@@ -1,22 +1,24 @@
 /* Custom CSS to replace Tailwind */
 :root {
-    --primary-color: #3b82f6; /* Blue-500 */
-    --primary-hover-color: #2563eb; /* Blue-600 */
-    --secondary-color: #6b7280; /* Gray-500 */
-    --secondary-hover-color: #4b5563; /* Gray-600 */
-    --google-red: #db4437; /* Google Red */
-    --google-red-hover: #c0392b; /* Google Red Darker */
-    --bg-light-gray: #f0f2f5;
+    --primary-color: #5E9BCD; /* Friendly Blue */
+    --primary-hover-color: #4178a6; /* Slightly deeper blue for hover */
+    --secondary-color: #7AB87C; /* Inviting Green */
+    --secondary-hover-color: #5e9b62; /* Deeper green for hover */
+    --accent-color: #FFD700; /* Warm Yellow for CTA */
+    --accent-hover-color: #FFC300; /* Slightly deeper yellow for hover */
+    --google-red: #db4437;
+    --google-red-hover: #c0392b;
+    --bg-light-gray: #f7fafc; /* Lighter, cleaner background */
     --bg-white: #ffffff;
-    --border-light: #d1d5db;
+    --border-light: #e5e7eb;
     --text-gray-dark: #1f2937;
     --text-gray-medium: #6b7280;
-    --text-blue-light: #2b6cb0;
-    --bg-blue-light: #e0f2fe;
-    --border-blue-light: #90cdf4;
-    --bg-info-light: #eff6ff;
-    --border-info-light: #bfdbfe;
-    --text-info-dark: #1e40af;
+    --text-blue-light: #5E9BCD;
+    --bg-blue-light: #eaf4fb;
+    --border-blue-light: #b6d2ea;
+    --bg-info-light: #eafbe7;
+    --border-info-light: #b6eac2;
+    --text-info-dark: #2d6a4f;
 }
 
 html, body {
@@ -211,15 +213,15 @@ button:hover {
 }
 
 .btn-primary {
-    background-color: var(--primary-color);
-    color: white;
-    box-shadow: 0 2px 5px rgba(59, 130, 246, 0.3);
-    width: 100%; /* w-full */
-    margin-bottom: 16px; /* mb-4 */
+    background-color: var(--accent-color);
+    color: #333;
+    box-shadow: 0 2px 5px rgba(255, 215, 0, 0.15);
+    width: 100%;
+    margin-bottom: 16px;
+    transition: background 0.2s;
 }
-
 .btn-primary:hover {
-    background-color: var(--primary-hover-color);
+    background-color: var(--accent-hover-color);
 }
 
 .btn-secondary {
