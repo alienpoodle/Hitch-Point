@@ -59,6 +59,19 @@
         let originMarker = null;
         let destinationMarker = null;
 
+        // Debounce utility function
+        const debounce = (func, delay) => {
+            let timeoutId;
+            return function(...args) {
+                // Clear the previous timeout if user types again
+                clearTimeout(timeoutId);
+                
+                // Set a new timeout
+                timeoutId = setTimeout(() => {
+                    func.apply(this, args);
+                }, delay);
+            };
+        };
 
         // --- Firebase Initialization and Authentication ---
         const initFirebase = async () => {
@@ -175,18 +188,44 @@
 
             geocoder = new google.maps.Geocoder(); // Initialize Geocoder
 
-            // Autocomplete for origin and destination inputs
             const originInput = document.getElementById('origin-input');
             const destinationInput = document.getElementById('destination-input');
-
-            // Set country restriction for autocomplete to St. Vincent and the Grenadines
-            const countryRestriction = { country: 'vc' }; // 'vc' is the ISO 3166-1 alpha-2 code for Saint Vincent and the Grenadines
-
+            
+            // Country restriction for St. Vincent and the Grenadines
+            const countryRestriction = { country: 'vc' };
+            
+            // Create autocomplete instances but don't attach them yet
             originAutocomplete = new google.maps.places.Autocomplete(originInput, {
                 componentRestrictions: countryRestriction
             });
             destinationAutocomplete = new google.maps.places.Autocomplete(destinationInput, {
                 componentRestrictions: countryRestriction
+            });
+            
+            // Disable default autocomplete behavior to implement custom debouncing
+            originInput.setAttribute('autocomplete', 'off');
+            destinationInput.setAttribute('autocomplete', 'off');
+            
+            // Create debounced search functions
+            const debouncedOriginSearch = debounce((value) => {
+                if (value.length >= 3) { // Only search after 3 characters
+                    searchPlace(value, 'origin');
+                }
+            }, 300);
+            
+            const debouncedDestinationSearch = debounce((value) => {
+                if (value.length >= 3) {
+                    searchPlace(value, 'destination');
+                }
+            }, 300);
+            
+            // Add input event listeners
+            originInput.addEventListener('input', (e) => {
+                debouncedOriginSearch(e.target.value);
+            });
+            
+            destinationInput.addEventListener('input', (e) => {
+                debouncedDestinationSearch(e.target.value);
             });
 
             // Bias the Autocomplete results towards the map's viewport.
@@ -195,6 +234,98 @@
                 destinationAutocomplete.setBounds(map.getBounds());
             });
         };
+
+                // Function to display predictions in the autocomplete dropdown
+                 const searchPlace = (query, inputType) => {
+                // Show loading indicator (optional)
+                const inputElement = document.getElementById(`${inputType}-input`);
+                inputElement.classList.add('searching');
+                
+                // Create autocomplete service
+                const service = new google.maps.places.AutocompleteService();
+                
+                // Search parameters
+                const request = {
+                    input: query,
+                    componentRestrictions: { country: 'vc' },
+                    // Bias results to current map bounds
+                    locationBias: map.getBounds()
+                };
+                
+                // Perform the search
+                service.getPlacePredictions(request, (predictions, status) => {
+                    inputElement.classList.remove('searching');
+                    
+                    if (status === google.maps.places.PlacesServiceStatus.OK && predictions) {
+                        displayPredictions(predictions, inputType);
+                    } else {
+                        console.log('Place search failed:', status);
+                        clearPredictions(inputType);
+                    }
+                });
+            };
+
+            // Function to display predictions in a dropdown
+            const displayPredictions = (predictions, inputType) => {
+                const inputElement = document.getElementById(`${inputType}-input`);
+                const existingDropdown = document.getElementById(`${inputType}-predictions`);
+                
+                // Remove existing dropdown if any
+                if (existingDropdown) {
+                    existingDropdown.remove();
+                }
+                
+                // Create new dropdown
+                const dropdown = document.createElement('div');
+                dropdown.id = `${inputType}-predictions`;
+                dropdown.className = 'autocomplete-dropdown';
+                
+                predictions.slice(0, 5).forEach(prediction => {
+                    const item = document.createElement('div');
+                    item.className = 'autocomplete-item';
+                    item.innerHTML = `
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span>${prediction.description}</span>
+                    `;
+                    
+                    item.addEventListener('click', () => {
+                        inputElement.value = prediction.description;
+                        clearPredictions(inputType);
+                        
+                        // Optional: Center map on selected location
+                        const placeService = new google.maps.places.PlacesService(map);
+                        placeService.getDetails({
+                            placeId: prediction.place_id,
+                            fields: ['geometry']
+                        }, (place, status) => {
+                            if (status === google.maps.places.PlacesServiceStatus.OK && place.geometry) {
+                                map.setCenter(place.geometry.location);
+                                map.setZoom(15);
+                            }
+                        });
+                    });
+                    
+                    dropdown.appendChild(item);
+                });
+                
+                // Position dropdown below input
+                inputElement.parentElement.appendChild(dropdown);
+            };
+
+            const clearPredictions = (inputType) => {
+                const dropdown = document.getElementById(`${inputType}-predictions`);
+                if (dropdown) {
+                    dropdown.remove();
+                }
+            };
+
+            // Close dropdowns when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.input-with-button')) {
+                    clearPredictions('origin');
+                    clearPredictions('destination');
+                }
+            });
 
         // Function to handle map clicks for setting origin/destination
         const handleMapClick = (event) => {

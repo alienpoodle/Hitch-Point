@@ -141,6 +141,59 @@ body {
     font-size: 0.875rem;
 }
 
+/* Autocomplete Dropdown Styles */
+.autocomplete-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid var(--border-light);
+    border-top: none;
+    border-radius: 0 0 8px 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 100;
+}
+
+.autocomplete-item {
+    padding: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: background-color 0.2s;
+}
+
+.autocomplete-item:hover {
+    background-color: var(--bg-blue-light);
+}
+
+.autocomplete-item i {
+    color: var(--primary-color);
+    font-size: 14px;
+}
+
+.autocomplete-item span {
+    flex: 1;
+    font-size: 14px;
+    color: var(--text-gray-dark);
+}
+
+/* Loading state for inputs */
+input.searching {
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%235E9BCD"><circle cx="12" cy="12" r="10" opacity="0.2"/><path d="M12 2a10 10 0 0 0-10 10h2a8 8 0 0 1 8-8V2z"><animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="1s" repeatCount="indefinite"/></path></svg>');
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 20px;
+}
+
+/* Make input containers relative for dropdown positioning */
+.input-with-button {
+    position: relative;
+}
+
 /* Input Group */
 .input-group {
     margin-bottom: 15px;
