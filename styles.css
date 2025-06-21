@@ -1,0 +1,483 @@
+/* Custom CSS to replace Tailwind */
+:root {
+    --primary-color: #3b82f6; /* Blue-500 */
+    --primary-hover-color: #2563eb; /* Blue-600 */
+    --secondary-color: #6b7280; /* Gray-500 */
+    --secondary-hover-color: #4b5563; /* Gray-600 */
+    --google-red: #db4437; /* Google Red */
+    --google-red-hover: #c0392b; /* Google Red Darker */
+    --bg-light-gray: #f0f2f5;
+    --bg-white: #ffffff;
+    --border-light: #d1d5db;
+    --text-gray-dark: #1f2937;
+    --text-gray-medium: #6b7280;
+    --text-blue-light: #2b6cb0;
+    --bg-blue-light: #e0f2fe;
+    --border-blue-light: #90cdf4;
+    --bg-info-light: #eff6ff;
+    --border-info-light: #bfdbfe;
+    --text-info-dark: #1e40af;
+}
+
+html, body {
+    height: 100%; /* Ensure html and body take full viewport height */
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--bg-light-gray);
+    display: flex;
+    justify-content: center;
+    align-items: flex-start; /* Changed to flex-start to align content to top */
+    min-height: 100vh;
+    padding: 20px; /* Consistent padding for mobile and desktop */
+}
+
+#app-container {
+    background-color: var(--bg-white);
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    padding: 30px;
+    width: 100%;
+    max-width: 1200px;
+    display: grid;
+    grid-template-columns: 1fr; /* Single column on mobile */
+    gap: 20px;
+    /* Allow vertical scrolling for the whole container on smaller screens if content overflows */
+    overflow-y: auto;
+}
+
+@media (min-width: 1024px) {
+    #app-container {
+        grid-template-columns: 1fr 1.5fr; /* Two columns on desktop */
+        height: 80vh; /* Fixed height for desktop */
+        grid-template-rows: 1fr; /* Ensure single row takes full height */
+        overflow-y: hidden; /* Prevent scrolling for the main container on desktop */
+    }
+
+    .left-section, .right-section {
+        height: 100%; /* Ensure grid children fill their cell height */
+        display: flex; /* Make them flex containers for internal content */
+        flex-direction: column; /* Stack content vertically */
+    }
+
+    .left-section {
+        overflow-y: auto; /* Allow scrolling for content that exceeds left section height */
+    }
+
+    #map {
+        height: 100%; /* Map now correctly takes 100% of its parent (.right-section) */
+    }
+}
+
+#map {
+    height: 400px; /* Fixed height for mobile */
+    border-radius: 8px;
+    box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.1);
+    width: 100%; /* Ensure map fills its container */
+}
+
+.left-section {
+    display: flex;
+    flex-direction: column;
+    padding: 16px; /* p-4 */
+    gap: 24px; /* space-y-6 */
+}
+
+.app-title {
+    font-size: 2rem; /* text-3xl */
+    font-weight: 800; /* font-extrabold */
+    color: var(--text-gray-dark);
+    margin-bottom: 24px; /* mb-6 */
+    text-align: center;
+}
+
+/* Auth Section */
+#auth-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px; /* space-y-4 */
+}
+
+#logged-out-view p {
+    color: var(--text-gray-medium);
+    margin-bottom: 16px; /* mb-4 */
+}
+
+#logged-in-view {
+    width: 100%;
+}
+
+.current-user-info {
+    background-color: var(--bg-info-light);
+    border: 1px solid var(--border-info-light);
+    border-radius: 8px;
+    padding: 10px 15px; /* py-2.5 px-4 */
+    margin-bottom: 20px; /* mb-5 */
+    font-size: 0.9rem;
+    color: var(--text-info-dark);
+}
+
+.current-user-info p {
+    margin: 0;
+    line-height: 1.4;
+}
+
+.current-user-info .font-semibold {
+    font-weight: 600;
+}
+
+.current-user-info .font-mono {
+    font-family: monospace;
+}
+
+.current-user-info .text-sm {
+    font-size: 0.875rem;
+}
+
+/* Input Group */
+.input-group {
+    margin-bottom: 15px;
+    display: flex;
+    flex-wrap: wrap; /* Allows label and input to wrap on smaller screens */
+    align-items: center;
+}
+
+.input-group label {
+    flex: 0 0 100%; /* Label takes full width on its own line */
+    color: var(--text-gray-medium);
+    font-size: 0.875rem; /* text-sm */
+    font-weight: 500; /* font-medium */
+    margin-bottom: 4px; /* mb-1 */
+}
+
+.input-with-button {
+    display: flex;
+    width: 100%;
+    gap: 8px; /* space-x-2 for the input and button */
+}
+
+input[type="text"] {
+    flex-grow: 1; /* Input takes available space */
+    padding: 12px;
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    box-sizing: border-box; /* Include padding in element's total width and height */
+}
+
+input[type="text"]:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+}
+
+.input-group .map-select-btn {
+    flex-shrink: 0; /* Button does not shrink */
+    padding: 8px 12px; /* Smaller padding for map select buttons */
+    font-size: 0.8rem;
+    background-color: #10b981; /* Green color for map selection */
+    color: white;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.1s;
+}
+
+.input-group .map-select-btn:hover {
+    background-color: #059669; /* Darker green on hover */
+    transform: translateY(-1px);
+}
+
+/* Buttons */
+button {
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.1s, box-shadow 0.2s;
+    border: none; /* Ensure no default button border */
+    display: flex; /* For center alignment of text/icon */
+    align-items: center;
+    justify-content: center;
+}
+
+button:hover {
+    transform: translateY(-1px);
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    color: white;
+    box-shadow: 0 2px 5px rgba(59, 130, 246, 0.3);
+    width: 100%; /* w-full */
+    margin-bottom: 16px; /* mb-4 */
+}
+
+.btn-primary:hover {
+    background-color: var(--primary-hover-color);
+}
+
+.btn-secondary {
+    background-color: var(--secondary-color);
+    color: white;
+    box-shadow: 0 2px 5px rgba(107, 114, 128, 0.3);
+    width: 100%; /* w-full */
+}
+
+.btn-secondary:hover {
+    background-color: var(--secondary-hover-color);
+}
+
+.btn-google {
+    background-color: var(--google-red);
+    color: white;
+    box-shadow: 0 2px 5px rgba(219, 68, 55, 0.3);
+    padding: 12px 24px; /* px-6 py-3 */
+}
+
+.btn-google:hover {
+    background-color: var(--google-red-hover);
+}
+
+.btn-google svg {
+    width: 20px; /* w-5 */
+    height: 20px; /* h-5 */
+    margin-right: 8px; /* mr-2 */
+}
+
+/* Utility classes */
+.hidden {
+    display: none !important;
+}
+
+.section-header {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-gray-dark);
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+/* Quote Box - now for modal content */
+.modal-quote-content {
+    background-color: var(--bg-blue-light);
+    border: 1px solid var(--border-blue-light);
+    border-radius: 8px;
+    padding: 15px;
+    margin-top: 20px;
+    font-size: 1.1rem;
+    color: var(--text-blue-light);
+    text-align: left; /* Align text within quote box content */
+}
+
+.modal-quote-content .font-semibold {
+    font-weight: 600;
+}
+
+.modal-quote-content p {
+    margin-bottom: 8px;
+    line-height: 1.4;
+}
+
+.modal-quote-content p:last-child {
+    margin-bottom: 0;
+}
+
+.modal-quote-content .text-xl {
+    font-size: 1.25rem;
+}
+
+.modal-quote-content .font-bold {
+    font-weight: 700;
+}
+
+.modal-quote-content .mt-4 {
+    margin-top: 16px;
+}
+
+/* Modals */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.modal.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+.modal-content {
+    background-color: white;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+    max-width: 500px;
+    width: 90%; /* Responsive width for smaller screens */
+    text-align: center;
+    position: relative;
+    transform: translateY(-20px);
+    transition: transform 0.3s ease;
+    max-height: 90vh; /* Limit modal height */
+    overflow-y: auto; /* Allow content to scroll within modal */
+}
+
+.modal.show .modal-content {
+    transform: translateY(0);
+}
+
+.modal-close-button {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--secondary-color);
+}
+
+.modal-close-button:hover {
+    color: #374151; /* Darker gray for hover */
+}
+
+.modal-content h3 {
+    font-size: 1.5rem; /* text-2xl */
+    font-weight: 700; /* font-bold */
+    color: var(--text-gray-dark);
+    margin-bottom: 16px; /* mb-4 */
+}
+
+.modal-content p {
+    color: var(--text-gray-medium);
+    margin-bottom: 24px; /* mb-6 */
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: center;
+    gap: 16px; /* space-x-4 */
+}
+
+.modal-actions button {
+    width: auto; /* Override w-full from general button style */
+    padding: 10px 20px;
+    margin-bottom: 0; /* Remove margin-bottom from general button style */
+}
+
+/* Loading Overlay */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+    display: none; /* Hidden by default */
+}
+
+.spinner {
+    border: 8px solid #f3f3f3;
+    border-top: 8px solid var(--primary-color);
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Ride History Table for modal */
+.modal-ride-history-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    font-size: 0.9rem;
+}
+
+.modal-ride-history-table th,
+.modal-ride-history-table td {
+    border: 1px solid #e5e7eb;
+    padding: 10px;
+    text-align: left;
+}
+
+.modal-ride-history-table th {
+    background-color: #f9fafb;
+    font-weight: 600;
+    color: #374151;
+}
+
+.modal-ride-history-table tbody tr:nth-child(even) {
+    background-color: #f3f4f6;
+}
+
+.modal-ride-history-table tbody tr:hover {
+    background-color: #e5e7eb;
+}
+
+.overflow-x-auto {
+    overflow-x: auto; /* Enables horizontal scroll for tables on small screens */
+}
+
+.rounded-lg {
+    border-radius: 0.5rem; /* 8px */
+}
+
+.shadow-sm {
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.border {
+    border-width: 1px;
+}
+
+.border-gray-200 {
+    border-color: #e5e7eb;
+}
+
+.text-center {
+    text-align: center;
+}
+
+.text-gray-500 {
+    color: #6b7280;
+}
+
+.py-4 {
+    padding-top: 16px;
+    padding-bottom: 16px;
+}
+
+/* New styles for catchphrase */
+.catch-phrase {
+    font-size: 1rem; /* text-lg */
+    font-weight: 500; /* font-medium */
+    color: var(--secondary-color); /* text-gray-500 */
+    margin-top: -16px; /* mt-[-4] equivalent to pull it closer to the title */
+    margin-bottom: 24px; /* mb-6 */
+    text-align: center;
+}

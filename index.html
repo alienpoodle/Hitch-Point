@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ride Share App</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <div id="app-container">
+        <!-- Left Section: Ride Request & History -->
+        <div class="left-section">
+            <h1 class="app-title">Hitch Point</h1>
+            <p class="catch-phrase">A Friendly Ride</p>
+
+            <!-- User Info / Auth Section -->
+            <div id="auth-section">
+                <div id="logged-out-view">
+                    <p>Please log in to request a ride and view your history.</p>
+                    <button id="google-login-btn" class="btn-google">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M22.675 12.001c0-.782-.068-1.528-.198-2.25H12v4.5H18.7c-.297 1.488-1.127 2.766-2.485 3.635v3.717h4.747c2.784-2.57 4.38-6.326 4.38-10.102z" fill="#4285F4"/>
+                            <path d="M12 23c3.238 0 5.926-1.07 7.904-2.909l-4.747-3.717c-1.358.9-2.618 1.458-3.157 1.458-3.618 0-6.68-2.437-7.798-5.717H.813v3.824C2.868 20.354 7.123 23 12 23z" fill="#34A853"/>
+                            <path d="M4.218 10.718a7.085 7.085 0 010-3.436V3.458H.813c-2.11 4.195-2.11 9.066 0 13.262l3.405-3.824z" fill="#FBBC05"/>
+                            <path d="M12 5.002c1.693 0 3.255.584 4.475 1.74l3.155-3.155C17.915 1.078 15.232 0 12 0c-4.877 0-9.132 2.646-11.187 6.548L4.218 10.718A7.085 7.085 0 0112 5.002z" fill="#EA4335"/>
+                        </svg>
+                        Sign in with Google
+                    </button>
+                </div>
+
+                <div id="logged-in-view" class="hidden">
+                    <div class="current-user-info">
+                        <p>Logged in as: <span id="user-email" class="font-semibold"></span></p>
+                        <p>User ID: <span id="user-id" class="font-mono text-sm"></span></p>
+                    </div>
+                    <button id="google-logout-btn" class="btn-secondary">Log Out</button>
+                </div>
+            </div>
+
+            <!-- Ride Request Section -->
+            <div id="ride-request-section" class="hidden">
+                <h2 class="section-header">Request a Ride</h2>
+                <div class="input-group">
+                    <label for="origin-input">Origin</label>
+                    <div class="input-with-button">
+                        <input type="text" id="origin-input" placeholder="Enter origin or select on map">
+                        <button id="select-origin-map-btn" class="map-select-btn">Select on Map</button>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label for="destination-input">Destination</label>
+                    <div class="input-with-button">
+                        <input type="text" id="destination-input" placeholder="Enter destination or select on map">
+                        <button id="select-destination-map-btn" class="map-select-btn">Select on Map</button>
+                    </div>
+                </div>
+                <button id="request-ride-btn" class="btn-primary">Get Quote & Request</button>
+
+                <!-- "View Ride History" button moved here -->
+                <button id="view-history-btn" class="btn-secondary mt-4 hidden">View Ride History</button>
+            </div>
+
+            <!-- Ride History Section (now a button on the main page, content in a modal) -->
+
+        </div>
+
+        <!-- Right Section: Google Map -->
+        <div class="right-section">
+            <div id="map"></div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+
+  
+    <div id="custom-modal" class="modal">
+        <div class="modal-content">
+            <button class="modal-close-button" onclick="window.closeModal()">&times;</button>
+            <h3 id="modal-title"></h3>
+            <p id="modal-message"></p>
+            <div id="modal-actions">
+                <button id="modal-confirm-btn" class="btn-primary hidden">Confirm</button>
+                <button id="modal-cancel-btn" class="btn-secondary hidden">Cancel</button>
+                <button id="modal-ok-btn" class="btn-primary">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ride History Modal -->
+    <div id="ride-history-modal" class="modal">
+        <div class="modal-content">
+            <button class="modal-close-button" onclick="window.closeModal('ride-history-modal')">&times;</button>
+            <h3>Ride History</h3>
+            <div class="overflow-x-auto rounded-lg shadow-sm border border-gray-200">
+                <table class="modal-ride-history-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Origin</th>
+                            <th>Destination</th>
+                            <th>Distance</th>
+                            <th>Duration</th>
+                            <th>Fare</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ride-history-body">
+                        <!-- Ride history will be populated here by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quote Display Modal -->
+    <div id="quote-display-modal" class="modal">
+        <div class="modal-content">
+            <button class="modal-close-button" onclick="window.closeModal('quote-display-modal')">&times;</button>
+            <h3>Estimated Ride Quote</h3>
+            <div class="modal-quote-content">
+                <p class="font-semibold">Quote Details:</p>
+                <p>Distance: <span id="quote-distance"></span></p>
+                <p>Duration: <span id="quote-duration"></span></p>
+                <p>Fare: <span id="quote-fare" class="text-xl font-bold"></span></p>
+                <button id="print-quote-btn" class="btn-secondary mt-4">Print Quote</button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="spinner"></div>
+    </div>
+
+    <script type="module" src="main.js"></script>
+</body>
+</html>
