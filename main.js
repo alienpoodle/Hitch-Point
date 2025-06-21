@@ -473,31 +473,26 @@
             cancelBtn.classList.add('hidden');
             okBtn.classList.remove('hidden'); // Default to OK button
 
+            // Remove previous event listeners
+            confirmBtn.onclick = null;
+            cancelBtn.onclick = null;
+            okBtn.onclick = null;
+
             if (isConfirm) {
                 okBtn.classList.add('hidden');
                 confirmBtn.classList.remove('hidden');
                 cancelBtn.classList.remove('hidden');
 
-                // Clone and replace to remove old event listeners
-                const newConfirmBtn = confirmBtn.cloneNode(true);
-                confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
-
-                const newCancelBtn = cancelBtn.cloneNode(true);
-                cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
-
-                newConfirmBtn.onclick = () => {
+                confirmBtn.onclick = () => {
                     onConfirm && onConfirm(true);
-                    window.closeModal(); // Call global closeModal
+                    window.closeModal();
                 };
-                newCancelBtn.onclick = () => {
+                cancelBtn.onclick = () => {
                     onConfirm && onConfirm(false);
-                    window.closeModal(); // Call global closeModal
+                    window.closeModal();
                 };
             } else {
-                 // Clone and replace to remove old event listeners for OK button
-                const newOkBtn = okBtn.cloneNode(true);
-                okBtn.parentNode.replaceChild(newOkBtn, okBtn);
-                newOkBtn.onclick = window.closeModal; // Call global closeModal
+                okBtn.onclick = window.closeModal;
             }
 
             modal.classList.add('show');
