@@ -1,13 +1,3 @@
-// Register service worker for PWA
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js')
-            .then(registration => console.log('ServiceWorker registered'))
-            .catch(err => console.log('ServiceWorker registration failed'));
-    });
-}
-
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 import {
     getAuth,
@@ -29,10 +19,18 @@ import {
     serverTimestamp
 } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
+// --- Register Service Worker for PWA ---
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+            .then(registration => console.log('ServiceWorker registered'))
+            .catch(err => console.log('ServiceWorker registration failed:', err));
+    });
+}
+
 // --- Global Variables ---
 const firebaseConfig = window.firebaseConfig || {};
 const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-
 let app, auth, db;
 let currentUserId = null;
 let currentUserEmail = null;
@@ -42,112 +40,46 @@ let isAuthReady = false;
 let map;
 let geocoder;
 let mapSelectionMode = 'none'; // 'none', 'origin', 'destination'
-
-// Google Maps loading state
+let selectedMarker = null;
 let isGoogleMapsReady = false;
 let isGoogleMapsLoading = false;
 let mapLoadPromise = null;
 
-// --- Modal Map Logic ---
-function openMapModal(mode) {
-    if (!isGoogleMapsReady) {
-        showToast("Google Maps is not ready. Please try again.", "error");
-        return;
-    }
-    mapSelectionMode = mode;
-    document.getElementById('map-modal').classList.add('show');
-    setTimeout(() => {
-        initMapForSelection();
-    }, 300);
+// PWA Install Prompt
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    // Show install button
+    const installBtn = document.getElementById('install-pwa-btn');
+    if (installBtn) installBtn.classList.remove('hidden');
+});
+
+// --- Modal Management ---
+function openModal(modalId) {
+    document.getElementById(modalId).classList.add('show');
 }
 
-function closeMapModal() {
-    document.getElementById('map-modal').classList.remove('show');
-    mapSelectionMode = 'none';
-    map = null;
-}
-
-window.closeModal = (modalId) => {
+function closeModal(modalId) {
+    document.getElementById(modalId).classList.remove('show');
+    
     if (modalId === 'map-modal') {
-        closeMapModal();
-    } else {
-        let targetModalElement = null;
-        if (modalId) {
-            targetModalElement = document.getElementById(modalId);
-        } else {
-            targetModalElement = document.getElementById('custom-modal');
+        mapSelectionMode = 'none';
+        if (selectedMarker) {
+            selectedMarker.setMap(null);
+            selectedMarker = null;
         }
-        if (targetModalElement) targetModalElement.classList.remove('show');
-    }
-};
-
-// --- Firebase Initialization and Authentication ---
-const initFirebase = async () => {
-    try {
-        app = initializeApp(firebaseConfig);
-        auth = getAuth(app);
-        db = getFirestore(app);
-
-        onAuthStateChanged(auth, async (user) => {
-            isAuthReady = true;
-            if (user) {
-                currentUserId = user.uid;
-                currentUserEmail = user.email || "N/A";
-                document.getElementById('logged-out-view').classList.add('hidden');
-                document.getElementById('logged-in-view').classList.remove('hidden');
-                document.getElementById('user-email').textContent = currentUserEmail;
-                document.getElementById('user-id').textContent = currentUserId;
-                document.getElementById('ride-request-section').classList.remove('hidden');
-                document.getElementById('view-history-btn').classList.remove('hidden');
-                listenForRideHistory();
-            } else {
-                currentUserId = null;
-                currentUserEmail = null;
-                document.getElementById('logged-out-view').classList.remove('hidden');
-                document.getElementById('logged-in-view').classList.add('hidden');
-                document.getElementById('ride-request-section').classList.add('hidden');
-                document.getElementById('view-history-btn').classList.add('hidden');
-                document.getElementById('ride-history-body').innerHTML = '';
-            }
-            hideLoadingOverlay();
-        });
-
-        if (initialAuthToken) {
-            await signInWithCustomToken(auth, initialAuthToken);
-        } else {
-            await signInAnonymously(auth);
+    } else if (modalId === 'ride-history-modal') {
+        // Clean up Firestore listener when closing ride history
+        if (window.rideHistoryUnsubscribe) {
+            window.rideHistoryUnsubscribe();
+            window.rideHistoryUnsubscribe = null;
         }
-    } catch (error) {
-        console.error("Error initializing Firebase:", error);
-        showToast("Failed to initialize the app. Please try again later.", "error");
-        hideLoadingOverlay();
     }
-};
+}
 
-const googleLogin = async () => {
-    showLoadingOverlay();
-    try {
-        const provider = new GoogleAuthProvider();
-        await signInWithPopup(auth, provider);
-    } catch (error) {
-        console.error("Google Sign-In Error:", error);
-        if (error.code !== 'auth/popup-closed-by-user') {
-            showToast("Could not sign in with Google. Please try again.", "error");
-        }
-        hideLoadingOverlay();
-    }
-};
-
-const googleLogout = async () => {
-    showLoadingOverlay();
-    try {
-        await signOut(auth);
-    } catch (error) {
-        console.error("Google Sign-Out Error:", error);
-        showToast("Could not log out. Please try again.", "error");
-        hideLoadingOverlay();
-    }
-};
+// Make closeModal globally available
+window.closeModal = closeModal;
 
 // --- Google Maps Integration ---
 function loadGoogleMapsScript(apiKey) {
@@ -155,15 +87,15 @@ function loadGoogleMapsScript(apiKey) {
     if (isGoogleMapsLoading && mapLoadPromise) {
         return mapLoadPromise;
     }
-
+    
     // If already loaded, return resolved promise
     if (window.google && window.google.maps) {
         isGoogleMapsReady = true;
         return Promise.resolve();
     }
-
+    
     isGoogleMapsLoading = true;
-
+    
     mapLoadPromise = new Promise((resolve, reject) => {
         // Define the callback function globally BEFORE adding the script
         window.googleMapsCallback = function() {
@@ -173,26 +105,42 @@ function loadGoogleMapsScript(apiKey) {
             console.log("Google Maps loaded successfully");
             resolve();
         };
-
+        
         const script = document.createElement('script');
         script.id = 'google-maps-script';
         script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&callback=googleMapsCallback`;
         script.async = true;
         script.defer = true;
-
+        
         script.onerror = () => {
             isGoogleMapsLoading = false;
             showToast("Failed to load Google Maps. Please check your API key.", "error");
             reject(new Error("Failed to load Google Maps"));
         };
-
+        
         document.head.appendChild(script);
     });
-
+    
     return mapLoadPromise;
 }
 
-// --- Map Modal Selection Logic ---
+// --- Map Modal Logic ---
+function openMapModal(mode) {
+    if (!isGoogleMapsReady) {
+        showToast("Google Maps is not ready. Please try again.", "error");
+        return;
+    }
+    
+    mapSelectionMode = mode;
+    openModal('map-modal');
+    
+    // Add a small delay to ensure modal is visible before initializing map
+    setTimeout(() => {
+        initMapForSelection();
+    }, 300);
+}
+
+// --- Map Selection Logic ---
 function initMapForSelection() {
     if (!isGoogleMapsReady || !window.google || !window.google.maps) {
         showToast("Google Maps is not ready yet.", "error");
@@ -234,19 +182,7 @@ function initMapForSelection() {
 
         // Add click listener for location selection
         map.addListener('click', (event) => {
-            geocoder.geocode({ location: event.latLng }, (results, status) => {
-                if (status === 'OK' && results[0]) {
-                    const address = results[0].formatted_address;
-                    if (mapSelectionMode === 'origin') {
-                        document.getElementById('origin-input').value = address;
-                    } else if (mapSelectionMode === 'destination') {
-                        document.getElementById('destination-input').value = address;
-                    }
-                    closeMapModal();
-                } else {
-                    showToast("No address found for this location.", "warning");
-                }
-            });
+            placeMarkerAndGetAddress(event.latLng);
         });
 
         // Add instruction overlay
@@ -257,7 +193,7 @@ function initMapForSelection() {
             Click anywhere on the map to select your ${mapSelectionMode}
         `;
         mapDiv.appendChild(instructionDiv);
-
+        
         console.log("Map initialized successfully for", mapSelectionMode);
     } catch (error) {
         console.error("Error initializing map:", error);
@@ -266,44 +202,155 @@ function initMapForSelection() {
     }
 }
 
+function placeMarkerAndGetAddress(location) {
+    // Remove existing marker
+    if (selectedMarker) {
+        selectedMarker.setMap(null);
+    }
+
+    // Place new marker
+    selectedMarker = new google.maps.Marker({
+        position: location,
+        map: map,
+        animation: google.maps.Animation.DROP
+    });
+
+    // Get address from coordinates
+    geocoder.geocode({ location: location }, (results, status) => {
+        if (status === 'OK' && results[0]) {
+            const address = results[0].formatted_address;
+            
+            // Update the appropriate input field
+            if (mapSelectionMode === 'origin') {
+                document.getElementById('origin-input').value = address;
+                showToast("Origin location selected!", "success");
+            } else if (mapSelectionMode === 'destination') {
+                document.getElementById('destination-input').value = address;
+                showToast("Destination location selected!", "success");
+            }
+            
+            // Close modal after short delay
+            setTimeout(() => {
+                closeModal('map-modal');
+            }, 1000);
+        } else {
+            showToast("Could not find address for this location.", "warning");
+        }
+    });
+}
+
+// --- Firebase Initialization and Authentication ---
+const initFirebase = async () => {
+    try {
+        app = initializeApp(firebaseConfig);
+        auth = getAuth(app);
+        db = getFirestore(app);
+
+        onAuthStateChanged(auth, async (user) => {
+            isAuthReady = true;
+            if (user) {
+                currentUserId = user.uid;
+                currentUserEmail = user.email || "N/A";
+                document.getElementById('logged-out-view').classList.add('hidden');
+                document.getElementById('logged-in-view').classList.remove('hidden');
+                document.getElementById('user-email').textContent = currentUserEmail;
+                document.getElementById('user-id').textContent = currentUserId;
+                document.getElementById('ride-request-section').classList.remove('hidden');
+                document.getElementById('view-history-btn').classList.remove('hidden');
+            } else {
+                currentUserId = null;
+                currentUserEmail = null;
+                document.getElementById('logged-out-view').classList.remove('hidden');
+                document.getElementById('logged-in-view').classList.add('hidden');
+                document.getElementById('ride-request-section').classList.add('hidden');
+                document.getElementById('view-history-btn').classList.add('hidden');
+            }
+            hideLoadingOverlay();
+        });
+
+        if (initialAuthToken) {
+            await signInWithCustomToken(auth, initialAuthToken);
+        } else {
+            await signInAnonymously(auth);
+        }
+    } catch (error) {
+        console.error("Error initializing Firebase:", error);
+        showToast("Failed to initialize the app. Please try again later.", "error");
+        hideLoadingOverlay();
+    }
+};
+
+const googleLogin = async () => {
+    showLoadingOverlay();
+    try {
+        const provider = new GoogleAuthProvider();
+        await signInWithPopup(auth, provider);
+        showToast("Successfully logged in!", "success");
+    } catch (error) {
+        console.error("Google Sign-In Error:", error);
+        if (error.code !== 'auth/popup-closed-by-user') {
+            showToast("Could not sign in with Google. Please try again.", "error");
+        }
+        hideLoadingOverlay();
+    }
+};
+
+const googleLogout = async () => {
+    showLoadingOverlay();
+    try {
+        await signOut(auth);
+        showToast("Successfully logged out!", "success");
+    } catch (error) {
+        console.error("Google Sign-Out Error:", error);
+        showToast("Could not log out. Please try again.", "error");
+        hideLoadingOverlay();
+    }
+};
+
 // --- UI Utility Functions ---
 function showToast(message, type = "info", duration = 3500) {
     const container = document.getElementById('toast-container');
     if (!container) return;
+    
     const toast = document.createElement('div');
     toast.className = 'toast ' + type;
     toast.textContent = message;
     container.appendChild(toast);
+    
     setTimeout(() => {
         toast.style.opacity = "0";
         setTimeout(() => container.removeChild(toast), 400);
     }, duration);
 }
+
 function showLoadingOverlay() {
     document.getElementById('loading-overlay').classList.add('show');
 }
+
 function hideLoadingOverlay() {
     document.getElementById('loading-overlay').classList.remove('show');
 }
 
-// --- Real Logic for Required Features ---
+// --- Ride Request Logic ---
 async function calculateRoute() {
     const origin = document.getElementById('origin-input').value;
     const destination = document.getElementById('destination-input').value;
+    
     if (!origin || !destination) {
         showToast("Please enter both origin and destination.", "warning");
         return;
     }
-
+    
+    if (!isGoogleMapsReady) {
+        showToast("Google Maps is not loaded yet. Please try again.", "error");
+        return;
+    }
+    
     showLoadingOverlay();
-
+    
     try {
-        if (!window.google || !window.google.maps) {
-            showToast("Google Maps is not loaded.", "error");
-            hideLoadingOverlay();
-            return;
-        }
         const directionsService = new google.maps.DirectionsService();
+        
         directionsService.route(
             {
                 origin,
@@ -312,16 +359,27 @@ async function calculateRoute() {
             },
             async (result, status) => {
                 hideLoadingOverlay();
+                
                 if (status === "OK" && result.routes.length > 0) {
                     const leg = result.routes[0].legs[0];
+                    
+                    // Update quote modal
                     document.getElementById('quote-distance').textContent = leg.distance.text;
                     document.getElementById('quote-duration').textContent = leg.duration.text;
-                    // Example fare calculation: $2 per km
+                    document.getElementById('quote-origin').textContent = origin;
+                    document.getElementById('quote-destination').textContent = destination;
+                    
+                    // Calculate fare (example: $2.50 base + $1.50 per km)
                     const distanceKm = leg.distance.value / 1000;
-                    const fare = (distanceKm * 2).toFixed(2);
-                    document.getElementById('quote-fare').textContent = `$${fare}`;
-                    document.getElementById('quote-display-modal').classList.add('show');
-
+                    const baseFare = 2.50;
+                    const perKmRate = 1.50;
+                    const fare = (baseFare + (distanceKm * perKmRate)).toFixed(2);
+                    
+                    document.getElementById('quote-fare').textContent = `$${fare} USD`;
+                    
+                    // Show quote modal
+                    openModal('quote-display-modal');
+                    
                     // Save ride request to Firestore
                     if (db && currentUserId) {
                         try {
@@ -332,19 +390,23 @@ async function calculateRoute() {
                                 distance: leg.distance.text,
                                 duration: leg.duration.text,
                                 fare,
+                                status: 'quoted',
                                 timestamp: serverTimestamp()
                             });
+                            showToast("Ride quote saved to history!", "success");
                         } catch (err) {
+                            console.error("Failed to save ride:", err);
                             showToast("Failed to save ride request.", "error");
                         }
                     }
                 } else {
-                    showToast("Could not calculate route.", "error");
+                    showToast("Could not calculate route. Please check your locations.", "error");
                 }
             }
         );
     } catch (err) {
         hideLoadingOverlay();
+        console.error("Route calculation error:", err);
         showToast("Error calculating route.", "error");
     }
 }
@@ -352,56 +414,156 @@ async function calculateRoute() {
 function printQuote() {
     const modal = document.getElementById('quote-display-modal');
     if (!modal) return;
+    
     const printContents = modal.querySelector('.modal-quote-content').innerHTML;
     const win = window.open('', '', 'height=600,width=400');
-    win.document.write('<html><head><title>Print Quote</title>');
-    win.document.write('<link rel="stylesheet" href="styles.css">');
-    win.document.write('</head><body>');
-    win.document.write(printContents);
-    win.document.write('</body></html>');
+    
+    win.document.write(`
+        <html>
+        <head>
+            <title>HitchPoint - Ride Quote</title>
+            <style>
+                body { font-family: Arial, sans-serif; padding: 20px; }
+                h1 { color: #5E9BCD; }
+                .quote-detail { margin: 10px 0; }
+                .fare { font-size: 24px; font-weight: bold; color: #FFD700; }
+            </style>
+        </head>
+        <body>
+            <h1>HitchPoint Ride Quote</h1>
+            ${printContents}
+            <p style="margin-top: 30px; font-size: 12px; color: #666;">
+                Generated on ${new Date().toLocaleString()}
+            </p>
+        </body>
+        </html>
+    `);
+    
     win.document.close();
     win.print();
 }
 
-function listenForRideHistory() {
+// --- Ride History ---
+function showRideHistory() {
     if (!db || !currentUserId) {
         showToast("You must be logged in to view ride history.", "warning");
         return;
     }
+    
+    openModal('ride-history-modal');
     const historyBody = document.getElementById('ride-history-body');
-    historyBody.innerHTML = "Loading...";
+    historyBody.innerHTML = '<div class="loading-spinner-container"><div class="spinner"></div><p>Loading ride history...</p></div>';
+    
     const ridesRef = collection(db, "rides");
     const q = query(ridesRef, where("userId", "==", currentUserId), orderBy("timestamp", "desc"));
+    
+    let unsubscribe = null;
+    
+    try {
+        unsubscribe = onSnapshot(q, 
+            (snapshot) => {
+                // Success callback
+                if (snapshot.empty) {
+                    historyBody.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-car fa-3x"></i>
+                            <p>No ride history found.</p>
+                            <p class="text-sm text-gray-500">Your ride requests will appear here.</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                let html = `
+                    <div class="table-container">
+                        <table class="modal-ride-history-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Origin</th>
+                                    <th>Destination</th>
+                                    <th>Distance</th>
+                                    <th>Fare</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+                
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    const date = data.timestamp ? new Date(data.timestamp.seconds * 1000).toLocaleString() : 'N/A';
+                    const status = data.status || 'quoted';
+                    const statusClass = status === 'completed' ? 'status-completed' : 'status-quoted';
+                    
+                    html += `
+                        <tr>
+                            <td>${date}</td>
+                            <td class="truncate" title="${data.origin || 'N/A'}">${data.origin || 'N/A'}</td>
+                            <td class="truncate" title="${data.destination || 'N/A'}">${data.destination || 'N/A'}</td>
+                            <td>${data.distance || 'N/A'}</td>
+                            <td class="fare-amount">$${data.fare || '0.00'}</td>
+                            <td><span class="status-badge ${statusClass}">${status}</span></td>
+                        </tr>
+                    `;
+                });
+                
+                html += '</tbody></table></div>';
+                historyBody.innerHTML = html;
+            },
+            (error) => {
+                // Error callback
+                console.error("Error loading ride history:", error);
+                closeModal('ride-history-modal');
+                
+                // Show error as toast notification instead of in modal
+                if (error.code === 'permission-denied') {
+                    showToast("Permission denied. Please log in again.", "error");
+                } else if (error.code === 'unavailable') {
+                    showToast("Service temporarily unavailable. Please try again later.", "error");
+                } else {
+                    showToast("Failed to load ride history. Please try again.", "error");
+                }
+            }
+        );
+        
+        // Store unsubscribe function for cleanup
+        window.rideHistoryUnsubscribe = unsubscribe;
+        
+    } catch (error) {
+        console.error("Error setting up ride history listener:", error);
+        closeModal('ride-history-modal');
+        showToast("Failed to load ride history. Please try again.", "error");
+    }
+}
 
-    onSnapshot(q, (snapshot) => {
-        let html = '<table class="modal-ride-history-table"><tr><th>Date</th><th>Origin</th><th>Destination</th><th>Fare</th></tr>';
-        snapshot.forEach(doc => {
-            const data = doc.data();
-            html += `<tr>
-                <td>${data.timestamp && data.timestamp.seconds ? new Date(data.timestamp.seconds * 1000).toLocaleString() : ''}</td>
-                <td>${data.origin || ''}</td>
-                <td>${data.destination || ''}</td>
-                <td>${data.fare ? `$${data.fare}` : ''}</td>
-            </tr>`;
-        });
-        html += '</table>';
-        historyBody.innerHTML = html;
-        document.getElementById('ride-history-modal').classList.add('show');
-    }, (error) => {
-        showToast("Failed to load ride history.", "error");
-        historyBody.innerHTML = "Failed to load ride history.";
-    });
+// --- PWA Install ---
+async function installPWA() {
+    if (!deferredPrompt) {
+        showToast("App is already installed or not available for installation.", "info");
+        return;
+    }
+    
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    
+    if (outcome === 'accepted') {
+        showToast("App installed successfully!", "success");
+    }
+    
+    deferredPrompt = null;
+    document.getElementById('install-pwa-btn').classList.add('hidden');
 }
 
 // --- Event Listeners ---
 document.addEventListener('DOMContentLoaded', () => {
     if (!firebaseConfig.googleMapsApiKey) {
-        showToast("Google Maps API key is missing from the provided Firebase configuration.", "error");
+        showToast("Google Maps API key is missing from configuration.", "error");
         hideLoadingOverlay();
     } else {
         showLoadingOverlay();
         initFirebase();
-
+        
         // Optionally preload Google Maps in the background
         setTimeout(() => {
             loadGoogleMapsScript(firebaseConfig.googleMapsApiKey).catch(err => {
@@ -409,13 +571,16 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }, 2000);
     }
-
+    
+    // Authentication buttons
     document.getElementById('google-login-btn').addEventListener('click', googleLogin);
     document.getElementById('google-logout-btn').addEventListener('click', googleLogout);
+    
+    // Ride request buttons
     document.getElementById('request-ride-btn').addEventListener('click', calculateRoute);
     document.getElementById('print-quote-btn').addEventListener('click', printQuote);
-
-    // Show map modal only when selecting on map
+    
+    // Map selection buttons
     document.getElementById('select-origin-map-btn').addEventListener('click', async () => {
         showLoadingOverlay();
         try {
@@ -428,6 +593,7 @@ document.addEventListener('DOMContentLoaded', () => {
             showToast("Failed to load Google Maps", "error");
         }
     });
+    
     document.getElementById('select-destination-map-btn').addEventListener('click', async () => {
         showLoadingOverlay();
         try {
@@ -440,6 +606,13 @@ document.addEventListener('DOMContentLoaded', () => {
             showToast("Failed to load Google Maps", "error");
         }
     });
-
-    document.getElementById('view-history-btn').addEventListener('click', listenForRideHistory);
+    
+    // History button
+    document.getElementById('view-history-btn').addEventListener('click', showRideHistory);
+    
+    // PWA install button
+    const installBtn = document.getElementById('install-pwa-btn');
+    if (installBtn) {
+        installBtn.addEventListener('click', installPWA);
+    }
 });

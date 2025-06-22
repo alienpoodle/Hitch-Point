@@ -11,12 +11,14 @@
     <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
     <link rel="manifest" href="site.webmanifest">
     <meta name="description" content="HitchPoint - Book rides in St. Vincent and the Grenadines with instant quotes and route planning">
+    <meta name="theme-color" content="#5E9BCD">
 </head>
 <body>
     <div id="app-container">
         <!-- Left Section: Ride Request & History -->
         <div class="left-section">
             <img src="logo.png" alt="Hitch Point Logo" class="app-logo" style="max-width: 180px; margin-bottom: 0.5em;">
+            <p class="catch-phrase">Your ride, just a tap away!</p>
            
             <!-- User Info / Auth Section -->
             <div id="auth-section">
@@ -32,7 +34,6 @@
                         Sign in with Google
                     </button>
                 </div>
-
                 <div id="logged-in-view" class="hidden">
                     <div class="current-user-info">
                         <p>Logged in as: <span id="user-email" class="font-semibold"></span></p>
@@ -41,7 +42,7 @@
                     <button id="google-logout-btn" class="btn-secondary">Log Out</button>
                 </div>
             </div>
-
+            
             <!-- Ride Request Section -->
             <div id="ride-request-section" class="hidden">
                 <h2 class="section-header">Request a Ride</h2>
@@ -61,23 +62,32 @@
                 </div>
                 <button id="request-ride-btn" class="btn-primary">Request Ride</button>
             </div>
-
+            
             <button id="view-history-btn" class="btn-secondary hidden" style="margin-top: 1em;">View Ride History</button>
+            
+            <!-- PWA Install Button -->
+            <button id="install-pwa-btn" class="btn-secondary hidden" style="margin-top: 1em;">
+                <i class="fas fa-download"></i> Install App
+            </button>
         </div>
-
-        <!-- Right Section: Ride History, Map, etc. (if any) -->
+        
+        <!-- Right Section: Map Preview (optional) -->
         <div class="right-section">
-            <!-- Ride history and quote modals will be shown as overlays -->
+            <!-- Can be used for a persistent map view in desktop layout -->
         </div>
     </div>
-
+    
     <!-- Ride History Modal -->
     <div id="ride-history-modal" class="modal">
-        <div class="modal-content">
-            <div id="ride-history-body"></div>
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h3>Ride History</h3>
+                <button class="modal-close-button" onclick="window.closeModal('ride-history-modal')">&times;</button>
+            </div>
+            <div id="ride-history-body" class="modal-body"></div>
         </div>
     </div>
-
+    
     <!-- Quote Display Modal -->
     <div id="quote-display-modal" class="modal">
         <div class="modal-content">
@@ -85,6 +95,8 @@
             <h3>Estimated Ride Quote</h3>
             <div class="modal-quote-content">
                 <p class="font-semibold">Quote Details:</p>
+                <p>Origin: <span id="quote-origin"></span></p>
+                <p>Destination: <span id="quote-destination"></span></p>
                 <p>Distance: <span id="quote-distance"></span></p>
                 <p>Duration: <span id="quote-duration"></span></p>
                 <p>Fare: <span id="quote-fare" class="text-xl font-bold"></span></p>
@@ -92,23 +104,23 @@
             </div>
         </div>
     </div>
-
+    
     <!-- Map Modal (only shown when selecting on map) -->
     <div id="map-modal" class="modal">
-        <div class="modal-content" style="width:90vw;max-width:600px;height:70vh;position:relative;">
+        <div class="modal-content map-modal-content">
             <button class="modal-close-button" onclick="window.closeModal('map-modal')">&times;</button>
-            <div id="map" style="width:100%;height:100%;border-radius:8px;"></div>
+            <div id="map"></div>
         </div>
     </div>
-
+    
     <!-- Loading Overlay -->
     <div id="loading-overlay" class="loading-overlay">
         <div class="spinner"></div>
     </div>
-
+    
     <!-- Toast Container -->
     <div id="toast-container" class="toast-container"></div>
-
+    
     <!-- Config and Main JS -->
     <script src="config.js"></script>
     <script type="module" src="main.js"></script>
