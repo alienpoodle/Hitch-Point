@@ -1,3 +1,13 @@
+// Register service worker for PWA
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+            .then(registration => console.log('ServiceWorker registered'))
+            .catch(err => console.log('ServiceWorker registration failed'));
+    });
+}
+
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 import {
     getAuth,
@@ -33,13 +43,22 @@ let map;
 let geocoder;
 let mapSelectionMode = 'none'; // 'none', 'origin', 'destination'
 
+// Google Maps loading state
+let isGoogleMapsReady = false;
+let isGoogleMapsLoading = false;
+let mapLoadPromise = null;
+
 // --- Modal Map Logic ---
 function openMapModal(mode) {
+    if (!isGoogleMapsReady) {
+        showToast("Google Maps is not ready. Please try again.", "error");
+        return;
+    }
     mapSelectionMode = mode;
     document.getElementById('map-modal').classList.add('show');
     setTimeout(() => {
         initMapForSelection();
-    }, 100);
+    }, 300);
 }
 
 function closeMapModal() {
@@ -131,51 +150,121 @@ const googleLogout = async () => {
 };
 
 // --- Google Maps Integration ---
-const loadGoogleMapsScript = (apiKey, callbackName = "initMapForSelection") => {
-    if (document.getElementById('google-maps-script')) return;
-    const script = document.createElement('script');
-    script.id = 'google-maps-script';
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&callback=${callbackName}`;
-    script.async = true;
-    script.defer = true;
-    document.head.appendChild(script);
-    script.onerror = () => {
-        showToast("Failed to load Google Maps. Please check your API key and network connection.", "error");
-        hideLoadingOverlay();
-    };
-};
+function loadGoogleMapsScript(apiKey) {
+    // If already loading, return the existing promise
+    if (isGoogleMapsLoading && mapLoadPromise) {
+        return mapLoadPromise;
+    }
+
+    // If already loaded, return resolved promise
+    if (window.google && window.google.maps) {
+        isGoogleMapsReady = true;
+        return Promise.resolve();
+    }
+
+    isGoogleMapsLoading = true;
+
+    mapLoadPromise = new Promise((resolve, reject) => {
+        // Define the callback function globally BEFORE adding the script
+        window.googleMapsCallback = function() {
+            isGoogleMapsReady = true;
+            isGoogleMapsLoading = false;
+            geocoder = new google.maps.Geocoder();
+            console.log("Google Maps loaded successfully");
+            resolve();
+        };
+
+        const script = document.createElement('script');
+        script.id = 'google-maps-script';
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&callback=googleMapsCallback`;
+        script.async = true;
+        script.defer = true;
+
+        script.onerror = () => {
+            isGoogleMapsLoading = false;
+            showToast("Failed to load Google Maps. Please check your API key.", "error");
+            reject(new Error("Failed to load Google Maps"));
+        };
+
+        document.head.appendChild(script);
+    });
+
+    return mapLoadPromise;
+}
 
 // --- Map Modal Selection Logic ---
-window.initMapForSelection = function() {
+function initMapForSelection() {
+    if (!isGoogleMapsReady || !window.google || !window.google.maps) {
+        showToast("Google Maps is not ready yet.", "error");
+        closeModal('map-modal');
+        return;
+    }
+
     const mapDiv = document.getElementById('map');
-    mapDiv.innerHTML = ""; // Clear previous map if any
+    if (!mapDiv) {
+        console.error("Map div not found");
+        return;
+    }
 
-    map = new google.maps.Map(mapDiv, {
-        center: { lat: 13.1592, lng: -61.2185 },
-        zoom: 12,
-        mapTypeControl: false,
-        streetViewControl: false,
-        fullscreenControl: false
-    });
+    // Clear any existing map
+    mapDiv.innerHTML = "";
 
-    geocoder = new google.maps.Geocoder();
-
-    map.addListener('click', (event) => {
-        geocoder.geocode({ location: event.latLng }, (results, status) => {
-            if (status === 'OK' && results[0]) {
-                const address = results[0].formatted_address;
-                if (mapSelectionMode === 'origin') {
-                    document.getElementById('origin-input').value = address;
-                } else if (mapSelectionMode === 'destination') {
-                    document.getElementById('destination-input').value = address;
+    try {
+        // Initialize map centered on St. Vincent
+        map = new google.maps.Map(mapDiv, {
+            center: { lat: 13.1592, lng: -61.2185 },
+            zoom: 11,
+            mapTypeControl: true,
+            streetViewControl: false,
+            fullscreenControl: true,
+            zoomControl: true,
+            styles: [
+                {
+                    featureType: "poi.business",
+                    elementType: "labels",
+                    stylers: [{ visibility: "off" }]
                 }
-                closeMapModal();
-            } else {
-                showToast("No address found for this location.", "warning");
-            }
+            ]
         });
-    });
-};
+
+        // Initialize geocoder if not already done
+        if (!geocoder) {
+            geocoder = new google.maps.Geocoder();
+        }
+
+        // Add click listener for location selection
+        map.addListener('click', (event) => {
+            geocoder.geocode({ location: event.latLng }, (results, status) => {
+                if (status === 'OK' && results[0]) {
+                    const address = results[0].formatted_address;
+                    if (mapSelectionMode === 'origin') {
+                        document.getElementById('origin-input').value = address;
+                    } else if (mapSelectionMode === 'destination') {
+                        document.getElementById('destination-input').value = address;
+                    }
+                    closeMapModal();
+                } else {
+                    showToast("No address found for this location.", "warning");
+                }
+            });
+        });
+
+        // Add instruction overlay
+        const instructionDiv = document.createElement('div');
+        instructionDiv.className = 'map-instruction';
+        instructionDiv.innerHTML = `
+            <i class="fas fa-map-marker-alt"></i> 
+            Click anywhere on the map to select your ${mapSelectionMode}
+        `;
+        mapDiv.appendChild(instructionDiv);
+
+        console.log("Map initialized successfully for", mapSelectionMode);
+    } catch (error) {
+        console.error("Error initializing map:", error);
+        showToast("Error initializing map", "error");
+        closeModal('map-modal');
+    }
+}
 
 // --- UI Utility Functions ---
 function showToast(message, type = "info", duration = 3500) {
@@ -312,6 +401,13 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
         showLoadingOverlay();
         initFirebase();
+
+        // Optionally preload Google Maps in the background
+        setTimeout(() => {
+            loadGoogleMapsScript(firebaseConfig.googleMapsApiKey).catch(err => {
+                console.warn("Background maps preload failed:", err);
+            });
+        }, 2000);
     }
 
     document.getElementById('google-login-btn').addEventListener('click', googleLogin);
@@ -320,24 +416,28 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('print-quote-btn').addEventListener('click', printQuote);
 
     // Show map modal only when selecting on map
-    document.getElementById('select-origin-map-btn').addEventListener('click', () => {
-        if (!window.google || !window.google.maps) {
-            loadGoogleMapsScript(firebaseConfig.googleMapsApiKey, "initMapForSelection");
-            window.initMapForSelection = () => {
-                openMapModal('origin');
-            };
-        } else {
+    document.getElementById('select-origin-map-btn').addEventListener('click', async () => {
+        showLoadingOverlay();
+        try {
+            await loadGoogleMapsScript(firebaseConfig.googleMapsApiKey);
+            hideLoadingOverlay();
             openMapModal('origin');
+        } catch (error) {
+            hideLoadingOverlay();
+            console.error("Error loading maps:", error);
+            showToast("Failed to load Google Maps", "error");
         }
     });
-    document.getElementById('select-destination-map-btn').addEventListener('click', () => {
-        if (!window.google || !window.google.maps) {
-            loadGoogleMapsScript(firebaseConfig.googleMapsApiKey, "initMapForSelection");
-            window.initMapForSelection = () => {
-                openMapModal('destination');
-            };
-        } else {
+    document.getElementById('select-destination-map-btn').addEventListener('click', async () => {
+        showLoadingOverlay();
+        try {
+            await loadGoogleMapsScript(firebaseConfig.googleMapsApiKey);
+            hideLoadingOverlay();
             openMapModal('destination');
+        } catch (error) {
+            hideLoadingOverlay();
+            console.error("Error loading maps:", error);
+            showToast("Failed to load Google Maps", "error");
         }
     });
 

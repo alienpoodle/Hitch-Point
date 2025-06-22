@@ -225,6 +225,83 @@ input.searching {
     background-size: 20px;
 }
 
+
+/* Map instruction overlay */
+.map-instruction {
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(255, 255, 255, 0.95);
+    padding: 12px 24px;
+    border-radius: 24px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--primary-color);
+    z-index: 10;
+    pointer-events: none;
+}
+
+.map-instruction i {
+    margin-right: 8px;
+    color: var(--accent-color);
+}
+
+/* Loading spinner for map container */
+#map {
+    position: relative;
+    background: #f0f0f0;
+}
+
+#map::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 40px;
+    height: 40px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid var(--primary-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    display: none;
+}
+
+#map.loading::before {
+    display: block;
+}
+
+/* Map modal specific styles */
+#map-modal .modal-content {
+    width: 90vw;
+    max-width: 800px;
+    height: 80vh;
+    max-height: 600px;
+    padding: 0;
+    overflow: hidden;
+}
+
+#map-modal #map {
+    width: 100%;
+    height: 100%;
+    border-radius: 12px;
+}
+
+#map-modal .modal-close-button {
+    background: white;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    z-index: 20;
+}
+
+
 /* Buttons */
 button {
     padding: 12px 20px;
