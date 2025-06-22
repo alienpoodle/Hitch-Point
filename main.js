@@ -13,12 +13,13 @@ import {
     collection,
     addDoc,
     query,
+    where,
+    orderBy,
     onSnapshot,
     serverTimestamp
 } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
 // --- Global Variables ---
-const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
 const firebaseConfig = window.firebaseConfig || {};
 const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
 
@@ -196,15 +197,111 @@ function hideLoadingOverlay() {
     document.getElementById('loading-overlay').classList.remove('show');
 }
 
-// --- Placeholder Functions for Required Features ---
+// --- Real Logic for Required Features ---
+async function calculateRoute() {
+    const origin = document.getElementById('origin-input').value;
+    const destination = document.getElementById('destination-input').value;
+    if (!origin || !destination) {
+        showToast("Please enter both origin and destination.", "warning");
+        return;
+    }
+
+    showLoadingOverlay();
+
+    try {
+        if (!window.google || !window.google.maps) {
+            showToast("Google Maps is not loaded.", "error");
+            hideLoadingOverlay();
+            return;
+        }
+        const directionsService = new google.maps.DirectionsService();
+        directionsService.route(
+            {
+                origin,
+                destination,
+                travelMode: google.maps.TravelMode.DRIVING
+            },
+            async (result, status) => {
+                hideLoadingOverlay();
+                if (status === "OK" && result.routes.length > 0) {
+                    const leg = result.routes[0].legs[0];
+                    document.getElementById('quote-distance').textContent = leg.distance.text;
+                    document.getElementById('quote-duration').textContent = leg.duration.text;
+                    // Example fare calculation: $2 per km
+                    const distanceKm = leg.distance.value / 1000;
+                    const fare = (distanceKm * 2).toFixed(2);
+                    document.getElementById('quote-fare').textContent = `$${fare}`;
+                    document.getElementById('quote-display-modal').classList.add('show');
+
+                    // Save ride request to Firestore
+                    if (db && currentUserId) {
+                        try {
+                            await addDoc(collection(db, "rides"), {
+                                userId: currentUserId,
+                                origin,
+                                destination,
+                                distance: leg.distance.text,
+                                duration: leg.duration.text,
+                                fare,
+                                timestamp: serverTimestamp()
+                            });
+                        } catch (err) {
+                            showToast("Failed to save ride request.", "error");
+                        }
+                    }
+                } else {
+                    showToast("Could not calculate route.", "error");
+                }
+            }
+        );
+    } catch (err) {
+        hideLoadingOverlay();
+        showToast("Error calculating route.", "error");
+    }
+}
+
 function printQuote() {
-    showToast("Print quote feature is not implemented yet.", "info");
+    const modal = document.getElementById('quote-display-modal');
+    if (!modal) return;
+    const printContents = modal.querySelector('.modal-quote-content').innerHTML;
+    const win = window.open('', '', 'height=600,width=400');
+    win.document.write('<html><head><title>Print Quote</title>');
+    win.document.write('<link rel="stylesheet" href="styles.css">');
+    win.document.write('</head><body>');
+    win.document.write(printContents);
+    win.document.write('</body></html>');
+    win.document.close();
+    win.print();
 }
+
 function listenForRideHistory() {
-    showToast("Ride history feature is not implemented yet.", "info");
-}
-function calculateRoute() {
-    showToast("Route calculation feature is not implemented yet.", "info");
+    if (!db || !currentUserId) {
+        showToast("You must be logged in to view ride history.", "warning");
+        return;
+    }
+    const historyBody = document.getElementById('ride-history-body');
+    historyBody.innerHTML = "Loading...";
+    const ridesRef = collection(db, "rides");
+    const q = query(ridesRef, where("userId", "==", currentUserId), orderBy("timestamp", "desc"));
+
+    onSnapshot(q, (snapshot) => {
+        let html = '<table class="modal-ride-history-table"><tr><th>Date</th><th>Origin</th><th>Destination</th><th>Fare</th></tr>';
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            html += `<tr>
+                <td>${data.timestamp && data.timestamp.seconds ? new Date(data.timestamp.seconds * 1000).toLocaleString() : ''}</td>
+                <td>${data.origin || ''}</td>
+                <td>${data.destination || ''}</td>
+                <td>${data.fare ? `$${data.fare}` : ''}</td>
+            </tr>`;
+        });
+        html += '</table>';
+        historyBody.innerHTML = html;
+        document.getElementById('ride-history-modal').classList.add('show');
+    }, (error) => {
+        showToast("Failed to load ride history.", "error");
+        historyBody.innerHTML = "Failed to load ride history.";
+    });
 }
 
 // --- Event Listeners ---
@@ -219,9 +316,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('google-login-btn').addEventListener('click', googleLogin);
     document.getElementById('google-logout-btn').addEventListener('click', googleLogout);
-    document.getElementById('request-ride-btn').addEventListener('click', () => {
-        calculateRoute();
-    });
+    document.getElementById('request-ride-btn').addEventListener('click', calculateRoute);
     document.getElementById('print-quote-btn').addEventListener('click', printQuote);
 
     // Show map modal only when selecting on map
@@ -246,7 +341,5 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    document.getElementById('view-history-btn').addEventListener('click', () => {
-        listenForRideHistory();
-    });
+    document.getElementById('view-history-btn').addEventListener('click', listenForRideHistory);
 });
