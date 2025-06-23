@@ -123,6 +123,67 @@ body {
     font-size: 0.875rem;
 }
 
+/* General Button Styles */
+button,
+.btn-primary,
+.btn-secondary,
+.btn-google {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.18s, color 0.18s, box-shadow 0.18s;
+    margin: 6px 0;
+    outline: none;
+    box-shadow: 0 1px 3px rgba(30,41,59,0.06);
+    gap: 8px;
+}
+
+/* Primary Button */
+.btn-primary {
+    background: var(--primary-color);
+    color: #fff;
+}
+.btn-primary:hover,
+.btn-primary:focus {
+    background: var(--primary-hover-color);
+}
+
+/* Secondary Button */
+.btn-secondary {
+    background: var(--secondary-color);
+    color: #fff;
+}
+.btn-secondary:hover,
+.btn-secondary:focus {
+    background: var(--secondary-hover-color);
+}
+
+/* Google Button */
+.btn-google {
+    background: var(--google-red);
+    color: #fff;
+}
+.btn-google:hover,
+.btn-google:focus {
+    background: var(--google-red-hover);
+}
+
+/* Disabled State */
+button:disabled,
+.btn-primary:disabled,
+.btn-secondary:disabled,
+.btn-google:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
 /* Input and Autocomplete */
 .input-group {
     margin-bottom: 15px;
