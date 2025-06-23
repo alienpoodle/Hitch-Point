@@ -161,6 +161,29 @@ input[type="text"]:focus {
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
 }
 
+/* --- RECOMMENDED: Add styles for number inputs and checkboxes --- */
+input[type="number"] {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    font-size: 1rem;
+    box-sizing: border-box;
+    margin-bottom: 0;
+}
+
+input[type="number"]:focus {
+    border-color: var(--primary-color);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+.input-group label input[type="checkbox"] {
+    margin-right: 8px;
+    accent-color: var(--primary-color);
+}
+/* --- END RECOMMENDED --- */
+
 .input-group .map-select-btn {
     flex-shrink: 0;
 }

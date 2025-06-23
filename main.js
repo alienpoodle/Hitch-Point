@@ -19,6 +19,16 @@ import {
     serverTimestamp
 } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
+import {
+    BASE_FARE_XCD,
+    DEFAULT_PER_KM_RATE_XCD,
+    AFTER_HOURS_SURCHARGE_PERCENTAGE,
+    XCD_TO_USD_EXCHANGE_RATE,
+    COST_PER_ADDITIONAL_BAG_XCD,
+    COST_PER_ADDITIONAL_PERSON_XCD,
+    FREE_PERSON_COUNT
+} from './constants.js';
+
 // --- Register Service Worker for PWA ---
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
@@ -335,22 +345,25 @@ function hideLoadingOverlay() {
 async function calculateRoute() {
     const origin = document.getElementById('origin-input').value;
     const destination = document.getElementById('destination-input').value;
-    
+    const bags = parseInt(document.getElementById('bags-input').value, 10) || 0;
+    const persons = parseInt(document.getElementById('persons-input').value, 10) || 1;
+    const isAfterHours = document.getElementById('after-hours-input').checked;
+
     if (!origin || !destination) {
         showToast("Please enter both origin and destination.", "warning");
         return;
     }
-    
+
     if (!isGoogleMapsReady) {
         showToast("Google Maps is not loaded yet. Please try again.", "error");
         return;
     }
-    
+
     showLoadingOverlay();
-    
+
     try {
         const directionsService = new google.maps.DirectionsService();
-        
+
         directionsService.route(
             {
                 origin,
@@ -359,27 +372,44 @@ async function calculateRoute() {
             },
             async (result, status) => {
                 hideLoadingOverlay();
-                
+
                 if (status === "OK" && result.routes.length > 0) {
                     const leg = result.routes[0].legs[0];
-                    
+
                     // Update quote modal
                     document.getElementById('quote-distance').textContent = leg.distance.text;
                     document.getElementById('quote-duration').textContent = leg.duration.text;
                     document.getElementById('quote-origin').textContent = origin;
                     document.getElementById('quote-destination').textContent = destination;
-                    
-                    // Calculate fare (example: $2.50 base + $1.50 per km)
+
+                    // --- Fare Calculation using constants.js ---
                     const distanceKm = leg.distance.value / 1000;
-                    const baseFare = 2.50;
-                    const perKmRate = 1.50;
-                    const fare = (baseFare + (distanceKm * perKmRate)).toFixed(2);
-                    
-                    document.getElementById('quote-fare').textContent = `$${fare} USD`;
-                    
+                    let fareXCD = BASE_FARE_XCD + (distanceKm * DEFAULT_PER_KM_RATE_XCD);
+
+                    // Additional bags
+                    if (bags > 0) {
+                        fareXCD += bags * COST_PER_ADDITIONAL_BAG_XCD;
+                    }
+
+                    // Additional persons (first FREE_PERSON_COUNT are free)
+                    if (persons > FREE_PERSON_COUNT) {
+                        fareXCD += (persons - FREE_PERSON_COUNT) * COST_PER_ADDITIONAL_PERSON_XCD;
+                    }
+
+                    // After hours surcharge
+                    if (isAfterHours) {
+                        fareXCD += fareXCD * AFTER_HOURS_SURCHARGE_PERCENTAGE;
+                    }
+
+                    // Convert to USD
+                    const fareUSD = fareXCD * XCD_TO_USD_EXCHANGE_RATE;
+
+                    document.getElementById('quote-fare').textContent =
+                        `${fareXCD.toFixed(2)} XCD / $${fareUSD.toFixed(2)} USD`;
+
                     // Show quote modal
                     openModal('quote-display-modal');
-                    
+
                     // Save ride request to Firestore
                     if (db && currentUserId) {
                         try {
@@ -389,7 +419,11 @@ async function calculateRoute() {
                                 destination,
                                 distance: leg.distance.text,
                                 duration: leg.duration.text,
-                                fare,
+                                fareXCD: fareXCD.toFixed(2),
+                                fareUSD: fareUSD.toFixed(2),
+                                bags,
+                                persons,
+                                afterHours: isAfterHours,
                                 status: 'quoted',
                                 timestamp: serverTimestamp()
                             });
