@@ -378,9 +378,14 @@ async function calculateRoute() {
 
                     // Update quote modal
                     document.getElementById('quote-distance').textContent = leg.distance.text;
-                    document.getElementById('quote-duration').textContent = leg.duration.text;
                     document.getElementById('quote-origin').textContent = origin;
                     document.getElementById('quote-destination').textContent = destination;
+                    document.getElementById('quote-duration').textContent = leg.duration.text;
+                    document.getElementById('quote-bags').textContent = bags > 0 ? `${bags} bag(s)` : "No bags";
+                    document.getElementById('quote-persons').textContent = persons > 1 ?
+                        `${persons} person(s)` : "1 person";
+                    document.getElementById('quote-afterHours').textContent = isAfterHours ? "Yes" : "No";
+
 
                     // --- Fare Calculation using constants.js ---
                     const distanceKm = leg.distance.value / 1000;
@@ -391,7 +396,7 @@ async function calculateRoute() {
                         fareXCD += bags * COST_PER_ADDITIONAL_BAG_XCD;
                     }
 
-                    // Additional persons (first FREE_PERSON_COUNT are free)
+                    // Additional persons (first FREE_PERSON_COUNT are included in cost)
                     if (persons > FREE_PERSON_COUNT) {
                         fareXCD += (persons - FREE_PERSON_COUNT) * COST_PER_ADDITIONAL_PERSON_XCD;
                     }
@@ -536,7 +541,10 @@ function showRideHistory() {
                             <td class="truncate" title="${data.origin || 'N/A'}">${data.origin || 'N/A'}</td>
                             <td class="truncate" title="${data.destination || 'N/A'}">${data.destination || 'N/A'}</td>
                             <td>${data.distance || 'N/A'}</td>
-                            <td class="fare-amount">$${data.fare || '0.00'}</td>
+                            <td class="fare-amount">
+                                ${data.fareXCD ? data.fareXCD + ' XCD' : ''}
+                                ${data.fareUSD ? '/ $' + data.fareUSD + ' USD' : ''}
+                            </td>
                             <td><span class="status-badge ${statusClass}">${status}</span></td>
                         </tr>
                     `;
