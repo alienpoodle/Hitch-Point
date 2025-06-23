@@ -410,7 +410,7 @@ async function calculateRoute() {
                     const fareUSD = fareXCD * XCD_TO_USD_EXCHANGE_RATE;
 
                     document.getElementById('quote-fare').textContent =
-                        `${fareXCD.toFixed(2)} XCD / $${fareUSD.toFixed(2)} USD`;
+                     `${Math.round(fareXCD)} XCD / $${Math.round(fareUSD)} USD`;
 
                     // Show quote modal
                     openModal('quote-display-modal');
@@ -542,8 +542,8 @@ function showRideHistory() {
                             <td class="truncate" title="${data.destination || 'N/A'}">${data.destination || 'N/A'}</td>
                             <td>${data.distance || 'N/A'}</td>
                             <td class="fare-amount">
-                                ${data.fareXCD ? data.fareXCD + ' XCD' : ''}
-                                ${data.fareUSD ? '/ $' + data.fareUSD + ' USD' : ''}
+                                ${data.fareXCD ? Math.round(Number(data.fareXCD)) + ' XCD' : ''}
+                                ${data.fareUSD ? '/ $' + Math.round(Number(data.fareUSD)) + ' USD' : ''}
                             </td>
                             <td><span class="status-badge ${statusClass}">${status}</span></td>
                         </tr>
