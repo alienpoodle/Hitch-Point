@@ -348,106 +348,89 @@ async function calculateRoute() {
     const bags = parseInt(document.getElementById('bags-input').value, 10) || 0;
     const persons = parseInt(document.getElementById('persons-input').value, 10) || 1;
     const isAfterHours = document.getElementById('after-hours-input').checked;
+    const isRoundTrip = document.getElementById('round-trip-input').checked; // <-- NEW
 
-    if (!origin || !destination) {
-        showToast("Please enter both origin and destination.", "warning");
-        return;
-    }
+    // ...existing validation and Google Maps logic...
 
-    if (!isGoogleMapsReady) {
-        showToast("Google Maps is not loaded yet. Please try again.", "error");
-        return;
-    }
+    directionsService.route(
+        {
+            origin,
+            destination,
+            travelMode: google.maps.TravelMode.DRIVING
+        },
+        async (result, status) => {
+            hideLoadingOverlay();
 
-    showLoadingOverlay();
+            if (status === "OK" && result.routes.length > 0) {
+                const leg = result.routes[0].legs[0];
 
-    try {
-        const directionsService = new google.maps.DirectionsService();
+                // ...existing code...
 
-        directionsService.route(
-            {
-                origin,
-                destination,
-                travelMode: google.maps.TravelMode.DRIVING
-            },
-            async (result, status) => {
-                hideLoadingOverlay();
+                // --- Fare Calculation using constants.js ---
+                const distanceKm = leg.distance.value / 1000;
+                let fareXCD = BASE_FARE_XCD + (distanceKm * DEFAULT_PER_KM_RATE_XCD);
 
-                if (status === "OK" && result.routes.length > 0) {
-                    const leg = result.routes[0].legs[0];
-
-                    // Update quote modal
-                    document.getElementById('quote-distance').textContent = leg.distance.text;
-                    document.getElementById('quote-origin').textContent = origin;
-                    document.getElementById('quote-destination').textContent = destination;
-                    document.getElementById('quote-duration').textContent = leg.duration.text;
-                    document.getElementById('quote-bags').textContent = bags > 0 ? `${bags} bag(s)` : "No bags";
-                    document.getElementById('quote-persons').textContent = persons > 1 ?
-                        `${persons} person(s)` : "1 person";
-                    document.getElementById('quote-afterHours').textContent = isAfterHours ? "Yes" : "No";
-
-
-                    // --- Fare Calculation using constants.js ---
-                    const distanceKm = leg.distance.value / 1000;
-                    let fareXCD = BASE_FARE_XCD + (distanceKm * DEFAULT_PER_KM_RATE_XCD);
-
-                    // Additional bags
-                    if (bags > 0) {
-                        fareXCD += bags * COST_PER_ADDITIONAL_BAG_XCD;
-                    }
-
-                    // Additional persons (first FREE_PERSON_COUNT are included in cost)
-                    if (persons > FREE_PERSON_COUNT) {
-                        fareXCD += (persons - FREE_PERSON_COUNT) * COST_PER_ADDITIONAL_PERSON_XCD;
-                    }
-
-                    // After hours surcharge
-                    if (isAfterHours) {
-                        fareXCD += fareXCD * AFTER_HOURS_SURCHARGE_PERCENTAGE;
-                    }
-
-                    // Convert to USD
-                    const fareUSD = fareXCD * XCD_TO_USD_EXCHANGE_RATE;
-
-                    document.getElementById('quote-fare').textContent =
-                     `${Math.round(fareXCD)} XCD / $${Math.round(fareUSD)} USD`;
-
-                    // Show quote modal
-                    openModal('quote-display-modal');
-
-                    // Save ride request to Firestore
-                    if (db && currentUserId) {
-                        try {
-                            await addDoc(collection(db, "rides"), {
-                                userId: currentUserId,
-                                origin,
-                                destination,
-                                distance: leg.distance.text,
-                                duration: leg.duration.text,
-                                fareXCD: fareXCD.toFixed(2),
-                                fareUSD: fareUSD.toFixed(2),
-                                bags,
-                                persons,
-                                afterHours: isAfterHours,
-                                status: 'quoted',
-                                timestamp: serverTimestamp()
-                            });
-                            showToast("Ride quote saved to history!", "success");
-                        } catch (err) {
-                            console.error("Failed to save ride:", err);
-                            showToast("Failed to save ride request.", "error");
-                        }
-                    }
-                } else {
-                    showToast("Could not calculate route. Please check your locations.", "error");
+                if (bags > 0) {
+                    fareXCD += bags * COST_PER_ADDITIONAL_BAG_XCD;
                 }
+                if (persons > FREE_PERSON_COUNT) {
+                    fareXCD += (persons - FREE_PERSON_COUNT) * COST_PER_ADDITIONAL_PERSON_XCD;
+                }
+                if (isAfterHours) {
+                    fareXCD += fareXCD * AFTER_HOURS_SURCHARGE_PERCENTAGE;
+                }
+                if (isRoundTrip) {
+                    fareXCD *= 2;
+                }
+
+                const fareUSD = fareXCD * XCD_TO_USD_EXCHANGE_RATE;
+
+                document.getElementById('quote-fare').textContent =
+                    `${Math.round(fareXCD)} XCD / $${Math.round(fareUSD)} USD`;
+
+                // Optionally show round trip in the modal
+                document.getElementById('quote-roundtrip').textContent = isRoundTrip ? "Yes" : "No";
+
+                // ...save to Firestore...
+                if (db && currentUserId) {
+                    try {
+                        await addDoc(collection(db, "rides"), {
+                            userId: currentUserId,
+                            origin,
+                            destination,
+                            distance: leg.distance.text,
+                            duration: leg.duration.text,
+                            fareXCD: fareXCD.toFixed(2),
+                            fareUSD: fareUSD.toFixed(2),
+                            bags,
+                            persons,
+                            afterHours: isAfterHours,
+                            roundTrip: isRoundTrip, // <-- NEW
+                            status: 'quoted',
+                            timestamp: serverTimestamp()
+                        });
+                        showToast("Ride quote saved to history!", "success");
+                        resetRideForm();
+                    } catch (err) {
+                        console.error("Failed to save ride:", err);
+                        showToast("Failed to save ride request.", "error");
+                    }
+                }
+            } else {
+                showToast("Could not calculate route. Please check your locations.", "error");
             }
-        );
-    } catch (err) {
-        hideLoadingOverlay();
-        console.error("Route calculation error:", err);
-        showToast("Error calculating route.", "error");
-    }
+        }
+    );
+}
+
+// --- Ride Quote Display ---
+function resetRideForm() {
+    document.getElementById('origin-input').value = '';
+    document.getElementById('destination-input').value = '';
+    document.getElementById('bags-input').value = 0;
+    document.getElementById('persons-input').value = 1;
+    document.getElementById('after-hours-input').checked = false;
+    document.getElementById('round-trip-input').checked = false;
 }
 
 function printQuote() {

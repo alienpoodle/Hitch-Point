@@ -65,6 +65,12 @@
                         After Hours (10pm - 6am)
                     </label>
                 </div>
+                <div class="input-group">
+                    <label for="round-trip-input" style="display: flex; align-items: center;">
+                        <input type="checkbox" id="round-trip-input" style="margin-right: 8px;">
+                        Round Trip
+                    </label>
+                </div>
                 <button id="request-ride-btn" class="btn-primary">Request Ride</button>
             </div>
             <button id="view-history-btn" class="btn-secondary hidden" style="margin-top: 1em;">View Ride History</button>
@@ -98,6 +104,7 @@
                 <p>Bags: <span id="quote-bags"></span></p>
                 <p>Persons: <span id="quote-persons"></span></p>
                 <p>After Hours: <span id="quote-afterHours"></span></p>
+                <p>Round Trip: <span id="quote-roundTrip"></span></p>
                 <p>Fare: <span id="quote-fare" class="text-xl font-bold"></span></p>
                 <button id="print-quote-btn" class="btn-secondary mt-4">Print Quote</button>
             </div>
