@@ -2,11 +2,12 @@
     "name": "HitchPoint - A friendly Ride",
     "short_name": "HitchPoint",
     "description": "Transport Service in St. Vincent and the Grenadines",
-    "start_url": "/",
+    "start_url": "/index.html",
     "display": "standalone",
     "background_color": "#f7fafc",
     "theme_color": "#5E9BCD",
     "orientation": "portrait",
+    "scope": "/",
     "icons": [
         {
             "src": "/android-chrome-192x192.png",
@@ -17,6 +18,13 @@
             "src": "/android-chrome-512x512.png",
             "sizes": "512x512",
             "type": "image/png"
+        },
+        {
+            "src": "/src/images/logo.png",
+            "sizes": "128x128",
+            "type": "image/png",
+            "purpose": "any maskable"
         }
-    ]
+    ],
+    "lang": "en"
 }
