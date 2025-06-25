@@ -1,0 +1,55 @@
+/* Styles for ride history modal/table */
+.table-container {
+    overflow-x: auto;
+    border-radius: 8px;
+    border: 1px solid var(--border-light);
+}
+.modal-ride-history-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+    min-width: 600px;
+}
+.modal-ride-history-table th {
+    background-color: var(--bg-blue-light);
+    font-weight: 600;
+    color: var(--text-gray-dark);
+    padding: 12px;
+    text-align: left;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+.modal-ride-history-table td {
+    padding: 12px;
+    border-bottom: 1px solid var(--border-light);
+}
+.modal-ride-history-table tbody tr:hover {
+    background-color: var(--bg-light-gray);
+}
+.truncate {
+    max-width: 200px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.fare-amount {
+    font-weight: 600;
+    color: var(--primary-color);
+}
+.status-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+.status-quoted {
+    background-color: var(--bg-blue-light);
+    color: var(--primary-color);
+}
+.status-completed {
+    background-color: var(--bg-info-light);
+    color: var(--text-info-dark);
+}

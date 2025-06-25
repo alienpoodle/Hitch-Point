@@ -36,4 +36,19 @@ document.addEventListener('DOMContentLoaded', () => {
     setupRideListeners();
     setupHistoryListeners();
     setupPWA();
+
+    // Hamburger menu toggle logic
+    const navbarHamburger = document.getElementById('navbar-hamburger');
+    const navbarDropdown = document.getElementById('navbar-dropdown');
+    if (navbarHamburger && navbarDropdown) {
+        navbarHamburger.addEventListener('click', (e) => {
+            e.stopPropagation();
+            navbarDropdown.classList.toggle('show');
+        });
+        document.addEventListener('click', (e) => {
+            if (!navbarDropdown.contains(e.target) && !navbarHamburger.contains(e.target)) {
+                navbarDropdown.classList.remove('show');
+            }
+        });
+    }
 });

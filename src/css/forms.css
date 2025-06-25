@@ -1,0 +1,86 @@
+/* Styles for forms */
+
+.input-group {
+    margin-bottom: 15px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+}
+.input-group label {
+    flex: 0 0 100%;
+    color: var(--text-gray-medium);
+    font-size: 0.875rem;
+    font-weight: 500;
+    margin-bottom: 4px;
+}
+.input-with-button {
+    display: flex;
+    width: 100%;
+    gap: 8px;
+    position: relative;
+}
+
+/* General input styles */
+input[type="text"],
+input[type="number"],
+input[type="email"],
+input[type="password"],
+select,
+textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    font-size: 1rem;
+    box-sizing: border-box;
+    margin-bottom: 0;
+    background: #fff;
+    color: var(--text-gray-dark);
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+input[type="text"]:focus,
+input[type="number"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
+select:focus,
+textarea:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+/* Label styling */
+label {
+    display: block;
+    color: var(--text-gray-medium);
+    font-size: 0.95rem;
+    font-weight: 500;
+    margin-bottom: 4px;
+}
+
+/* Checkbox and radio styling */
+.input-group label input[type="checkbox"] {
+    margin-right: 8px;
+    accent-color: var(--primary-color);
+}
+input[type="checkbox"] {
+    accent-color: var(--primary-color);
+    margin-right: 8px;
+}
+input[type="radio"] {
+    accent-color: var(--primary-color);
+    margin-right: 6px;
+}
+
+/* Custom select arrow */
+select {
+    appearance: none;
+    background: #fff url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M6 8L0.803847 0.5L11.1962 0.5L6 8Z' fill='%235E9BCD'/%3E%3C/svg%3E%0A") no-repeat right 12px center/16px 12px;
+}
+
+/* Textarea styling */
+textarea {
+    min-height: 80px;
+    resize: vertical;
+}
