@@ -2,7 +2,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebas
 import {
     getAuth,
     signInWithCustomToken,
-    signInAnonymously,
+    //signInAnonymously,
     onAuthStateChanged,
     GoogleAuthProvider,
     signInWithPopup,
@@ -38,7 +38,7 @@ export async function initFirebase(onUserChanged) {
     if (initialAuthToken) {
         await signInWithCustomToken(auth, initialAuthToken);
     } else {
-        await signInAnonymously(auth);
+       // await signInAnonymously(auth);
     }
 }
 
