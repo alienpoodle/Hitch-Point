@@ -43,14 +43,15 @@ body {
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
     padding: 32px 16px;
     width: 100%;
-    max-width: 1200px;
-    display: grid;
+    max-width: 420px; /* Similar to previous left-section width */
+    margin: 32px auto;
+    display: block; /* Remove grid */
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 600px) {
     #app-container {
-        height: 80vh;
-       
+        max-width: 480px;
+    }
 }
 
 
