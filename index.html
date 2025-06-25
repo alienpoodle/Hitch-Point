@@ -4,28 +4,29 @@
     <meta charset="UTF-8">
     <title>Hitch Point</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="styles.css">
-    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="src/css/styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 </head>
 <body>
-    <!-- Navbar -->
-    <nav id="main-navbar" class="navbar hidden">
-        <div class="navbar-logo">
-            <img src="logo.png" alt="Hitch Point Logo" class="navbar-logo-img">
-        </div>
-        <div class="navbar-menu">
-            <button id="navbar-hamburger" class="navbar-hamburger" aria-label="Menu">
-                <span></span>
-                <span></span>
-                <span></span>
-            </button>
-            <div id="navbar-dropdown" class="navbar-dropdown">
-                <button id="navbar-view-history" class="btn-secondary">View Ride History</button>
-                <button id="navbar-logout" class="btn-secondary">Log Out</button>
+    <!-- Centered Navbar -->
+    <div class="navbar-wrapper">
+        <nav id="main-navbar" class="navbar hidden">
+            <div class="navbar-logo">
+                <img src="src/images/logo.png" alt="Hitch Point Logo" class="navbar-logo-img">
             </div>
-        </div>
-    </nav>
+            <div class="navbar-menu">
+                <button id="navbar-hamburger" class="navbar-hamburger" aria-label="Menu">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+                <div id="navbar-dropdown" class="navbar-dropdown">
+                    <button id="navbar-view-history" class="btn-secondary">View Ride History</button>
+                    <button id="navbar-logout" class="btn-secondary">Log Out</button>
+                </div>
+            </div>
+        </nav>
+    </div>
 
     <div id="app-container">
         <!-- Toast notifications -->
@@ -38,6 +39,9 @@
 
         <!-- Logged out view -->
         <div id="logged-out-view">
+            <div class="signin-logo-container">
+                <img src="src/images/logo.png" alt="Hitch Point Logo" class="signin-logo-img">
+            </div>
             <h2>Welcome to Hitch Point</h2>
             <button id="google-login-btn" class="btn-google">
                 <i class="fab fa-google"></i> Sign in with Google
@@ -140,6 +144,6 @@
     <!-- Config (if needed) -->
     <script src="config.js"></script>
     <!-- Main JS as module -->
-    <script type="module" src="main.js"></script>
+    <script type="module" src="src/js/main.js"></script>
 </body>
 </html>
