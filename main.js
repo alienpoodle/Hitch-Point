@@ -67,11 +67,13 @@ window.addEventListener('beforeinstallprompt', (e) => {
 
 // --- Modal Management ---
 function openModal(modalId) {
-    document.getElementById(modalId).classList.add('show');
+    const modal = document.getElementById(modalId);
+    if (modal) modal.classList.add('show');
 }
 
 function closeModal(modalId) {
-    document.getElementById(modalId).classList.remove('show');
+    const modal = document.getElementById(modalId);
+    if (modal) modal.classList.remove('show');
     
     if (modalId === 'map-modal') {
         mapSelectionMode = 'none';
@@ -232,10 +234,12 @@ function placeMarkerAndGetAddress(location) {
             
             // Update the appropriate input field
             if (mapSelectionMode === 'origin') {
-                document.getElementById('origin-input').value = address;
+                const originInput = document.getElementById('origin-input');
+                if (originInput) originInput.value = address;
                 showToast("Origin location selected!", "success");
             } else if (mapSelectionMode === 'destination') {
-                document.getElementById('destination-input').value = address;
+                const destInput = document.getElementById('destination-input');
+                if (destInput) destInput.value = address;
                 showToast("Destination location selected!", "success");
             }
             
@@ -261,19 +265,30 @@ const initFirebase = async () => {
             if (user) {
                 currentUserId = user.uid;
                 currentUserEmail = user.email || "N/A";
-                document.getElementById('logged-out-view').classList.add('hidden');
-                document.getElementById('logged-in-view').classList.remove('hidden');
-                document.getElementById('user-email').textContent = currentUserEmail;
-                document.getElementById('user-id').textContent = currentUserId;
-                document.getElementById('ride-request-section').classList.remove('hidden');
-                document.getElementById('main-navbar').classList.remove('hidden');
+                const loggedOutView = document.getElementById('logged-out-view');
+                const loggedInView = document.getElementById('logged-in-view');
+                const rideRequestSection = document.getElementById('ride-request-section');
+                const mainNavbar = document.getElementById('main-navbar');
+                if (loggedOutView) loggedOutView.classList.add('hidden');
+                if (loggedInView) loggedInView.classList.remove('hidden');
+                // Safely set user info
+                const userEmailElem = document.getElementById('user-email');
+                if (userEmailElem) userEmailElem.textContent = currentUserEmail;
+                const userIdElem = document.getElementById('user-id');
+                if (userIdElem) userIdElem.textContent = currentUserId;
+                if (rideRequestSection) rideRequestSection.classList.remove('hidden');
+                if (mainNavbar) mainNavbar.classList.remove('hidden');
             } else {
                 currentUserId = null;
                 currentUserEmail = null;
-                document.getElementById('logged-out-view').classList.remove('hidden');
-                document.getElementById('logged-in-view').classList.add('hidden');
-                document.getElementById('ride-request-section').classList.add('hidden');
-                document.getElementById('main-navbar').classList.add('hidden');
+                const loggedOutView = document.getElementById('logged-out-view');
+                const loggedInView = document.getElementById('logged-in-view');
+                const rideRequestSection = document.getElementById('ride-request-section');
+                const mainNavbar = document.getElementById('main-navbar');
+                if (loggedOutView) loggedOutView.classList.remove('hidden');
+                if (loggedInView) loggedInView.classList.add('hidden');
+                if (rideRequestSection) rideRequestSection.classList.add('hidden');
+                if (mainNavbar) mainNavbar.classList.add('hidden');
             }
             hideLoadingOverlay();
         });
@@ -334,21 +349,32 @@ function showToast(message, type = "info", duration = 3500) {
 }
 
 function showLoadingOverlay() {
-    document.getElementById('loading-overlay').classList.add('show');
+    const overlay = document.getElementById('loading-overlay');
+    if (overlay) overlay.classList.add('show');
 }
 
 function hideLoadingOverlay() {
-    document.getElementById('loading-overlay').classList.remove('show');
+    const overlay = document.getElementById('loading-overlay');
+    if (overlay) overlay.classList.remove('show');
 }
 
 // --- Ride Request Logic ---
 async function calculateRoute() {
-    const origin = document.getElementById('origin-input').value;
-    const destination = document.getElementById('destination-input').value;
-    const bags = parseInt(document.getElementById('bags-input').value, 10) || 0;
-    const persons = parseInt(document.getElementById('persons-input').value, 10) || 1;
-    const isAfterHours = document.getElementById('after-hours-input').checked;
-    const isRoundTrip = document.getElementById('round-trip-input').checked;
+    const originInput = document.getElementById('origin-input');
+    const destinationInput = document.getElementById('destination-input');
+    const bagsInput = document.getElementById('bags-input');
+    const personsInput = document.getElementById('persons-input');
+    const afterHoursInput = document.getElementById('after-hours-input');
+    const roundTripInput = document.getElementById('round-trip-input');
+
+    if (!originInput || !destinationInput) return;
+
+    const origin = originInput.value;
+    const destination = destinationInput.value;
+    const bags = parseInt(bagsInput?.value, 10) || 0;
+    const persons = parseInt(personsInput?.value, 10) || 1;
+    const isAfterHours = afterHoursInput?.checked || false;
+    const isRoundTrip = roundTripInput?.checked || false;
 
     if (!origin || !destination) {
         showToast("Please enter both origin and destination.", "warning");
@@ -378,14 +404,24 @@ async function calculateRoute() {
                     const leg = result.routes[0].legs[0];
 
                     // Update quote modal
-                    document.getElementById('quote-distance').textContent = leg.distance.text;
-                    document.getElementById('quote-duration').textContent = leg.duration.text;
-                    document.getElementById('quote-origin').textContent = origin;
-                    document.getElementById('quote-destination').textContent = destination;
-                    document.getElementById('quote-bags').textContent = bags > 0 ? `${bags} bag(s)` : "No bags";
-                    document.getElementById('quote-persons').textContent = persons > 1 ? `${persons} person(s)` : "1 person";
-                    document.getElementById('quote-afterHours').textContent = isAfterHours ? "Yes" : "No";
-                    document.getElementById('quote-roundtrip').textContent = isRoundTrip ? "Yes" : "No";
+                    const quoteDistance = document.getElementById('quote-distance');
+                    const quoteDuration = document.getElementById('quote-duration');
+                    const quoteOrigin = document.getElementById('quote-origin');
+                    const quoteDestination = document.getElementById('quote-destination');
+                    const quoteBags = document.getElementById('quote-bags');
+                    const quotePersons = document.getElementById('quote-persons');
+                    const quoteAfterHours = document.getElementById('quote-afterHours');
+                    const quoteRoundTrip = document.getElementById('quote-roundtrip');
+                    const quoteFare = document.getElementById('quote-fare');
+
+                    if (quoteDistance) quoteDistance.textContent = leg.distance.text;
+                    if (quoteDuration) quoteDuration.textContent = leg.duration.text;
+                    if (quoteOrigin) quoteOrigin.textContent = origin;
+                    if (quoteDestination) quoteDestination.textContent = destination;
+                    if (quoteBags) quoteBags.textContent = bags > 0 ? `${bags} bag(s)` : "No bags";
+                    if (quotePersons) quotePersons.textContent = persons > 1 ? `${persons} person(s)` : "1 person";
+                    if (quoteAfterHours) quoteAfterHours.textContent = isAfterHours ? "Yes" : "No";
+                    if (quoteRoundTrip) quoteRoundTrip.textContent = isRoundTrip ? "Yes" : "No";
 
                     // --- Fare Calculation using constants.js ---
                     const distanceKm = leg.distance.value / 1000;
@@ -406,7 +442,7 @@ async function calculateRoute() {
 
                     const fareUSD = fareXCD * XCD_TO_USD_EXCHANGE_RATE;
 
-                    document.getElementById('quote-fare').textContent =
+                    if (quoteFare) quoteFare.textContent =
                         `${Math.round(fareXCD)} XCD / $${Math.round(fareUSD)} USD`;
 
                     openModal('quote-display-modal');
@@ -450,12 +486,18 @@ async function calculateRoute() {
 
 // --- Ride Quote Display ---
 function resetRideForm() {
-    document.getElementById('origin-input').value = '';
-    document.getElementById('destination-input').value = '';
-    document.getElementById('bags-input').value = 0;
-    document.getElementById('persons-input').value = 1;
-    document.getElementById('after-hours-input').checked = false;
-    document.getElementById('round-trip-input').checked = false;
+    const originInput = document.getElementById('origin-input');
+    const destinationInput = document.getElementById('destination-input');
+    const bagsInput = document.getElementById('bags-input');
+    const personsInput = document.getElementById('persons-input');
+    const afterHoursInput = document.getElementById('after-hours-input');
+    const roundTripInput = document.getElementById('round-trip-input');
+    if (originInput) originInput.value = '';
+    if (destinationInput) destinationInput.value = '';
+    if (bagsInput) bagsInput.value = 0;
+    if (personsInput) personsInput.value = 1;
+    if (afterHoursInput) afterHoursInput.checked = false;
+    if (roundTripInput) roundTripInput.checked = false;
 }
 
 function printQuote() {
@@ -499,7 +541,9 @@ function showRideHistory() {
     
     openModal('ride-history-modal');
     const historyBody = document.getElementById('ride-history-body');
-    historyBody.innerHTML = '<div class="loading-spinner-container"><div class="spinner"></div><p>Loading ride history...</p></div>';
+    if (historyBody) {
+        historyBody.innerHTML = '<div class="loading-spinner-container"><div class="spinner"></div><p>Loading ride history...</p></div>';
+    }
     
     const ridesRef = collection(db, "rides");
     const q = query(ridesRef, where("userId", "==", currentUserId), orderBy("timestamp", "desc"));
@@ -510,6 +554,7 @@ function showRideHistory() {
         unsubscribe = onSnapshot(q, 
             (snapshot) => {
                 // Success callback
+                if (!historyBody) return;
                 if (snapshot.empty) {
                     historyBody.innerHTML = `
                         <div class="empty-state">
@@ -565,8 +610,6 @@ function showRideHistory() {
                 // Error callback
                 console.error("Error loading ride history:", error);
                 closeModal('ride-history-modal');
-                
-                // Show error as toast notification instead of in modal
                 if (error.code === 'permission-denied') {
                     showToast("Permission denied. Please log in again.", "error");
                 } else if (error.code === 'unavailable') {
@@ -602,7 +645,8 @@ async function installPWA() {
     }
     
     deferredPrompt = null;
-    document.getElementById('install-pwa-btn').classList.add('hidden');
+    const installBtn = document.getElementById('install-pwa-btn');
+    if (installBtn) installBtn.classList.add('hidden');
 }
 
 // --- Event Listeners ---
@@ -623,7 +667,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     // Authentication buttons
-    document.getElementById('google-login-btn').addEventListener('click', googleLogin);
+    const googleLoginBtn = document.getElementById('google-login-btn');
+    if (googleLoginBtn) googleLoginBtn.addEventListener('click', googleLogin);
 
     // Hamburger menu toggle
     const navbarHamburger = document.getElementById('navbar-hamburger');
@@ -632,7 +677,6 @@ document.addEventListener('DOMContentLoaded', () => {
         navbarHamburger.addEventListener('click', () => {
             navbarDropdown.classList.toggle('show');
         });
-        // Optional: close dropdown when clicking outside
         document.addEventListener('click', (e) => {
             if (!navbarDropdown.contains(e.target) && !navbarHamburger.contains(e.target)) {
                 navbarDropdown.classList.remove('show');
@@ -651,35 +695,44 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Ride request buttons
-    document.getElementById('request-ride-btn').addEventListener('click', calculateRoute);
-    document.getElementById('print-quote-btn').addEventListener('click', printQuote);
+    const requestRideBtn = document.getElementById('request-ride-btn');
+    if (requestRideBtn) requestRideBtn.addEventListener('click', calculateRoute);
+
+    const printQuoteBtn = document.getElementById('print-quote-btn');
+    if (printQuoteBtn) printQuoteBtn.addEventListener('click', printQuote);
 
     // Map selection buttons
-    document.getElementById('select-origin-map-btn').addEventListener('click', async () => {
-        showLoadingOverlay();
-        try {
-            await loadGoogleMapsScript(firebaseConfig.googleMapsApiKey);
-            hideLoadingOverlay();
-            openMapModal('origin');
-        } catch (error) {
-            hideLoadingOverlay();
-            console.error("Error loading maps:", error);
-            showToast("Failed to load Google Maps", "error");
-        }
-    });
+    const selectOriginBtn = document.getElementById('select-origin-map-btn');
+    if (selectOriginBtn) {
+        selectOriginBtn.addEventListener('click', async () => {
+            showLoadingOverlay();
+            try {
+                await loadGoogleMapsScript(firebaseConfig.googleMapsApiKey);
+                hideLoadingOverlay();
+                openMapModal('origin');
+            } catch (error) {
+                hideLoadingOverlay();
+                console.error("Error loading maps:", error);
+                showToast("Failed to load Google Maps", "error");
+            }
+        });
+    }
 
-    document.getElementById('select-destination-map-btn').addEventListener('click', async () => {
-        showLoadingOverlay();
-        try {
-            await loadGoogleMapsScript(firebaseConfig.googleMapsApiKey);
-            hideLoadingOverlay();
-            openMapModal('destination');
-        } catch (error) {
-            hideLoadingOverlay();
-            console.error("Error loading maps:", error);
-            showToast("Failed to load Google Maps", "error");
-        }
-    });
+    const selectDestinationBtn = document.getElementById('select-destination-map-btn');
+    if (selectDestinationBtn) {
+        selectDestinationBtn.addEventListener('click', async () => {
+            showLoadingOverlay();
+            try {
+                await loadGoogleMapsScript(firebaseConfig.googleMapsApiKey);
+                hideLoadingOverlay();
+                openMapModal('destination');
+            } catch (error) {
+                hideLoadingOverlay();
+                console.error("Error loading maps:", error);
+                showToast("Failed to load Google Maps", "error");
+            }
+        });
+    }
 
     // PWA install button
     const installBtn = document.getElementById('install-pwa-btn');
