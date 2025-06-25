@@ -266,14 +266,14 @@ const initFirebase = async () => {
                 document.getElementById('user-email').textContent = currentUserEmail;
                 document.getElementById('user-id').textContent = currentUserId;
                 document.getElementById('ride-request-section').classList.remove('hidden');
-                document.getElementById('view-history-btn').classList.remove('hidden');
+                document.getElementById('main-navbar').classList.remove('hidden');
             } else {
                 currentUserId = null;
                 currentUserEmail = null;
                 document.getElementById('logged-out-view').classList.remove('hidden');
                 document.getElementById('logged-in-view').classList.add('hidden');
                 document.getElementById('ride-request-section').classList.add('hidden');
-                document.getElementById('view-history-btn').classList.add('hidden');
+                document.getElementById('main-navbar').classList.add('hidden');
             }
             hideLoadingOverlay();
         });
@@ -348,79 +348,104 @@ async function calculateRoute() {
     const bags = parseInt(document.getElementById('bags-input').value, 10) || 0;
     const persons = parseInt(document.getElementById('persons-input').value, 10) || 1;
     const isAfterHours = document.getElementById('after-hours-input').checked;
-    const isRoundTrip = document.getElementById('round-trip-input').checked; // <-- NEW
+    const isRoundTrip = document.getElementById('round-trip-input').checked;
 
-    // ...existing validation and Google Maps logic...
+    if (!origin || !destination) {
+        showToast("Please enter both origin and destination.", "warning");
+        return;
+    }
 
-    directionsService.route(
-        {
-            origin,
-            destination,
-            travelMode: google.maps.TravelMode.DRIVING
-        },
-        async (result, status) => {
-            hideLoadingOverlay();
+    if (!isGoogleMapsReady) {
+        showToast("Google Maps is not loaded yet. Please try again.", "error");
+        return;
+    }
 
-            if (status === "OK" && result.routes.length > 0) {
-                const leg = result.routes[0].legs[0];
+    showLoadingOverlay();
 
-                // ...existing code...
+    try {
+        const directionsService = new google.maps.DirectionsService();
 
-                // --- Fare Calculation using constants.js ---
-                const distanceKm = leg.distance.value / 1000;
-                let fareXCD = BASE_FARE_XCD + (distanceKm * DEFAULT_PER_KM_RATE_XCD);
+        directionsService.route(
+            {
+                origin,
+                destination,
+                travelMode: google.maps.TravelMode.DRIVING
+            },
+            async (result, status) => {
+                hideLoadingOverlay();
 
-                if (bags > 0) {
-                    fareXCD += bags * COST_PER_ADDITIONAL_BAG_XCD;
-                }
-                if (persons > FREE_PERSON_COUNT) {
-                    fareXCD += (persons - FREE_PERSON_COUNT) * COST_PER_ADDITIONAL_PERSON_XCD;
-                }
-                if (isAfterHours) {
-                    fareXCD += fareXCD * AFTER_HOURS_SURCHARGE_PERCENTAGE;
-                }
-                if (isRoundTrip) {
-                    fareXCD *= 2;
-                }
+                if (status === "OK" && result.routes.length > 0) {
+                    const leg = result.routes[0].legs[0];
 
-                const fareUSD = fareXCD * XCD_TO_USD_EXCHANGE_RATE;
+                    // Update quote modal
+                    document.getElementById('quote-distance').textContent = leg.distance.text;
+                    document.getElementById('quote-duration').textContent = leg.duration.text;
+                    document.getElementById('quote-origin').textContent = origin;
+                    document.getElementById('quote-destination').textContent = destination;
+                    document.getElementById('quote-bags').textContent = bags > 0 ? `${bags} bag(s)` : "No bags";
+                    document.getElementById('quote-persons').textContent = persons > 1 ? `${persons} person(s)` : "1 person";
+                    document.getElementById('quote-afterHours').textContent = isAfterHours ? "Yes" : "No";
+                    document.getElementById('quote-roundtrip').textContent = isRoundTrip ? "Yes" : "No";
 
-                document.getElementById('quote-fare').textContent =
-                    `${Math.round(fareXCD)} XCD / $${Math.round(fareUSD)} USD`;
+                    // --- Fare Calculation using constants.js ---
+                    const distanceKm = leg.distance.value / 1000;
+                    let fareXCD = BASE_FARE_XCD + (distanceKm * DEFAULT_PER_KM_RATE_XCD);
 
-                // Optionally show round trip in the modal
-                document.getElementById('quote-roundtrip').textContent = isRoundTrip ? "Yes" : "No";
-
-                // ...save to Firestore...
-                if (db && currentUserId) {
-                    try {
-                        await addDoc(collection(db, "rides"), {
-                            userId: currentUserId,
-                            origin,
-                            destination,
-                            distance: leg.distance.text,
-                            duration: leg.duration.text,
-                            fareXCD: fareXCD.toFixed(2),
-                            fareUSD: fareUSD.toFixed(2),
-                            bags,
-                            persons,
-                            afterHours: isAfterHours,
-                            roundTrip: isRoundTrip, // <-- NEW
-                            status: 'quoted',
-                            timestamp: serverTimestamp()
-                        });
-                        showToast("Ride quote saved to history!", "success");
-                        resetRideForm();
-                    } catch (err) {
-                        console.error("Failed to save ride:", err);
-                        showToast("Failed to save ride request.", "error");
+                    if (bags > 0) {
+                        fareXCD += bags * COST_PER_ADDITIONAL_BAG_XCD;
                     }
+                    if (persons > FREE_PERSON_COUNT) {
+                        fareXCD += (persons - FREE_PERSON_COUNT) * COST_PER_ADDITIONAL_PERSON_XCD;
+                    }
+                    if (isAfterHours) {
+                        fareXCD += fareXCD * AFTER_HOURS_SURCHARGE_PERCENTAGE;
+                    }
+                    if (isRoundTrip) {
+                        fareXCD *= 2;
+                    }
+
+                    const fareUSD = fareXCD * XCD_TO_USD_EXCHANGE_RATE;
+
+                    document.getElementById('quote-fare').textContent =
+                        `${Math.round(fareXCD)} XCD / $${Math.round(fareUSD)} USD`;
+
+                    openModal('quote-display-modal');
+
+                    // Save ride request to Firestore
+                    if (db && currentUserId) {
+                        try {
+                            await addDoc(collection(db, "rides"), {
+                                userId: currentUserId,
+                                origin,
+                                destination,
+                                distance: leg.distance.text,
+                                duration: leg.duration.text,
+                                fareXCD: fareXCD.toFixed(2),
+                                fareUSD: fareUSD.toFixed(2),
+                                bags,
+                                persons,
+                                afterHours: isAfterHours,
+                                roundTrip: isRoundTrip,
+                                status: 'quoted',
+                                timestamp: serverTimestamp()
+                            });
+                            showToast("Ride quote saved to history!", "success");
+                            resetRideForm();
+                        } catch (err) {
+                            console.error("Failed to save ride:", err);
+                            showToast("Failed to save ride request.", "error");
+                        }
+                    }
+                } else {
+                    showToast("Could not calculate route. Please check your locations.", "error");
                 }
-            } else {
-                showToast("Could not calculate route. Please check your locations.", "error");
             }
-        }
-    );
+        );
+    } catch (err) {
+        hideLoadingOverlay();
+        console.error("Route calculation error:", err);
+        showToast("Error calculating route.", "error");
+    }
 }
 
 // --- Ride Quote Display ---
@@ -599,12 +624,36 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Authentication buttons
     document.getElementById('google-login-btn').addEventListener('click', googleLogin);
-    document.getElementById('google-logout-btn').addEventListener('click', googleLogout);
-    
+
+    // Hamburger menu toggle
+    const navbarHamburger = document.getElementById('navbar-hamburger');
+    const navbarDropdown = document.getElementById('navbar-dropdown');
+    if (navbarHamburger && navbarDropdown) {
+        navbarHamburger.addEventListener('click', () => {
+            navbarDropdown.classList.toggle('show');
+        });
+        // Optional: close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!navbarDropdown.contains(e.target) && !navbarHamburger.contains(e.target)) {
+                navbarDropdown.classList.remove('show');
+            }
+        });
+    }
+
+    // Navbar button actions
+    const navbarLogout = document.getElementById('navbar-logout');
+    const navbarViewHistory = document.getElementById('navbar-view-history');
+    if (navbarLogout) {
+        navbarLogout.addEventListener('click', googleLogout);
+    }
+    if (navbarViewHistory) {
+        navbarViewHistory.addEventListener('click', showRideHistory);
+    }
+
     // Ride request buttons
     document.getElementById('request-ride-btn').addEventListener('click', calculateRoute);
     document.getElementById('print-quote-btn').addEventListener('click', printQuote);
-    
+
     // Map selection buttons
     document.getElementById('select-origin-map-btn').addEventListener('click', async () => {
         showLoadingOverlay();
@@ -618,7 +667,7 @@ document.addEventListener('DOMContentLoaded', () => {
             showToast("Failed to load Google Maps", "error");
         }
     });
-    
+
     document.getElementById('select-destination-map-btn').addEventListener('click', async () => {
         showLoadingOverlay();
         try {
@@ -631,10 +680,7 @@ document.addEventListener('DOMContentLoaded', () => {
             showToast("Failed to load Google Maps", "error");
         }
     });
-    
-    // History button
-    document.getElementById('view-history-btn').addEventListener('click', showRideHistory);
-    
+
     // PWA install button
     const installBtn = document.getElementById('install-pwa-btn');
     if (installBtn) {

@@ -2,82 +2,101 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <title>Hitch Point</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HitchPoint - Your ride, just a tap away!</title>
     <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
-    <link rel="manifest" href="site.webmanifest">
-    <meta name="description" content="HitchPoint - Book rides in St. Vincent and the Grenadines with instant quotes and route planning">
-    <meta name="theme-color" content="#5E9BCD">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 </head>
 <body>
+    <!-- Navbar -->
+    <nav id="main-navbar" class="navbar hidden">
+        <div class="navbar-logo">
+            <img src="logo.png" alt="Hitch Point Logo" class="navbar-logo-img">
+        </div>
+        <div class="navbar-menu">
+            <button id="navbar-hamburger" class="navbar-hamburger" aria-label="Menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <div id="navbar-dropdown" class="navbar-dropdown">
+                <button id="navbar-view-history" class="btn-secondary">View Ride History</button>
+                <button id="navbar-logout" class="btn-secondary">Log Out</button>
+            </div>
+        </div>
+    </nav>
+
     <div id="app-container">
-        <!-- Left Section: Ride Request & History -->
-            <img src="logo.png" alt="Hitch Point Logo" class="app-logo" style="max-width: 180px; margin-bottom: 0.5em;">
-            <!-- User Info / Auth Section -->
-            <div id="auth-section">
-                <div id="logged-out-view">
-                    <p>Please log in to request a ride and view your history.</p>
-                    <button id="google-login-btn" class="btn-google">
-                        <i class="fab fa-google"></i> Sign in with Google
-                    </button>
-                </div>
-                <div id="logged-in-view" class="hidden">
-                    <div class="current-user-info">
-                        <p>Logged in as: <span id="user-email" class="font-semibold"></span></p>
-                        <p>User ID: <span id="user-id" class="font-mono text-sm"></span></p>
-                    </div>
-                    <button id="google-logout-btn" class="btn-secondary">Log Out</button>
-                </div>
+        <!-- Toast notifications -->
+        <div id="toast-container"></div>
+        <!-- Loading overlay -->
+        <div id="loading-overlay">
+            <div class="spinner"></div>
+            <p>Loading...</p>
+        </div>
+
+        <!-- Logged out view -->
+        <div id="logged-out-view">
+            <h2>Welcome to Hitch Point</h2>
+            <button id="google-login-btn" class="btn-google">
+                <i class="fab fa-google"></i> Sign in with Google
+            </button>
+        </div>
+
+        <!-- Logged in view -->
+        <div id="logged-in-view" class="hidden">
+            <div class="user-info">
+                <span>Email: <span id="user-email"></span></span>
+                <span>User ID: <span id="user-id"></span></span>
             </div>
-            <!-- Ride Request Section -->
-            <div id="ride-request-section" class="hidden">
-                <h2 class="section-header">Request a Ride</h2>
-                <div class="input-group">
-                    <label for="origin-input">Origin</label>
-                    <div class="input-with-button">
-                        <input type="text" id="origin-input" placeholder="Enter origin or select on map">
-                        <button id="select-origin-map-btn" class="map-select-btn">Select on Map</button>
-                    </div>
-                </div>
-                <div class="input-group">
-                    <label for="destination-input">Destination</label>
-                    <div class="input-with-button">
-                        <input type="text" id="destination-input" placeholder="Enter destination or select on map">
-                        <button id="select-destination-map-btn" class="map-select-btn">Select on Map</button>
-                    </div>
-                </div>
-                <div class="input-group">
-                    <label for="bags-input">Number of Bags</label>
-                    <input type="number" id="bags-input" min="0" value="0">
-                </div>
-                <div class="input-group">
-                    <label for="persons-input">Number of Persons</label>
-                    <input type="number" id="persons-input" min="1" value="1">
-                </div>
-                <div class="input-group">
-                    <label>
-                        <input type="checkbox" id="after-hours-input">
-                        After Hours (10pm - 6am)
-                    </label>
-                </div>
-                <div class="input-group">
-                    <label for="round-trip-input" style="display: flex; align-items: center;">
-                        <input type="checkbox" id="round-trip-input" style="margin-right: 8px;">
-                        Round Trip
-                    </label>
-                </div>
-                <button id="request-ride-btn" class="btn-primary">Request Ride</button>
+        </div>
+
+        <!-- Ride Request Section -->
+        <div id="ride-request-section" class="hidden">
+            <h2>Request a Ride</h2>
+            <div class="input-group">
+                <label for="origin-input">Origin</label>
+                <input type="text" id="origin-input" placeholder="Enter origin">
+                <button id="select-origin-map-btn" class="btn-secondary" type="button">
+                    <i class="fas fa-map-marker-alt"></i> Select on Map
+                </button>
             </div>
-            <button id="view-history-btn" class="btn-secondary hidden" style="margin-top: 1em;">View Ride History</button>
+            <div class="input-group">
+                <label for="destination-input">Destination</label>
+                <input type="text" id="destination-input" placeholder="Enter destination">
+                <button id="select-destination-map-btn" class="btn-secondary" type="button">
+                    <i class="fas fa-map-marker-alt"></i> Select on Map
+                </button>
+            </div>
+            <div class="input-group">
+                <label for="bags-input">Bags</label>
+                <input type="number" id="bags-input" min="0" value="0">
+            </div>
+            <div class="input-group">
+                <label for="persons-input">Persons</label>
+                <input type="number" id="persons-input" min="1" value="1">
+            </div>
+            <div class="input-group">
+                <label>
+                    <input type="checkbox" id="after-hours-input">
+                    After Hours (10pm - 6am)
+                </label>
+            </div>
+            <div class="input-group">
+                <label for="round-trip-input" style="display: flex; align-items: center;">
+                    <input type="checkbox" id="round-trip-input" style="margin-right: 8px;">
+                    Round Trip
+                </label>
+            </div>
+            <button id="request-ride-btn" class="btn-primary">Request Ride</button>
             <!-- PWA Install Button -->
             <button id="install-pwa-btn" class="btn-secondary hidden" style="margin-top: 1em;">
                 <i class="fas fa-download"></i> Install App
             </button>
+        </div>
     </div>
+
     <!-- Ride History Modal -->
     <div id="ride-history-modal" class="modal">
         <div class="modal-content modal-large">
@@ -88,6 +107,7 @@
             <div id="ride-history-body" class="modal-body"></div>
         </div>
     </div>
+
     <!-- Quote Display Modal -->
     <div id="quote-display-modal" class="modal">
         <div class="modal-content">
@@ -102,27 +122,24 @@
                 <p>Bags: <span id="quote-bags"></span></p>
                 <p>Persons: <span id="quote-persons"></span></p>
                 <p>After Hours: <span id="quote-afterHours"></span></p>
-                <p>Round Trip: <span id="quote-roundTrip"></span></p>
+                <p>Round Trip: <span id="quote-roundtrip"></span></p>
                 <p>Fare: <span id="quote-fare" class="text-xl font-bold"></span></p>
                 <button id="print-quote-btn" class="btn-secondary mt-4">Print Quote</button>
             </div>
         </div>
     </div>
-    <!-- Map Modal (only shown when selecting on map) -->
+
+    <!-- Map Modal -->
     <div id="map-modal" class="modal">
-        <div class="modal-content map-modal-content">
+        <div class="modal-content modal-large">
             <button class="modal-close-button" onclick="window.closeModal('map-modal')">&times;</button>
-            <div id="map"></div>
+            <div id="map" style="height: 400px; width: 100%;"></div>
         </div>
     </div>
-    <!-- Loading Overlay -->
-    <div id="loading-overlay" class="loading-overlay">
-        <div class="spinner"></div>
-    </div>
-    <!-- Toast Container -->
-    <div id="toast-container" class="toast-container"></div>
-    <!-- Config and Main JS -->
+
+    <!-- Config (if needed) -->
     <script src="config.js"></script>
+    <!-- Main JS as module -->
     <script type="module" src="main.js"></script>
 </body>
 </html>
