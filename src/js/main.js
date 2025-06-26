@@ -11,12 +11,12 @@ document.addEventListener('DOMContentLoaded', () => {
     initFirebase((user) => {
         // Show/hide UI based on user state
         const loggedOutView = document.getElementById('logged-out-view');
-        const loggedInView = document.getElementById('logged-in-view');
+       // const loggedInView = document.getElementById('logged-in-view');
         const rideRequestSection = document.getElementById('ride-request-section');
         const mainNavbar = document.getElementById('main-navbar');
         if (user) {
             if (loggedOutView) loggedOutView.classList.add('hidden');
-            if (loggedInView) loggedInView.classList.remove('hidden');
+           // if (loggedInView) loggedInView.classList.remove('hidden');
             if (rideRequestSection) rideRequestSection.classList.remove('hidden');
             if (mainNavbar) mainNavbar.classList.remove('hidden');
             const userEmailElem = document.getElementById('user-email');
@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (userIdElem) userIdElem.textContent = user.uid;
         } else {
             if (loggedOutView) loggedOutView.classList.remove('hidden');
-            if (loggedInView) loggedInView.classList.add('hidden');
+           // if (loggedInView) loggedInView.classList.add('hidden');
             if (rideRequestSection) rideRequestSection.classList.add('hidden');
             if (mainNavbar) mainNavbar.classList.add('hidden');
         }
@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
    const profileView = document.getElementById('profile-view');
-    const loggedInView = document.getElementById('logged-in-view');
+   // const loggedInView = document.getElementById('logged-in-view');
     const rideRequestSection = document.getElementById('ride-request-section');
     const navbarProfileBtn = document.getElementById('navbar-profile');
     const profileBackBtn = document.getElementById('profile-back-btn');
