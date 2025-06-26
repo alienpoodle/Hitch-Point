@@ -51,4 +51,38 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+
+    // Carousel logic for login screen
+    const slides = document.querySelectorAll('#login-carousel .carousel-slide');
+    const dots = document.querySelectorAll('#login-carousel .carousel-dot');
+    let currentSlide = 0;
+    let carouselTimer = null;
+
+    function showSlide(index) {
+        slides.forEach((slide, i) => {
+            slide.classList.toggle('active', i === index);
+            dots[i].classList.toggle('active', i === index);
+        });
+        currentSlide = index;
+    }
+
+    function nextSlide() {
+        let next = (currentSlide + 1) % slides.length;
+        showSlide(next);
+    }
+
+    function resetCarouselTimer() {
+        if (carouselTimer) clearInterval(carouselTimer);
+        carouselTimer = setInterval(nextSlide, 3000);
+    }
+
+    dots.forEach((dot, idx) => {
+        dot.addEventListener('click', () => {
+            showSlide(idx);
+            resetCarouselTimer();
+        });
+    });
+
+    showSlide(0);
+    resetCarouselTimer();
 });

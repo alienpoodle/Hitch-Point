@@ -50,14 +50,41 @@
 
         <!-- Logged out view -->
         <div id="logged-out-view">
-            <div class="signin-logo-container">
-                <img src="src/images/logo.png" alt="Hitch Point Logo" class="signin-logo-img">
+    <div class="signin-logo-container">
+        <img src="src/images/logo.png" alt="Hitch Point Logo" class="signin-logo-img">
+    </div>
+    <div class="carousel" id="login-carousel">
+        <div class="carousel-slide active">
+            <div class="carousel-icon">
+                <!-- Home SVG -->
+                <svg width="48" height="48" fill="none" viewBox="0 0 48 48"><path d="M8 20L24 8l16 12v16a4 4 0 0 1-4 4H12a4 4 0 0 1-4-4V20z" stroke="#5E9BCD" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><rect x="18" y="28" width="12" height="12" rx="2" stroke="#5E9BCD" stroke-width="3"/></svg>
             </div>
-            <h2>Welcome to Hitch Point</h2>
-            <button id="google-login-btn" class="btn-google">
-                <i class="fab fa-google"></i> Sign in with Google
-            </button>
+            <div class="carousel-message">Welcome to Hitch Point</div>
         </div>
+        <div class="carousel-slide">
+            <div class="carousel-icon">
+                <!-- Lightning Bolt SVG -->
+                <svg width="48" height="48" fill="none" viewBox="0 0 48 48"><path d="M24 4L10 28h12v16l14-24H26L24 4z" stroke="#5E9BCD" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <div class="carousel-message">Get Rides in Instant</div>
+        </div>
+        <div class="carousel-slide">
+            <div class="carousel-icon">
+                <!-- Steering Wheel SVG -->
+                <svg width="48" height="48" fill="none" viewBox="0 0 48 48"><circle cx="24" cy="24" r="20" stroke="#5E9BCD" stroke-width="3"/><circle cx="24" cy="24" r="6" stroke="#5E9BCD" stroke-width="3"/><path d="M24 30v8M24 10v8M10.93 37.07l5.66-5.66M37.07 10.93l-5.66 5.66M10.93 10.93l5.66 5.66M37.07 37.07l-5.66-5.66" stroke="#5E9BCD" stroke-width="3"/></svg>
+            </div>
+            <div class="carousel-message">Choose Your Ride</div>
+        </div>
+        <div class="carousel-dots">
+            <span class="carousel-dot active"></span>
+            <span class="carousel-dot"></span>
+            <span class="carousel-dot"></span>
+        </div>
+    </div>
+    <button id="google-login-btn" class="btn-google">
+        <i class="fab fa-google"></i> Sign in with Google
+    </button>
+</div>
 
         <!-- Logged in view -->
         <div id="logged-in-view" class="hidden">

@@ -67,10 +67,75 @@ button,
     background: var(--google-red-hover);
 }
 
-/* Sign-in logo styles */
+
+/* Carousel styles */
+.carousel {
+    width: 100%;
+    max-width: 320px;
+    margin: 0 auto 24px auto;
+    position: relative;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 2px 12px rgba(30,41,59,0.06);
+    padding: 24px 12px 32px 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 220px;
+}
+
+.carousel-slide {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    min-height: 120px;
+    transition: opacity 0.4s;
+}
+.carousel-slide.active {
+    display: flex;
+    opacity: 1;
+}
+
+.carousel-icon {
+    margin-bottom: 16px;
+}
+.carousel-message {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+.carousel-dots {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 18px;
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 10px;
+}
+
+.carousel-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--border-light);
+    transition: background 0.2s, transform 0.2s;
+    cursor: pointer;
+    display: inline-block;
+}
+.carousel-dot.active {
+    background: var(--primary-color);
+    transform: scale(1.2);
+}
+
+/* Logo sizing for login */
 .signin-logo-img {
     max-width: 180px;
-    max-height: 80px;
+    max-height: 280px;
     width: auto;
     height: auto;
     display: block;
