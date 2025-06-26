@@ -32,7 +32,8 @@
                     <span></span>
                 </button>
                 <div id="navbar-dropdown" class="navbar-dropdown">
-                    <button id="navbar-view-history" class="btn-secondary">View Ride History</button>
+                    <button id="navbar-profile" class="btn-secondary">Profile</button>
+                    <button id="navbar-view-history" class="btn-secondary">Ride History</button>
                     <button id="navbar-logout" class="btn-secondary">Log Out</button>
                 </div>
             </div>
@@ -59,6 +60,7 @@
                 <svg width="48" height="48" fill="none" viewBox="0 0 48 48"><path d="M8 20L24 8l16 12v16a4 4 0 0 1-4 4H12a4 4 0 0 1-4-4V20z" stroke="#5E9BCD" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><rect x="18" y="28" width="12" height="12" rx="2" stroke="#5E9BCD" stroke-width="3"/></svg>
             </div>
             <div class="carousel-message">Welcome to Hitch Point</div>
+            <div class="carousel-submessage">Easily pinpoint your pickup and drop-off locations on the map.</div>
         </div>
         <div class="carousel-slide">
             <div class="carousel-icon">
@@ -66,13 +68,15 @@
                 <svg width="48" height="48" fill="none" viewBox="0 0 48 48"><path d="M24 4L10 28h12v16l14-24H26L24 4z" stroke="#5E9BCD" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </div>
             <div class="carousel-message">Get Rides in Instant</div>
+            <div class="carousel-submessage">Quickly request rides with just a few taps.</div>
         </div>
         <div class="carousel-slide">
             <div class="carousel-icon">
                 <!-- Steering Wheel SVG -->
                 <svg width="48" height="48" fill="none" viewBox="0 0 48 48"><circle cx="24" cy="24" r="20" stroke="#5E9BCD" stroke-width="3"/><circle cx="24" cy="24" r="6" stroke="#5E9BCD" stroke-width="3"/><path d="M24 30v8M24 10v8M10.93 37.07l5.66-5.66M37.07 10.93l-5.66 5.66M10.93 10.93l5.66 5.66M37.07 37.07l-5.66-5.66" stroke="#5E9BCD" stroke-width="3"/></svg>
             </div>
-            <div class="carousel-message">Choose Your Ride</div>
+            <div class="carousel-message">Enjoy Your Ride</div>
+            <div class="carousel-submessage">Sit back, relax, and enjoy a safe and comfortable journey.</div>
         </div>
         <div class="carousel-dots">
             <span class="carousel-dot active"></span>
@@ -137,6 +141,32 @@
             </button>
         </div>
     </div>
+
+    <!-- User Profile View -->
+    <div id="profile-view" class="hidden">
+        <form id="user-profile-form" class="p-4 rounded-lg shadow-sm" autocomplete="off">
+            <h3 class="text-xl mb-4">Your Profile</h3>
+            <div class="input-group">
+                <label for="profile-first-name">First Name</label>
+                <input type="text" id="profile-first-name" name="firstName" required>
+            </div>
+            <div class="input-group">
+                <label for="profile-last-name">Last Name</label>
+                <input type="text" id="profile-last-name" name="lastName" required>
+            </div>
+            <div class="input-group">
+                <label for="profile-phone">Phone Number (optional)</label>
+                <input type="text" id="profile-phone" name="phone" pattern="^[0-9+\-\s()]*$">
+            </div>
+            <div class="input-group">
+                <label for="profile-email">Email Address</label>
+                <input type="email" id="profile-email" name="email" required readonly>
+            </div>
+            <button type="submit" class="btn-primary mt-4">Save Profile</button>
+            <button type="button" id="profile-back-btn" class="btn-secondary mt-4" style="margin-left: 1em;">Back</button>
+        </form>
+    </div>
+
 
     <!-- Ride History Modal -->
     <div id="ride-history-modal" class="modal">

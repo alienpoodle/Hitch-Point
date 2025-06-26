@@ -37,6 +37,47 @@ document.addEventListener('DOMContentLoaded', () => {
     setupHistoryListeners();
     setupPWA();
 
+
+    const profileView = document.getElementById('profile-view');
+    const loggedInView = document.getElementById('logged-in-view');
+    const rideRequestSection = document.getElementById('ride-request-section');
+    const navbarProfileBtn = document.getElementById('navbar-profile');
+    const profileBackBtn = document.getElementById('profile-back-btn');
+
+    function showProfileView() {
+        profileView.classList.remove('hidden');
+        loggedInView.classList.add('hidden');
+        rideRequestSection.classList.add('hidden');
+    }
+    function hideProfileView() {
+        profileView.classList.add('hidden');
+        loggedInView.classList.remove('hidden');
+        rideRequestSection.classList.remove('hidden');
+    }
+
+    if (navbarProfileBtn) {
+        navbarProfileBtn.addEventListener('click', () => {
+            showProfileView();
+            // Optionally prefill profile fields here
+        });
+    }
+    if (profileBackBtn) {
+        profileBackBtn.addEventListener('click', hideProfileView);
+    }
+
+    // Prefill profile fields after login
+    function prefillUserProfileForm(user) {
+        if (!user) return;
+        const profile = user.providerData && user.providerData[0] ? user.providerData[0] : {};
+        document.getElementById('profile-first-name').value = profile.givenName || user.displayName?.split(' ')[0] || '';
+        document.getElementById('profile-last-name').value = profile.familyName || user.displayName?.split(' ')[1] || '';
+        document.getElementById('profile-email').value = user.email || '';
+        document.getElementById('profile-phone').value = user.phoneNumber || '';
+    }
+
+
+
+
     // Hamburger menu toggle logic
     const navbarHamburger = document.getElementById('navbar-hamburger');
     const navbarDropdown = document.getElementById('navbar-dropdown');
