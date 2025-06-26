@@ -38,7 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setupPWA();
 
 
-    const profileView = document.getElementById('profile-view');
+   const profileView = document.getElementById('profile-view');
     const loggedInView = document.getElementById('logged-in-view');
     const rideRequestSection = document.getElementById('ride-request-section');
     const navbarProfileBtn = document.getElementById('navbar-profile');
@@ -56,25 +56,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (navbarProfileBtn) {
-        navbarProfileBtn.addEventListener('click', () => {
-            showProfileView();
-            // Optionally prefill profile fields here
-        });
+        navbarProfileBtn.addEventListener('click', showProfileView);
     }
     if (profileBackBtn) {
         profileBackBtn.addEventListener('click', hideProfileView);
     }
-
-    // Prefill profile fields after login
-    function prefillUserProfileForm(user) {
-        if (!user) return;
-        const profile = user.providerData && user.providerData[0] ? user.providerData[0] : {};
-        document.getElementById('profile-first-name').value = profile.givenName || user.displayName?.split(' ')[0] || '';
-        document.getElementById('profile-last-name').value = profile.familyName || user.displayName?.split(' ')[1] || '';
-        document.getElementById('profile-email').value = user.email || '';
-        document.getElementById('profile-phone').value = user.phoneNumber || '';
-    }
-
 
 
 
