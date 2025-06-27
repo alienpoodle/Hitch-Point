@@ -115,24 +115,26 @@
                     <i class="fas fa-map-marker-alt"></i> Select on Map
                 </button>
             </div>
-            <div class="input-group">
-                <label for="bags-input">Bags</label>
-                <input type="number" id="bags-input" min="0" value="0">
+            <div class="input-group input-group-row">
+                <div class="input-half">
+                    <label for="bags-input">Bags</label>
+                    <input type="number" id="bags-input" min="0" value="0">
+                </div>
+                <div class="input-half">
+                    <label for="persons-input">Persons</label>
+                    <input type="number" id="persons-input" min="1" value="1">
+                </div>
             </div>
-            <div class="input-group">
-                <label for="persons-input">Persons</label>
-                <input type="number" id="persons-input" min="1" value="1">
-            </div>
-            <div class="input-group">
-                <label>
-                    <input type="checkbox" id="after-hours-input">
-                    After Hours (10pm - 6am)
+            <div class="input-group input-group-row">
+                <label class="toggle-label">
+                    <span>After Hours (10pm - 6am)</span>
+                    <input type="checkbox" id="after-hours-input" class="toggle-switch">
+                    <span class="slider"></span>
                 </label>
-            </div>
-            <div class="input-group">
-                <label for="round-trip-input" style="display: flex; align-items: center;">
-                    <input type="checkbox" id="round-trip-input" style="margin-right: 8px;">
-                    Round Trip
+                <label class="toggle-label">
+                    <span>Round Trip</span>
+                    <input type="checkbox" id="round-trip-input" class="toggle-switch">
+                    <span class="slider"></span>
                 </label>
             </div>
             <button id="request-ride-btn" class="btn-primary">Request Ride</button>
@@ -141,9 +143,8 @@
                 <i class="fas fa-download"></i> Install App
             </button>
         </div>
-    </div>
 
-    <!-- User Profile View -->
+         <!-- User Profile View -->
     <div id="profile-view" class="hidden">
         <form id="user-profile-form" class="p-4 rounded-lg shadow-sm" autocomplete="off">
             <h3 class="text-xl mb-4">Your Profile</h3>
@@ -167,6 +168,14 @@
             <button type="button" id="profile-back-btn" class="btn-secondary mt-4" style="margin-left: 1em;">Back</button>
         </form>
     </div>
+
+
+
+
+
+    </div>
+
+   
 
 
     <!-- Ride History Modal -->

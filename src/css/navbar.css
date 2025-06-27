@@ -93,6 +93,15 @@
     background: var(--bg-blue-light);
     color: var(--primary-hover-color);
 }
+
+.navbar-dropdown button.active,
+.navbar-dropdown button.selected {
+    background: #e6f0fa;      /* Soft blue background for active item */
+    color: #17446b;           /* Dark blue text for contrast */
+    border-left: 4px solid #5E9BCD;
+    font-weight: 700;
+}
+
 .navbar-dropdown.show {
     display: flex;
 }
