@@ -2,8 +2,7 @@ import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/fireb
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 import { showConfirm, showToast } from './ui.js'; 
 
-const db = getFirestore();
-const auth = getAuth();
+let db, auth;
 
 const profileForm = document.getElementById('user-profile-form');
 const firstNameInput = document.getElementById('profile-first-name');
@@ -32,6 +31,10 @@ function resetProfileForm() {
 }
 
 export function initProfileFeature() {
+    // Initialize Firebase services here, after initializeApp() has run
+    db = getFirestore();
+    auth = getAuth();
+
     onAuthStateChanged(auth, async user => {
         if (user && profileForm) {
             // Always use Google account email, never allow editing
