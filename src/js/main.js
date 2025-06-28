@@ -40,7 +40,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     setupRideListeners();
     setupHistoryListeners();
     setupPWA();
-    
+
+    const navbarViewHistoryBtn = document.getElementById('navbar-view-history');
+    const rideHistoryModal = document.getElementById('ride-history-modal');
     const profileView = document.getElementById('profile-view');
     const rideRequestSection = document.getElementById('ride-request-section');
     const navbarProfileBtn = document.getElementById('navbar-profile');
@@ -60,6 +62,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     if (profileBackBtn) {
         profileBackBtn.addEventListener('click', hideProfileView);
+    }
+
+     if (navbarViewHistoryBtn && rideHistoryModal) {
+        navbarViewHistoryBtn.addEventListener('click', () => {
+            rideHistoryModal.classList.add('show');
+        });
     }
 
     // Hamburger menu toggle logic
