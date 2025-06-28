@@ -9,6 +9,24 @@ export function setupRideListeners() {
 
     const printQuoteBtn = document.getElementById('print-quote-btn');
     if (printQuoteBtn) printQuoteBtn.addEventListener('click', printQuote);
+
+    // Show/hide return pickup time field
+    const roundTripInput = document.getElementById('round-trip-input');
+    const returnPickupTimeGroup = document.getElementById('return-pickup-time-group');
+    if (roundTripInput && returnPickupTimeGroup) {
+        roundTripInput.addEventListener('change', () => {
+            returnPickupTimeGroup.style.display = roundTripInput.checked ? '' : 'none';
+        });
+    }
+}
+
+function isAfterHours(dtString) {
+    // dtString: "YYYY-MM-DDTHH:mm"
+    if (!dtString) return false;
+    const dt = new Date(dtString);
+    const hour = dt.getHours();
+    // Example: after hours is before 6am or after 8pm
+    return hour < 6 || hour >= 20;
 }
 
 export async function calculateRoute() {
@@ -16,15 +34,19 @@ export async function calculateRoute() {
     const destinationInput = document.getElementById('destination-input');
     const bagsInput = document.getElementById('bags-input');
     const personsInput = document.getElementById('persons-input');
-    const afterHoursInput = document.getElementById('after-hours-input');
     const roundTripInput = document.getElementById('round-trip-input');
+    const pickupTimeInput = document.getElementById('pickup-time-input');
+    const returnPickupTimeInput = document.getElementById('return-pickup-time-input');
+
     if (!originInput || !destinationInput) return;
     const origin = originInput.value;
     const destination = destinationInput.value;
     const bags = parseInt(bagsInput?.value, 10) || 0;
     const persons = parseInt(personsInput?.value, 10) || 1;
-    const isAfterHours = afterHoursInput?.checked || false;
     const isRoundTrip = roundTripInput?.checked || false;
+    const pickupTime = pickupTimeInput?.value || null;
+    const returnPickupTime = (isRoundTrip && returnPickupTimeInput) ? returnPickupTimeInput.value : null;
+
     if (!origin || !destination) {
         showToast("Please enter both origin and destination.", "warning");
         return;
@@ -52,22 +74,31 @@ export async function calculateRoute() {
                     const quoteDestination = document.getElementById('quote-destination');
                     const quoteBags = document.getElementById('quote-bags');
                     const quotePersons = document.getElementById('quote-persons');
-                    const quoteAfterHours = document.getElementById('quote-afterHours');
                     const quoteRoundTrip = document.getElementById('quote-roundtrip');
                     const quoteFare = document.getElementById('quote-fare');
+                    const quotePickupTime = document.getElementById('quote-pickup-time');
+                    const quoteReturnPickupTime = document.getElementById('quote-return-pickup-time');
+                    const quoteAfterHours = document.getElementById('quote-afterHours');
+
                     if (quoteDistance) quoteDistance.textContent = leg.distance.text;
                     if (quoteDuration) quoteDuration.textContent = leg.duration.text;
                     if (quoteOrigin) quoteOrigin.textContent = origin;
                     if (quoteDestination) quoteDestination.textContent = destination;
                     if (quoteBags) quoteBags.textContent = bags > 0 ? `${bags} bag(s)` : "No bags";
                     if (quotePersons) quotePersons.textContent = persons > 1 ? `${persons} person(s)` : "1 person";
-                    if (quoteAfterHours) quoteAfterHours.textContent = isAfterHours ? "Yes" : "No";
                     if (quoteRoundTrip) quoteRoundTrip.textContent = isRoundTrip ? "Yes" : "No";
+                    if (quotePickupTime) quotePickupTime.textContent = pickupTime ? new Date(pickupTime).toLocaleString() : "Not set";
+                    if (quoteReturnPickupTime) quoteReturnPickupTime.textContent = (isRoundTrip && returnPickupTime) ? new Date(returnPickupTime).toLocaleString() : "N/A";
+
+                    // Determine after hours for either pickup time or return pickup time
+                    const afterHours = isAfterHours(pickupTime) || (isRoundTrip && isAfterHours(returnPickupTime));
+                    if (quoteAfterHours) quoteAfterHours.textContent = afterHours ? "Yes" : "No";
+
                     const distanceKm = leg.distance.value / 1000;
                     let fareXCD = BASE_FARE_XCD + (distanceKm * DEFAULT_PER_KM_RATE_XCD);
                     if (bags > 0) fareXCD += bags * COST_PER_ADDITIONAL_BAG_XCD;
                     if (persons > FREE_PERSON_COUNT) fareXCD += (persons - FREE_PERSON_COUNT) * COST_PER_ADDITIONAL_PERSON_XCD;
-                    if (isAfterHours) fareXCD += fareXCD * AFTER_HOURS_SURCHARGE_PERCENTAGE;
+                    if (afterHours) fareXCD += fareXCD * AFTER_HOURS_SURCHARGE_PERCENTAGE;
                     if (isRoundTrip) fareXCD *= 2;
                     const fareUSD = fareXCD * XCD_TO_USD_EXCHANGE_RATE;
                     if (quoteFare) quoteFare.textContent = `${Math.round(fareXCD)} XCD / $${Math.round(fareUSD)} USD`;
@@ -84,8 +115,10 @@ export async function calculateRoute() {
                                 fareUSD: fareUSD.toFixed(2),
                                 bags,
                                 persons,
-                                afterHours: isAfterHours,
+                                afterHours,
                                 roundTrip: isRoundTrip,
+                                pickupTime,
+                                returnPickupTime,
                                 status: 'quoted',
                                 timestamp: serverTimestamp()
                             });
@@ -111,13 +144,15 @@ export function resetRideForm() {
     const destinationInput = document.getElementById('destination-input');
     const bagsInput = document.getElementById('bags-input');
     const personsInput = document.getElementById('persons-input');
-    const afterHoursInput = document.getElementById('after-hours-input');
     const roundTripInput = document.getElementById('round-trip-input');
+    const pickupTimeInput = document.getElementById('pickup-time-input');
+    const returnPickupTimeInput = document.getElementById('return-pickup-time-input');
+    if (pickupTimeInput) pickupTimeInput.value = '';
+    if (returnPickupTimeInput) returnPickupTimeInput.value = '';
     if (originInput) originInput.value = '';
     if (destinationInput) destinationInput.value = '';
     if (bagsInput) bagsInput.value = 0;
     if (personsInput) personsInput.value = 1;
-    if (afterHoursInput) afterHoursInput.checked = false;
     if (roundTripInput) roundTripInput.checked = false;
 }
 

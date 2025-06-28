@@ -36,7 +36,7 @@ export function initDriverFeature() {
 
 async function loadRideRequests() {
     requestsTableBody.innerHTML = '';
-    const querySnapshot = await getDocs(collection(db, "rideRequests"));
+    const querySnapshot = await getDocs(collection(db, "rides"));
     querySnapshot.forEach(docSnap => {
         const data = docSnap.data();
         const tr = document.createElement('tr');
