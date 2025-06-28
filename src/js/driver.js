@@ -2,8 +2,7 @@ import { getFirestore, collection, getDocs, updateDoc, doc } from "https://www.g
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 import { showToast } from './ui.js';
 
-const db = getFirestore();
-const auth = getAuth();
+let db, auth;
 
 const driverSection = document.getElementById('driver-requests-section');
 const requestsTableBody = document.querySelector('#driver-requests-table tbody');
@@ -11,6 +10,9 @@ const routeModal = document.getElementById('driver-route-modal');
 const routeMapDiv = document.getElementById('driver-route-map');
 
 export function initDriverFeature() {
+    db = getFirestore();
+    auth = getAuth();
+
     onAuthStateChanged(auth, async user => {
         if (user && user.isDriver) { // You must set this property in your auth logic
             driverSection.classList.remove('hidden');
