@@ -29,12 +29,14 @@ document.addEventListener('DOMContentLoaded', () => {
             if (rideRequestSection) rideRequestSection.classList.add('hidden');
             if (mainNavbar) mainNavbar.classList.add('hidden');
         }
+
+        initProfileFeature();
+        initDriverFeature();
         hideLoadingOverlay();
     });
     setupAuthListeners();
     setupMapListeners(window.firebaseConfig.googleMapsApiKey);
-    initProfileFeature();
-    initDriverFeature();
+    
     setupRideListeners();
     setupHistoryListeners();
     setupPWA();
