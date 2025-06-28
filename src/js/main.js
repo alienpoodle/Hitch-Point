@@ -5,6 +5,8 @@ import { setupRideListeners } from './ride.js';
 import { setupHistoryListeners } from './history.js';
 import { setupPWA } from './pwa.js';
 import { showLoadingOverlay, hideLoadingOverlay } from './ui.js';
+import { initProfileFeature } from './js/profile.js';
+
 
 document.addEventListener('DOMContentLoaded', () => {
     showLoadingOverlay();
@@ -30,10 +32,11 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     setupAuthListeners();
     setupMapListeners(window.firebaseConfig.googleMapsApiKey);
+    initProfileFeature();
     setupRideListeners();
     setupHistoryListeners();
     setupPWA();
-
+    
     const profileView = document.getElementById('profile-view');
     const rideRequestSection = document.getElementById('ride-request-section');
     const navbarProfileBtn = document.getElementById('navbar-profile');
