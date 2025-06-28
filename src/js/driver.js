@@ -1,4 +1,4 @@
-import { getFirestore, collection, getDocs, updateDoc, doc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+import { getFirestore, collection, getDocs, updateDoc, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 import { showToast } from './ui.js';
 
@@ -14,9 +14,16 @@ export function initDriverFeature() {
     auth = getAuth();
 
     onAuthStateChanged(auth, async user => {
-        if (user && user.isDriver) { // You must set this property in your auth logic
-            driverSection.classList.remove('hidden');
-            await loadRideRequests();
+        if (user) {
+            // Check Firestore for role
+            const userRef = doc(db, "users", user.uid);
+            const userSnap = await getDoc(userRef);
+            if (userSnap.exists() && userSnap.data().role === "driver") {
+                driverSection.classList.remove('hidden');
+                await loadRideRequests();
+            } else {
+                driverSection.classList.add('hidden');
+            }
         }
     });
 }

@@ -59,15 +59,16 @@ export function initProfileFeature() {
                 const firstName = firstNameInput.value.trim();
                 const lastName = lastNameInput.value.trim();
                 const phone = phoneInput.value.trim();
-                const email = user.email; // Always use Google email
+                const email = user.email; // always use Google email
 
                 try {
                     await setDoc(doc(db, "users", user.uid), {
+                        uid: user.uid,
                         firstName,
                         lastName,
                         phone,
                         email
-                    }, { merge: true });
+                    }, { merge: true }); // merge: true preserves role and other fields
 
                     showToast("Profile saved!", "success");
                     originalProfile = { firstName, lastName, phone, email };

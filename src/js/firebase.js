@@ -7,7 +7,7 @@ import {
     signInWithPopup,
     signOut
 } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-import { getFirestore } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
 export let app, auth, db;
 export let currentUserId = null;
@@ -23,10 +23,20 @@ export async function initFirebase(onUserChanged) {
         db = getFirestore(app);
     }
 
+    // Ensure every new user gets a Firestore doc with role: "passenger" and uid
     onAuthStateChanged(auth, async (user) => {
         if (user) {
             currentUserId = user.uid;
             currentUserEmail = user.email || "N/A";
+            const userRef = doc(db, "users", user.uid);
+            const userSnap = await getDoc(userRef);
+            if (!userSnap.exists()) {
+                await setDoc(userRef, {
+                    uid: user.uid,
+                    email: user.email,
+                    role: "passenger"
+                });
+            }
         } else {
             currentUserId = null;
             currentUserEmail = null;
