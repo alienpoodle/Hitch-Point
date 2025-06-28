@@ -1,5 +1,5 @@
-import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 import { showConfirm, showToast } from './ui.js'; 
 
 let db, auth;
@@ -31,7 +31,6 @@ function resetProfileForm() {
 }
 
 export function initProfileFeature() {
-    // Initialize Firebase services here, after initializeApp() has run
     db = getFirestore();
     auth = getAuth();
 
@@ -79,9 +78,7 @@ export function initProfileFeature() {
 
             backBtn.onclick = async (e) => {
                 e.preventDefault();
-                const confirmed = typeof showConfirm === "function"
-                    ? await showConfirm("Discard changes to your profile?")
-                    : confirm("Discard changes to your profile?");
+                const confirmed = await showConfirm("Discard changes to your profile?");
                 if (confirmed) {
                     resetProfileForm();
                 }

@@ -2,15 +2,12 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebas
 import {
     getAuth,
     signInWithCustomToken,
-    //signInAnonymously,
     onAuthStateChanged,
     GoogleAuthProvider,
     signInWithPopup,
     signOut
 } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-import {
-    getFirestore
-} from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+import { getFirestore } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
 export let app, auth, db;
 export let currentUserId = null;
@@ -20,9 +17,11 @@ const firebaseConfig = window.firebaseConfig || {};
 const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
 
 export async function initFirebase(onUserChanged) {
-    app = initializeApp(firebaseConfig);
-    auth = getAuth(app);
-    db = getFirestore(app);
+    if (!app) {
+        app = initializeApp(firebaseConfig);
+        auth = getAuth(app);
+        db = getFirestore(app);
+    }
 
     onAuthStateChanged(auth, async (user) => {
         if (user) {
@@ -37,8 +36,6 @@ export async function initFirebase(onUserChanged) {
 
     if (initialAuthToken) {
         await signInWithCustomToken(auth, initialAuthToken);
-    } else {
-       // await signInAnonymously(auth);
     }
 }
 
