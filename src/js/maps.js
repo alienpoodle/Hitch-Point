@@ -131,3 +131,95 @@ export function setupMapListeners(apiKey) {
         });
     }
 }
+
+// Show or hide cancel pin buttons based on selection mode
+function showCancelPinButton(mode) {
+    const cancelOriginBtn = document.getElementById('cancel-origin-pin-btn');
+    const cancelDestBtn = document.getElementById('cancel-destination-pin-btn');
+    if (mode === 'origin') {
+        if (cancelOriginBtn) cancelOriginBtn.classList.remove('hidden');
+        if (cancelDestBtn) cancelDestBtn.classList.add('hidden');
+    } else if (mode === 'destination') {
+        if (cancelDestBtn) cancelDestBtn.classList.remove('hidden');
+        if (cancelOriginBtn) cancelOriginBtn.classList.add('hidden');
+    }
+}
+
+function hideCancelPinButtons() {
+    const cancelOriginBtn = document.getElementById('cancel-origin-pin-btn');
+    const cancelDestBtn = document.getElementById('cancel-destination-pin-btn');
+    if (cancelOriginBtn) cancelOriginBtn.classList.add('hidden');
+    if (cancelDestBtn) cancelDestBtn.classList.add('hidden');
+}
+
+// Update openMapModal to show the correct cancel button
+export function openMapModal(mode) {
+    if (!isGoogleMapsReady) {
+        showToast("Google Maps is not ready. Please try again.", "error");
+        return;
+    }
+    mapSelectionMode = mode;
+    openModal('map-modal');
+    showCancelPinButton(mode);
+    setTimeout(() => {
+        initMapForSelection();
+    }, 300);
+}
+
+// Add event listeners for cancel buttons
+document.addEventListener('DOMContentLoaded', () => {
+    const cancelOriginBtn = document.getElementById('cancel-origin-pin-btn');
+    const cancelDestBtn = document.getElementById('cancel-destination-pin-btn');
+    if (cancelOriginBtn) {
+        cancelOriginBtn.addEventListener('click', () => {
+            if (selectedMarker) {
+                selectedMarker.setMap(null);
+                selectedMarker = null;
+            }
+            hideCancelPinButtons();
+            closeModal('map-modal');
+            showToast("Origin pin cancelled.", "info");
+        });
+    }
+    if (cancelDestBtn) {
+        cancelDestBtn.addEventListener('click', () => {
+            if (selectedMarker) {
+                selectedMarker.setMap(null);
+                selectedMarker = null;
+            }
+            hideCancelPinButtons();
+            closeModal('map-modal');
+            showToast("Destination pin cancelled.", "info");
+        });
+    }
+});
+
+// In placeMarkerAndGetAddress, after closing the modal, also hide cancel buttons:
+function placeMarkerAndGetAddress(location) {
+    if (selectedMarker) selectedMarker.setMap(null);
+    selectedMarker = new google.maps.Marker({
+        position: location,
+        map: map,
+        animation: google.maps.Animation.DROP
+    });
+    geocoder.geocode({ location: location }, (results, status) => {
+        if (status === 'OK' && results[0]) {
+            const address = results[0].formatted_address;
+            if (mapSelectionMode === 'origin') {
+                const originInput = document.getElementById('origin-input');
+                if (originInput) originInput.value = address;
+                showToast("Origin location selected!", "success");
+            } else if (mapSelectionMode === 'destination') {
+                const destInput = document.getElementById('destination-input');
+                if (destInput) destInput.value = address;
+                showToast("Destination location selected!", "success");
+            }
+            setTimeout(() => {
+                closeModal('map-modal');
+                hideCancelPinButtons();
+            }, 1000);
+        } else {
+            showToast("Could not find address for this location.", "warning");
+        }
+    });
+}
