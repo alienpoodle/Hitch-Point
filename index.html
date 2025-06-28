@@ -90,54 +90,54 @@
 </div>
 
        <!-- Ride Request Section -->
-<div id="ride-request-section" class="hidden">
-    <h2>Request a Ride</h2>
-    <div class="input-group input-group-inline">
-        <label for="origin-input">Origin</label>
-        <div class="input-inline-wrap">
-            <input type="text" id="origin-input" placeholder="Enter origin">
-            <button id="select-origin-map-btn" class="btn-secondary" type="button">
-                <i class="fas fa-map-marker-alt"></i> Select on Map
-            </button>
+    <div id="ride-request-section" class="hidden">
+        <h2>Request a Ride</h2>
+        <div class="input-group input-group-inline">
+            <label for="origin-input">Origin</label>
+            <div class="input-inline-wrap">
+                <input type="text" id="origin-input" placeholder="Enter origin">
+                <button id="select-origin-map-btn" class="btn-secondary" type="button">
+                    <i class="fas fa-map-marker-alt"></i> Select on Map
+                </button>
+            </div>
         </div>
-    </div>
-    <div class="input-group input-group-inline">
-        <label for="destination-input">Destination</label>
-        <div class="input-inline-wrap">
-            <input type="text" id="destination-input" placeholder="Enter destination">
-            <button id="select-destination-map-btn" class="btn-secondary" type="button">
-                <i class="fas fa-map-marker-alt"></i> Select on Map
-            </button>
+        <div class="input-group input-group-inline">
+            <label for="destination-input">Destination</label>
+            <div class="input-inline-wrap">
+                <input type="text" id="destination-input" placeholder="Enter destination">
+                <button id="select-destination-map-btn" class="btn-secondary" type="button">
+                    <i class="fas fa-map-marker-alt"></i> Select on Map
+                </button>
+            </div>
         </div>
-    </div>
-    <div class="input-group input-group-row">
-        <div class="input-half">
-            <label for="bags-input">Bags</label>
-            <input type="number" id="bags-input" min="0" value="0">
+        <div class="input-group input-group-row">
+            <div class="input-half">
+                <label for="bags-input">Bags</label>
+                <input type="number" id="bags-input" min="0" value="0">
+            </div>
+            <div class="input-half">
+                <label for="persons-input">Persons</label>
+                <input type="number" id="persons-input" min="1" value="1">
+            </div>
         </div>
-        <div class="input-half">
-            <label for="persons-input">Persons</label>
-            <input type="number" id="persons-input" min="1" value="1">
+        <div class="input-group input-group-row">
+            <label class="toggle-label">
+                <span>After Hours (10pm - 6am)</span>
+                <input type="checkbox" id="after-hours-input" class="toggle-switch">
+                <span class="slider"></span>
+            </label>
+            <label class="toggle-label">
+                <span>Round Trip</span>
+                <input type="checkbox" id="round-trip-input" class="toggle-switch">
+                <span class="slider"></span>
+            </label>
         </div>
+        <button id="request-ride-btn" class="btn-primary">Request Ride</button>
+        <!-- PWA Install Button -->
+        <button id="install-pwa-btn" class="btn-secondary hidden" style="margin-top: 1em;">
+            <i class="fas fa-download"></i> Install App
+        </button>
     </div>
-    <div class="input-group input-group-row">
-        <label class="toggle-label">
-            <span>After Hours (10pm - 6am)</span>
-            <input type="checkbox" id="after-hours-input" class="toggle-switch">
-            <span class="slider"></span>
-        </label>
-        <label class="toggle-label">
-            <span>Round Trip</span>
-            <input type="checkbox" id="round-trip-input" class="toggle-switch">
-            <span class="slider"></span>
-        </label>
-    </div>
-    <button id="request-ride-btn" class="btn-primary">Request Ride</button>
-    <!-- PWA Install Button -->
-    <button id="install-pwa-btn" class="btn-secondary hidden" style="margin-top: 1em;">
-        <i class="fas fa-download"></i> Install App
-    </button>
-</div>
 
          <!-- User Profile View -->
     <div id="profile-view" class="hidden">
@@ -164,14 +164,36 @@
         </form>
     </div>
 
-
-
+    <div id="driver-requests-section" class="hidden">
+        <h2>Ride Requests</h2>
+        <table id="driver-requests-table">
+            <thead>
+                <tr>
+                    <th>Origin</th>
+                    <th>Destination</th>
+                    <th>Rider</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Ride requests will be populated here -->
+            </tbody>
+        </table>
+    </div>
 
 
     </div>
 
    
-
+<!-- Modal for map route -->
+    <div id="driver-route-modal" class="modal hidden">
+        <div class="modal-content">
+            <button class="modal-close-button" onclick="window.closeModal('driver-route-modal')">&times;</button>
+            <h3>Route Preview</h3>
+            <div id="driver-route-map" style="width:100%;height:400px;"></div>
+        </div>
+    </div>
 
     <!-- Ride History Modal -->
     <div id="ride-history-modal" class="modal">

@@ -6,6 +6,7 @@ import { setupHistoryListeners } from './history.js';
 import { setupPWA } from './pwa.js';
 import { showLoadingOverlay, hideLoadingOverlay } from './ui.js';
 import { initProfileFeature } from './js/profile.js';
+import { initDriverFeature } from './driver.js';
 
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -33,6 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setupAuthListeners();
     setupMapListeners(window.firebaseConfig.googleMapsApiKey);
     initProfileFeature();
+    initDriverFeature();
     setupRideListeners();
     setupHistoryListeners();
     setupPWA();
