@@ -35,18 +35,6 @@ export async function loadGoogleMapsScript(apiKey) {
     return mapLoadPromise;
 }
 
-export function openMapModal(mode) {
-    if (!isGoogleMapsReady) {
-        showToast("Google Maps is not ready. Please try again.", "error");
-        return;
-    }
-    mapSelectionMode = mode;
-    openModal('map-modal');
-    setTimeout(() => {
-        initMapForSelection();
-    }, 300);
-}
-
 function initMapForSelection() {
     if (!isGoogleMapsReady || !window.google || !window.google.maps) {
         showToast("Google Maps is not ready yet.", "error");
