@@ -82,7 +82,10 @@ function placeMarkerAndGetAddress(location) {
                 if (destInput) destInput.value = address;
                 showToast("Destination location selected!", "success");
             }
-            setTimeout(() => closeModal('map-modal'), 1000);
+            setTimeout(() => {
+                closeModal('map-modal');
+                hideCancelPinButtons();
+            }, 1000);
         } else {
             showToast("Could not find address for this location.", "warning");
         }
@@ -140,7 +143,6 @@ function hideCancelPinButtons() {
     if (cancelDestBtn) cancelDestBtn.classList.add('hidden');
 }
 
-// Update openMapModal to show the correct cancel button
 export function openMapModal(mode) {
     if (!isGoogleMapsReady) {
         showToast("Google Maps is not ready. Please try again.", "error");
@@ -181,33 +183,3 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
-
-// In placeMarkerAndGetAddress, after closing the modal, also hide cancel buttons:
-function placeMarkerAndGetAddress(location) {
-    if (selectedMarker) selectedMarker.setMap(null);
-    selectedMarker = new google.maps.Marker({
-        position: location,
-        map: map,
-        animation: google.maps.Animation.DROP
-    });
-    geocoder.geocode({ location: location }, (results, status) => {
-        if (status === 'OK' && results[0]) {
-            const address = results[0].formatted_address;
-            if (mapSelectionMode === 'origin') {
-                const originInput = document.getElementById('origin-input');
-                if (originInput) originInput.value = address;
-                showToast("Origin location selected!", "success");
-            } else if (mapSelectionMode === 'destination') {
-                const destInput = document.getElementById('destination-input');
-                if (destInput) destInput.value = address;
-                showToast("Destination location selected!", "success");
-            }
-            setTimeout(() => {
-                closeModal('map-modal');
-                hideCancelPinButtons();
-            }, 1000);
-        } else {
-            showToast("Could not find address for this location.", "warning");
-        }
-    });
-}

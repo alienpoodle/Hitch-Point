@@ -1,0 +1,139 @@
+/* Ride Request Section Container */
+#ride-request-section {
+    background: #f8fafc;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(30,41,59,0.06);
+    padding: 2em 1.5em;
+    max-width: 500px;
+    margin: 2em auto;
+}
+
+#ride-request-section h2 {
+    font-size: 1.5em;
+    font-weight: 700;
+    margin-bottom: 1em;
+    color: #17446b;
+}
+
+/* Table Styles for Driver Requests */
+#driver-requests-section {
+    background: #f8fafc;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(30,41,59,0.06);
+    padding: 2em 1.5em;
+    max-width: 900px;
+    margin: 2em auto;
+}
+
+#driver-requests-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1em;
+    background: #fff;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 1px 4px rgba(30,41,59,0.04);
+}
+
+#driver-requests-table th,
+#driver-requests-table td {
+    padding: 0.85em 1em;
+    text-align: left;
+}
+
+#driver-requests-table th {
+    background: #e6f0fa;
+    color: #17446b;
+    font-weight: 700;
+    font-size: 1em;
+    border-bottom: 2px solid #cbd5e1;
+}
+
+#driver-requests-table tr {
+    border-bottom: 1px solid #e5e7eb;
+}
+
+#driver-requests-table tr:last-child {
+    border-bottom: none;
+}
+
+#driver-requests-table td {
+    vertical-align: middle;
+    font-size: 1em;
+}
+
+#driver-requests-table button {
+    margin: 0;
+    padding: 0.4em 1em;
+    font-size: 0.95em;
+}
+
+/* Modal Styles for Route Preview */
+#driver-route-modal.modal {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    z-index: 2000;
+    left: 0;
+    top: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(30,41,59,0.18);
+}
+
+#driver-route-modal .modal-content {
+    background: #fff;
+    border-radius: 12px;
+    padding: 1.5em 1em 1em 1em;
+    box-shadow: 0 2px 16px rgba(30,41,59,0.12);
+    max-width: 600px;
+    width: 95vw;
+    position: relative;
+}
+
+#driver-route-modal .modal-close-button {
+    position: absolute;
+    top: 0.7em;
+    right: 1em;
+    background: none;
+    border: none;
+    font-size: 2em;
+    color: #5E9BCD;
+    cursor: pointer;
+    z-index: 10;
+}
+
+#driver-route-map {
+    width: 100%;
+    height: 400px;
+    border-radius: 8px;
+    margin-top: 1em;
+    background: #e6f0fa;
+}
+
+/* Responsive adjustments */
+@media (max-width: 900px) {
+    #driver-requests-section {
+        max-width: 98vw;
+        padding: 1em 0.5em;
+    }
+    #driver-route-modal .modal-content {
+        max-width: 98vw;
+        padding: 1em 0.5em;
+    }
+}
+
+@media (max-width: 600px) {
+    #ride-request-section {
+        padding: 1em 0.5em;
+    }
+    #driver-requests-table th,
+    #driver-requests-table td {
+        padding: 0.6em 0.5em;
+        font-size: 0.98em;
+    }
+    #driver-route-map {
+        height: 250px;
+    }
+}
