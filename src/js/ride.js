@@ -2,6 +2,7 @@ import { BASE_FARE_XCD, DEFAULT_PER_KM_RATE_XCD, AFTER_HOURS_SURCHARGE_PERCENTAG
 import { db, currentUserId } from './firebase.js';
 import { showToast, openModal, hideLoadingOverlay, showLoadingOverlay } from './ui.js';
 import { collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+import { loadGoogleMapsApi } from './maps.js';
 
 export function setupRideListeners() {
     const requestRideBtn = document.getElementById('request-ride-btn');
@@ -17,11 +18,12 @@ export function setupRideListeners() {
         roundTripInput.addEventListener('change', () => {
             returnPickupTimeGroup.style.display = roundTripInput.checked ? '' : 'none';
         });
+        // Set initial state on page load
+        returnPickupTimeGroup.style.display = roundTripInput.checked ? '' : 'none';
     }
 }
 
 function isAfterHours(dtString) {
-    // dtString: "YYYY-MM-DDTHH:mm"
     if (!dtString) return false;
     const dt = new Date(dtString);
     const hour = dt.getHours();
@@ -51,10 +53,7 @@ export async function calculateRoute() {
         showToast("Please enter both origin and destination.", "warning");
         return;
     }
-    if (!window.google || !window.google.maps) {
-        showToast("Google Maps is not loaded yet. Please try again.", "error");
-        return;
-    }
+    await loadGoogleMapsApi();
     showLoadingOverlay();
     try {
         const directionsService = new google.maps.DirectionsService();

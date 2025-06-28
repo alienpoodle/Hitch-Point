@@ -1,6 +1,7 @@
 import { getFirestore, collection, getDocs, updateDoc, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 import { showToast } from './ui.js';
+import { loadGoogleMapsApi } from './maps.js';
 
 let db, auth;
 
@@ -43,7 +44,7 @@ async function loadRideRequests() {
         tr.innerHTML = `
             <td>${data.origin}</td>
             <td>${data.destination}</td>
-            <td>${data.riderName || data.riderEmail || ''}</td>
+            <td>${data.riderName || data.riderEmail || data.userId || ''}</td>
             <td>
                 <select data-id="${docSnap.id}" class="status-select">
                     <option value="pending" ${data.status === 'pending' ? 'selected' : ''}>Pending</option>
@@ -63,29 +64,28 @@ async function loadRideRequests() {
         sel.addEventListener('change', async (e) => {
             const id = e.target.getAttribute('data-id');
             const newStatus = e.target.value;
-            await updateDoc(doc(db, "rideRequests", id), { status: newStatus });
+            await updateDoc(doc(db, "rides", id), { status: newStatus });
             showToast("Status updated!", "success");
         });
     });
 
     // View route handler
     document.querySelectorAll('.view-route-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
+        btn.addEventListener('click', async (e) => {
             const origin = decodeURIComponent(btn.getAttribute('data-origin'));
             const destination = decodeURIComponent(btn.getAttribute('data-destination'));
-            showRouteOnMap(origin, destination);
+            await showRouteOnMap(origin, destination);
         });
     });
 }
 
 // Show route on map using Google Maps JS API
-function showRouteOnMap(origin, destination) {
+async function showRouteOnMap(origin, destination) {
+    await loadGoogleMapsApi();
     routeModal.classList.remove('hidden');
-    // Initialize Google Map and DirectionsRenderer here
-    // (Assumes Google Maps JS API is loaded and available as google.maps)
     const map = new google.maps.Map(routeMapDiv, {
         zoom: 11,
-        center: { lat: 13.1592, lng: -61.2185 } 
+        center: { lat: 13.1592, lng: -61.2185 }
     });
     const directionsService = new google.maps.DirectionsService();
     const directionsRenderer = new google.maps.DirectionsRenderer();

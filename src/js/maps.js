@@ -6,11 +6,12 @@ let isGoogleMapsLoading = false;
 let mapLoadPromise = null;
 let mapSelectionMode = 'none';
 
-export async function loadGoogleMapsScript(apiKey) {
+// Unified loader for Google Maps API, using the API key from window.firebaseConfig
+export function loadGoogleMapsApi() {
     if (isGoogleMapsLoading && mapLoadPromise) return mapLoadPromise;
     if (window.google && window.google.maps) {
         isGoogleMapsReady = true;
-        return Promise.resolve();
+        return Promise.resolve(window.google.maps);
     }
     isGoogleMapsLoading = true;
     mapLoadPromise = new Promise((resolve, reject) => {
@@ -18,11 +19,11 @@ export async function loadGoogleMapsScript(apiKey) {
             isGoogleMapsReady = true;
             isGoogleMapsLoading = false;
             geocoder = new google.maps.Geocoder();
-            resolve();
+            resolve(window.google.maps);
         };
         const script = document.createElement('script');
         script.id = 'google-maps-script';
-        script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&callback=googleMapsCallback`;
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${window.firebaseConfig.googleMapsApiKey}&libraries=places&callback=googleMapsCallback`;
         script.async = true;
         script.defer = true;
         script.onerror = () => {
@@ -92,13 +93,14 @@ function placeMarkerAndGetAddress(location) {
     });
 }
 
-export function setupMapListeners(apiKey) {
+export function setupMapListeners() {
+    const apiKey = window.firebaseConfig.googleMapsApiKey;
     const selectOriginBtn = document.getElementById('select-origin-map-btn');
     if (selectOriginBtn) {
         selectOriginBtn.addEventListener('click', async () => {
             showLoadingOverlay();
             try {
-                await loadGoogleMapsScript(apiKey);
+                await loadGoogleMapsApi();
                 hideLoadingOverlay();
                 openMapModal('origin');
             } catch (error) {
@@ -112,7 +114,7 @@ export function setupMapListeners(apiKey) {
         selectDestinationBtn.addEventListener('click', async () => {
             showLoadingOverlay();
             try {
-                await loadGoogleMapsScript(apiKey);
+                await loadGoogleMapsApi();
                 hideLoadingOverlay();
                 openMapModal('destination');
             } catch (error) {
@@ -156,7 +158,7 @@ export function openMapModal(mode) {
     }, 300);
 }
 
-// Add event listeners for cancel buttons
+// Add event listeners for cancel buttons based on DOMContentLoaded
 document.addEventListener('DOMContentLoaded', () => {
     const cancelOriginBtn = document.getElementById('cancel-origin-pin-btn');
     const cancelDestBtn = document.getElementById('cancel-destination-pin-btn');

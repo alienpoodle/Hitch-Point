@@ -1,6 +1,6 @@
 import { initFirebase } from './firebase.js';
 import { setupAuthListeners } from './auth.js';
-import { setupMapListeners } from './maps.js';
+import { setupMapListeners, loadGoogleMapsApi } from './maps.js';
 import { setupRideListeners } from './ride.js';
 import { setupHistoryListeners } from './history.js';
 import { setupPWA } from './pwa.js';
@@ -9,7 +9,7 @@ import { initProfileFeature } from './profile.js';
 import { initDriverFeature } from './driver.js';
 
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     showLoadingOverlay();
     initFirebase((user) => {
         // Show/hide UI based on user state
