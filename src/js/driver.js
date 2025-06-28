@@ -8,6 +8,8 @@ const driverSection = document.getElementById('driver-requests-section');
 const requestsTableBody = document.querySelector('#driver-requests-table tbody');
 const routeModal = document.getElementById('driver-route-modal');
 const routeMapDiv = document.getElementById('driver-route-map');
+const rideRequestSection = document.getElementById('ride-request-section');
+const rideHistoryMenu = document.getElementById('menu-ride-history');
 
 export function initDriverFeature() {
     db = getFirestore();
@@ -20,9 +22,13 @@ export function initDriverFeature() {
             const userSnap = await getDoc(userRef);
             if (userSnap.exists() && userSnap.data().role === "driver") {
                 driverSection.classList.remove('hidden');
+                if (rideRequestSection) rideRequestSection.classList.add('hidden');
+                if (rideHistoryMenu) rideHistoryMenu.textContent = "Ride Requests";
                 await loadRideRequests();
             } else {
                 driverSection.classList.add('hidden');
+                if (rideRequestSection) rideRequestSection.classList.remove('hidden');
+                if (rideHistoryMenu) rideHistoryMenu.textContent = "Ride History";
             }
         }
     });
