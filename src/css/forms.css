@@ -69,6 +69,30 @@
     }
 }
 
+/* Group Bags, Persons, Round Trip inline on desktop */
+.input-group-bags-persons-roundtrip {
+    display: flex;
+    gap: 1em;
+    flex-wrap: wrap;
+}
+.input-group-bags-persons-roundtrip .input-third {
+    flex: 1 1 0;
+    min-width: 120px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+}
+.input-group-bags-persons-roundtrip .input-roundtrip-toggle {
+    align-items: flex-end;
+    justify-content: center;
+}
+@media (max-width: 600px) {
+    .input-group-bags-persons-roundtrip {
+        flex-direction: column;
+        gap: 0.5em;
+    }
+}
+
 /* Toggle switch styling */
 .toggle-label {
     display: flex;
