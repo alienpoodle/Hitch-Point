@@ -15,7 +15,7 @@ export async function loadGoogleMapsScript(apiKey) {
     isGoogleMapsLoading = true;
     mapLoadPromise = new Promise((resolve, reject) => {
         const script = document.createElement('script');
-        script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&features=marker`;
         script.async = true;
         script.onload = () => {
             isGoogleMapsReady = true;
@@ -58,7 +58,6 @@ function initMapForSelection() {
     });
     if (!geocoder) geocoder = new google.maps.Geocoder();
 
-    // Use AdvancedMarkerElement instead of Marker
     map.addListener('click', (event) => {
         placeMarkerAndGetAddress(event.latLng);
     });
@@ -74,7 +73,12 @@ function placeMarkerAndGetAddress(location) {
     // Remove previous marker if exists
     if (selectedMarker) selectedMarker.map = null;
 
-    // Use AdvancedMarkerElement
+    // Check for AdvancedMarkerElement
+    if (!google.maps.marker || !google.maps.marker.AdvancedMarkerElement) {
+        showToast("AdvancedMarkerElement is not available. Please check your Maps API version and features.", "error");
+        return;
+    }
+
     const { AdvancedMarkerElement } = google.maps.marker;
     selectedMarker = new AdvancedMarkerElement({
         map: map,
