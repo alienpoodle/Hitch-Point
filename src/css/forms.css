@@ -42,6 +42,12 @@
     min-width: 0;
 }
 
+.input-half input[type="number"] {
+    max-width: 60px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
 .input-group-inline {
     margin-bottom: 1em;
 }
@@ -162,6 +168,14 @@
     .toggle-label {
         margin-right: 0;
     }
+}
+
+#ride-request-section {
+    padding: 1em;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    background: #fff;
+    margin-bottom: 1em;
 }
 
 /* Profile form specific */
