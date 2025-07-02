@@ -11,6 +11,13 @@ export function showToast(message, type = "info", duration = 3500) {
     }, duration);
 }
 
+export function showConfirm(message) {
+    return new Promise((resolve) => {
+        const confirmed = window.confirm(message);
+        resolve(confirmed);
+    });
+}
+
 export function showLoadingOverlay() {
     const overlay = document.getElementById('loading-overlay');
     if (overlay) overlay.classList.add('show');
