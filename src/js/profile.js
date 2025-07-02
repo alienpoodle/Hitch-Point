@@ -1,9 +1,7 @@
-import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+import { db, auth } from './firebase.js';
+import { doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 import { showConfirm, showToast } from './ui.js'; 
-
-const db = getFirestore();
-const auth = getAuth();
 
 const profileForm = document.getElementById('user-profile-form');
 const firstNameInput = document.getElementById('profile-first-name');
