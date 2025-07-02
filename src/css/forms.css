@@ -192,29 +192,30 @@
     .toggle-label {
         margin-right: 0;
     }
+    .input-group-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
-#ride-request-section {
+#ride-request-section,
+#profile-view form {
     max-width: 440px;
     margin-left: 1em;
     margin-right: 1em;
-}
-
-/* Profile form specific */
-#user-profile-form {
     background: #f8fafc;
-    max-width: 400px;
-    margin: 2em auto;
+    border-radius: 12px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    padding: 2em 1.5em;
 }
 
-#user-profile-form h3 {
+#profile-view form h3 {
     font-weight: 700;
     color: #222;
+    margin-bottom: 1em;
 }
 
-#user-profile-form .btn-primary,
-#user-profile-form .btn-secondary {
+#profile-view .btn-primary,
+#profile-view .btn-secondary {
     width: auto;
     margin-top: 1em;
 }

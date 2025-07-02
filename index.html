@@ -144,29 +144,28 @@
         </div>
 
         <!-- User Profile View -->
-        <div id="profile-view" class="hidden">
-            <form id="user-profile-form" class="p-4 rounded-lg shadow-sm" autocomplete="off">
-                <h3 class="text-xl mb-4">Your Profile</h3>
-                <div class="input-group">
-                    <label for="profile-first-name">First Name</label>
-                    <input type="text" id="profile-first-name" name="firstName" required>
-                </div>
-                <div class="input-group">
-                    <label for="profile-last-name">Last Name</label>
-                    <input type="text" id="profile-last-name" name="lastName" required>
-                </div>
-                <div class="input-group">
-                    <label for="profile-phone">Phone Number (optional)</label>
-                    <input type="text" id="profile-phone" name="phone" pattern="^[0-9+\-\s()]*$">
-                </div>
-                <div class="input-group">
-                    <label for="profile-email">Email Address</label>
-                    <input type="email" id="user-email" name="email" required readonly>
-                </div>
-                <button type="submit" class="btn-primary mt-4">Save Profile</button>
-                <button type="button" id="profile-back-btn" class="btn-secondary mt-4" style="margin-left: 1em;">Back</button>
-            </form>
-        </div>
+    <div id="profile-view" class="hidden">
+        <form id="user-profile-form" autocomplete="off">
+            <h3 class="text-xl mb-4">Your Profile</h3>
+            <div class="input-group">
+                <label for="profile-first-name">First Name</label>
+                <input type="text" id="profile-first-name" name="firstName" required>
+            </div>
+            <div class="input-group">
+                <label for="profile-last-name">Last Name</label>
+                <input type="text" id="profile-last-name" name="lastName" required>
+            </div>
+            <div class="input-group">
+                <label for="profile-phone">Phone Number (optional)</label>
+                <input type="text" id="profile-phone" name="phone" pattern="^[0-9+\-\s()]*$">
+            </div>
+            <div class="input-group">
+                <label for="profile-email">Email Address</label>
+                <input type="email" id="user-email" name="email" required readonly>
+            </div>
+            <button type="submit" class="btn-primary mt-4">Save Profile</button>
+            <button type="button" id="profile-back-btn" class="btn-secondary mt-4" style="margin-left: 1em;">Back</button>
+        </form>
     </div>
 
     <!-- Ride History Modal -->
