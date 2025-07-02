@@ -9,6 +9,8 @@ const lastNameInput = document.getElementById('profile-last-name');
 const phoneInput = document.getElementById('profile-phone');
 const emailInput = document.getElementById('user-email');
 const backBtn = document.getElementById('profile-back-btn');
+const profileView = document.getElementById('profile-view');
+const rideRequestSection = document.getElementById('ride-request-section');
 
 let originalProfile = {};
 
@@ -80,6 +82,11 @@ export function initProfileFeature() {
                     : confirm("Discard changes to your profile?");
                 if (confirmed) {
                     resetProfileForm();
+                    // Hide profile, show ride request section
+                    if (profileView && rideRequestSection) {
+                        profileView.classList.add('hidden');
+                        rideRequestSection.classList.remove('hidden');
+                    }
                 }
             };
         }
