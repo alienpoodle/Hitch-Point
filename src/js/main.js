@@ -5,8 +5,7 @@ import { setupRideListeners } from './ride.js';
 import { setupHistoryListeners } from './history.js';
 import { setupPWA } from './pwa.js';
 import { showLoadingOverlay, hideLoadingOverlay } from './ui.js';
-import { initProfileFeature } from './js/profile.js';
-
+import { initProfileFeature } from './profile.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     showLoadingOverlay();
@@ -40,23 +39,25 @@ document.addEventListener('DOMContentLoaded', () => {
     const profileView = document.getElementById('profile-view');
     const rideRequestSection = document.getElementById('ride-request-section');
     const navbarProfileBtn = document.getElementById('navbar-profile');
-    const profileBackBtn = document.getElementById('profile-back-btn');
+    // Removed duplicate profileBackBtn logic
 
     function showProfileView() {
-        profileView.classList.remove('hidden');
-        rideRequestSection.classList.add('hidden');
+        if (profileView && rideRequestSection) {
+            profileView.classList.remove('hidden');
+            rideRequestSection.classList.add('hidden');
+        }
     }
     function hideProfileView() {
-        profileView.classList.add('hidden');
-        rideRequestSection.classList.remove('hidden');
+        if (profileView && rideRequestSection) {
+            profileView.classList.add('hidden');
+            rideRequestSection.classList.remove('hidden');
+        }
     }
 
     if (navbarProfileBtn) {
         navbarProfileBtn.addEventListener('click', showProfileView);
     }
-    if (profileBackBtn) {
-        profileBackBtn.addEventListener('click', hideProfileView);
-    }
+    // Removed duplicate profileBackBtn event listener
 
     // Hamburger menu toggle logic
     const navbarHamburger = document.getElementById('navbar-hamburger');

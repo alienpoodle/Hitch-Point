@@ -122,8 +122,8 @@
     </div>
     <div class="input-group input-group-row">
         <label class="toggle-label">
-            <span>After Hours (10pm - 6am)</span>
-            <input type="checkbox" id="after-hours-input" class="toggle-switch">
+            <label for="ride-datetime-input">Ride Date & Time:</label>
+            <input type="datetime-local" id="ride-datetime-input" required>
             <span class="slider"></span>
         </label>
         <label class="toggle-label">
@@ -197,7 +197,7 @@
                 <p>Duration: <span id="quote-duration"></span></p>
                 <p>Bags: <span id="quote-bags"></span></p>
                 <p>Persons: <span id="quote-persons"></span></p>
-                <p>After Hours: <span id="quote-afterHours"></span></p>
+                <p class="quote-detail"><strong>Date & Time:</strong> <span id="quote-datetime"></span></p>
                 <p>Round Trip: <span id="quote-roundtrip"></span></p>
                 <p>Fare: <span id="quote-fare" class="text-xl font-bold"></span></p>
                 <button id="print-quote-btn" class="btn-secondary mt-4">Print Quote</button>

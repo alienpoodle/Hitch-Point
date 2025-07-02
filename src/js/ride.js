@@ -11,28 +11,42 @@ export function setupRideListeners() {
     if (printQuoteBtn) printQuoteBtn.addEventListener('click', printQuote);
 }
 
+function isAfterHours(dateObj) {
+    // After hours: before 6:00 AM or after 8:00 PM
+    const hour = dateObj.getHours();
+    return (hour < 6 || hour >= 20);
+}
+
 export async function calculateRoute() {
     const originInput = document.getElementById('origin-input');
     const destinationInput = document.getElementById('destination-input');
     const bagsInput = document.getElementById('bags-input');
     const personsInput = document.getElementById('persons-input');
-    const afterHoursInput = document.getElementById('after-hours-input');
+    const rideDateTimeInput = document.getElementById('ride-datetime-input');
     const roundTripInput = document.getElementById('round-trip-input');
-    if (!originInput || !destinationInput) return;
+    if (!originInput || !destinationInput || !rideDateTimeInput) return;
     const origin = originInput.value;
     const destination = destinationInput.value;
     const bags = parseInt(bagsInput?.value, 10) || 0;
     const persons = parseInt(personsInput?.value, 10) || 1;
-    const isAfterHours = afterHoursInput?.checked || false;
     const isRoundTrip = roundTripInput?.checked || false;
-    if (!origin || !destination) {
-        showToast("Please enter both origin and destination.", "warning");
+    const rideDateTimeValue = rideDateTimeInput.value;
+    if (!origin || !destination || !rideDateTimeValue) {
+        showToast("Please enter origin, destination, and ride date/time.", "warning");
         return;
     }
     if (!window.google || !window.google.maps) {
         showToast("Google Maps is not loaded yet. Please try again.", "error");
         return;
     }
+    // Parse date/time
+    const rideDateObj = new Date(rideDateTimeValue);
+    if (isNaN(rideDateObj.getTime())) {
+        showToast("Invalid ride date/time.", "error");
+        return;
+    }
+    const isAfter = isAfterHours(rideDateObj);
+
     showLoadingOverlay();
     try {
         const directionsService = new google.maps.DirectionsService();
@@ -55,19 +69,21 @@ export async function calculateRoute() {
                     const quoteAfterHours = document.getElementById('quote-afterHours');
                     const quoteRoundTrip = document.getElementById('quote-roundtrip');
                     const quoteFare = document.getElementById('quote-fare');
+                    const quoteDateTime = document.getElementById('quote-datetime');
                     if (quoteDistance) quoteDistance.textContent = leg.distance.text;
                     if (quoteDuration) quoteDuration.textContent = leg.duration.text;
                     if (quoteOrigin) quoteOrigin.textContent = origin;
                     if (quoteDestination) quoteDestination.textContent = destination;
                     if (quoteBags) quoteBags.textContent = bags > 0 ? `${bags} bag(s)` : "No bags";
                     if (quotePersons) quotePersons.textContent = persons > 1 ? `${persons} person(s)` : "1 person";
-                    if (quoteAfterHours) quoteAfterHours.textContent = isAfterHours ? "Yes" : "No";
+                    if (quoteAfterHours) quoteAfterHours.textContent = isAfter ? "Yes" : "No";
                     if (quoteRoundTrip) quoteRoundTrip.textContent = isRoundTrip ? "Yes" : "No";
+                    if (quoteDateTime) quoteDateTime.textContent = rideDateObj.toLocaleString();
                     const distanceKm = leg.distance.value / 1000;
                     let fareXCD = BASE_FARE_XCD + (distanceKm * DEFAULT_PER_KM_RATE_XCD);
                     if (bags > 0) fareXCD += bags * COST_PER_ADDITIONAL_BAG_XCD;
                     if (persons > FREE_PERSON_COUNT) fareXCD += (persons - FREE_PERSON_COUNT) * COST_PER_ADDITIONAL_PERSON_XCD;
-                    if (isAfterHours) fareXCD += fareXCD * AFTER_HOURS_SURCHARGE_PERCENTAGE;
+                    if (isAfter) fareXCD += fareXCD * AFTER_HOURS_SURCHARGE_PERCENTAGE;
                     if (isRoundTrip) fareXCD *= 2;
                     const fareUSD = fareXCD * XCD_TO_USD_EXCHANGE_RATE;
                     if (quoteFare) quoteFare.textContent = `${Math.round(fareXCD)} XCD / $${Math.round(fareUSD)} USD`;
@@ -84,8 +100,9 @@ export async function calculateRoute() {
                                 fareUSD: fareUSD.toFixed(2),
                                 bags,
                                 persons,
-                                afterHours: isAfterHours,
+                                afterHours: isAfter,
                                 roundTrip: isRoundTrip,
+                                rideDateTime: rideDateObj.toISOString(),
                                 status: 'quoted',
                                 timestamp: serverTimestamp()
                             });
@@ -111,13 +128,13 @@ export function resetRideForm() {
     const destinationInput = document.getElementById('destination-input');
     const bagsInput = document.getElementById('bags-input');
     const personsInput = document.getElementById('persons-input');
-    const afterHoursInput = document.getElementById('after-hours-input');
+    const rideDateTimeInput = document.getElementById('ride-datetime-input');
     const roundTripInput = document.getElementById('round-trip-input');
     if (originInput) originInput.value = '';
     if (destinationInput) destinationInput.value = '';
     if (bagsInput) bagsInput.value = 0;
     if (personsInput) personsInput.value = 1;
-    if (afterHoursInput) afterHoursInput.checked = false;
+    if (rideDateTimeInput) rideDateTimeInput.value = '';
     if (roundTripInput) roundTripInput.checked = false;
 }
 

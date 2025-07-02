@@ -15,6 +15,7 @@ const backBtn = document.getElementById('profile-back-btn');
 let originalProfile = {};
 
 function fillProfileForm(data, email) {
+    if (!firstNameInput || !lastNameInput || !phoneInput || !emailInput) return;
     firstNameInput.value = data?.firstName || '';
     lastNameInput.value = data?.lastName || '';
     phoneInput.value = data?.phone || '';
@@ -33,7 +34,7 @@ function resetProfileForm() {
 
 export function initProfileFeature() {
     onAuthStateChanged(auth, async user => {
-        if (user && profileForm) {
+        if (user && profileForm && firstNameInput && lastNameInput && phoneInput && emailInput && backBtn) {
             // Always use Google account email, never allow editing
             emailInput.value = user.email || '';
             emailInput.readOnly = true;
