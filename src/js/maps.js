@@ -1,4 +1,4 @@
-import { showToast, openModal, closeModal, showLoadingOverlay, hideLoadingOverlay } from './ui.js';
+import { openModal, showToast } from './ui.js';
 
 let map, geocoder, selectedMarker;
 let isGoogleMapsReady = false;
@@ -14,22 +14,14 @@ export async function loadGoogleMapsScript(apiKey) {
     }
     isGoogleMapsLoading = true;
     mapLoadPromise = new Promise((resolve, reject) => {
-        window.googleMapsCallback = function() {
+        const script = document.createElement('script');
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
+        script.async = true;
+        script.onload = () => {
             isGoogleMapsReady = true;
-            isGoogleMapsLoading = false;
-            geocoder = new google.maps.Geocoder();
             resolve();
         };
-        const script = document.createElement('script');
-        script.id = 'google-maps-script';
-        script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&callback=googleMapsCallback`;
-        script.async = true;
-        script.defer = true;
-        script.onerror = () => {
-            isGoogleMapsLoading = false;
-            showToast("Failed to load Google Maps. Please check your API key.", "error");
-            reject(new Error("Failed to load Google Maps"));
-        };
+        script.onerror = reject;
         document.head.appendChild(script);
     });
     return mapLoadPromise;
@@ -37,7 +29,7 @@ export async function loadGoogleMapsScript(apiKey) {
 
 export function openMapModal(mode) {
     if (!isGoogleMapsReady) {
-        showToast("Google Maps is not ready. Please try again.", "error");
+        showToast("Google Maps is not loaded yet. Please try again.", "error");
         return;
     }
     mapSelectionMode = mode;
@@ -49,8 +41,7 @@ export function openMapModal(mode) {
 
 function initMapForSelection() {
     if (!isGoogleMapsReady || !window.google || !window.google.maps) {
-        showToast("Google Maps is not ready yet.", "error");
-        closeModal('map-modal');
+        showToast("Google Maps is not loaded yet. Please try again.", "error");
         return;
     }
     const mapDiv = document.getElementById('map');
@@ -66,68 +57,61 @@ function initMapForSelection() {
         styles: [{ featureType: "poi.business", elementType: "labels", stylers: [{ visibility: "off" }] }]
     });
     if (!geocoder) geocoder = new google.maps.Geocoder();
+
+    // Use AdvancedMarkerElement instead of Marker
     map.addListener('click', (event) => {
         placeMarkerAndGetAddress(event.latLng);
     });
+
+    // Optional: Add instructions
     const instructionDiv = document.createElement('div');
     instructionDiv.className = 'map-instruction';
-    instructionDiv.innerHTML = `<i class="fas fa-map-marker-alt"></i> Click anywhere on the map to select your ${mapSelectionMode}`;
-    mapDiv.appendChild(instructionDiv);
+    instructionDiv.textContent = "Click on the map to select a location.";
+    map.controls[google.maps.ControlPosition.TOP_CENTER].push(instructionDiv);
 }
 
 function placeMarkerAndGetAddress(location) {
-    if (selectedMarker) selectedMarker.setMap(null);
-    selectedMarker = new google.maps.Marker({
-        position: location,
+    // Remove previous marker if exists
+    if (selectedMarker) selectedMarker.map = null;
+
+    // Use AdvancedMarkerElement
+    const { AdvancedMarkerElement } = google.maps.marker;
+    selectedMarker = new AdvancedMarkerElement({
         map: map,
-        animation: google.maps.Animation.DROP
+        position: location,
+        title: "Selected Location"
     });
-    geocoder.geocode({ location: location }, (results, status) => {
-        if (status === 'OK' && results[0]) {
+
+    if (!geocoder) geocoder = new google.maps.Geocoder();
+    geocoder.geocode({ location }, (results, status) => {
+        if (status === "OK" && results[0]) {
             const address = results[0].formatted_address;
             if (mapSelectionMode === 'origin') {
                 const originInput = document.getElementById('origin-input');
                 if (originInput) originInput.value = address;
-                showToast("Origin location selected!", "success");
             } else if (mapSelectionMode === 'destination') {
-                const destInput = document.getElementById('destination-input');
-                if (destInput) destInput.value = address;
-                showToast("Destination location selected!", "success");
+                const destinationInput = document.getElementById('destination-input');
+                if (destinationInput) destinationInput.value = address;
             }
-            setTimeout(() => closeModal('map-modal'), 1000);
         } else {
-            showToast("Could not find address for this location.", "warning");
+            showToast("Could not get address for selected location.", "error");
         }
     });
 }
 
 export function setupMapListeners(apiKey) {
-    const selectOriginBtn = document.getElementById('select-origin-map-btn');
-    if (selectOriginBtn) {
-        selectOriginBtn.addEventListener('click', async () => {
-            showLoadingOverlay();
-            try {
-                await loadGoogleMapsScript(apiKey);
-                hideLoadingOverlay();
-                openMapModal('origin');
-            } catch (error) {
-                hideLoadingOverlay();
-                showToast("Failed to load Google Maps", "error");
-            }
-        });
-    }
-    const selectDestinationBtn = document.getElementById('select-destination-map-btn');
-    if (selectDestinationBtn) {
-        selectDestinationBtn.addEventListener('click', async () => {
-            showLoadingOverlay();
-            try {
-                await loadGoogleMapsScript(apiKey);
-                hideLoadingOverlay();
-                openMapModal('destination');
-            } catch (error) {
-                hideLoadingOverlay();
-                showToast("Failed to load Google Maps", "error");
-            }
-        });
-    }
+    loadGoogleMapsScript(apiKey).then(() => {
+        // Origin map button
+        const selectOriginBtn = document.getElementById('select-origin-map-btn');
+        if (selectOriginBtn) {
+            selectOriginBtn.addEventListener('click', () => openMapModal('origin'));
+        }
+        // Destination map button
+        const selectDestinationBtn = document.getElementById('select-destination-map-btn');
+        if (selectDestinationBtn) {
+            selectDestinationBtn.addEventListener('click', () => openMapModal('destination'));
+        }
+    }).catch(() => {
+        showToast("Failed to load Google Maps.", "error");
+    });
 }
