@@ -49,127 +49,123 @@
 
         <!-- Logged out view -->
         <div id="logged-out-view">
-    <div class="signin-logo-container">
-        <img src="src/images/logo.png" alt="Hitch Point Logo" class="signin-logo-img">
-    </div>
-    <div class="carousel" id="login-carousel">
-        <div class="carousel-slide active">
-            <div class="carousel-icon">
-                <!-- Home SVG -->
-                <svg width="48" height="48" fill="none" viewBox="0 0 48 48"><path d="M8 20L24 8l16 12v16a4 4 0 0 1-4 4H12a4 4 0 0 1-4-4V20z" stroke="#5E9BCD" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><rect x="18" y="28" width="12" height="12" rx="2" stroke="#5E9BCD" stroke-width="3"/></svg>
+            <div class="signin-logo-container">
+                <img src="src/images/logo.png" alt="Hitch Point Logo" class="signin-logo-img">
             </div>
-            <div class="carousel-message">Welcome to Hitch Point</div>
-            <div class="carousel-submessage">Easily pinpoint your pickup and drop-off locations on the map.</div>
-        </div>
-        <div class="carousel-slide">
-            <div class="carousel-icon">
-                <!-- Lightning Bolt SVG -->
-                <svg width="48" height="48" fill="none" viewBox="0 0 48 48"><path d="M24 4L10 28h12v16l14-24H26L24 4z" stroke="#5E9BCD" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <div class="carousel" id="login-carousel">
+                <div class="carousel-slide active">
+                    <div class="carousel-icon">
+                        <!-- Home SVG -->
+                        <svg width="48" height="48" fill="none" viewBox="0 0 48 48"><path d="M8 20L24 8l16 12v16a4 4 0 0 1-4 4H12a4 4 0 0 1-4-4V20z" stroke="#5E9BCD" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><rect x="18" y="28" width="12" height="12" rx="2" stroke="#5E9BCD" stroke-width="3"/></svg>
+                    </div>
+                    <div class="carousel-message">Welcome to Hitch Point</div>
+                    <div class="carousel-submessage">Easily pinpoint your pickup and drop-off locations on the map.</div>
+                </div>
+                <div class="carousel-slide">
+                    <div class="carousel-icon">
+                        <!-- Lightning Bolt SVG -->
+                        <svg width="48" height="48" fill="none" viewBox="0 0 48 48"><path d="M24 4L10 28h12v16l14-24H26L24 4z" stroke="#5E9BCD" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </div>
+                    <div class="carousel-message">Get Rides in Instant</div>
+                    <div class="carousel-submessage">Quickly request rides with just a few taps.</div>
+                </div>
+                <div class="carousel-slide">
+                    <div class="carousel-icon">
+                        <!-- Steering Wheel SVG -->
+                        <svg width="48" height="48" fill="none" viewBox="0 0 48 48"><circle cx="24" cy="24" r="20" stroke="#5E9BCD" stroke-width="3"/><circle cx="24" cy="24" r="6" stroke="#5E9BCD" stroke-width="3"/><path d="M24 30v8M24 10v8M10.93 37.07l5.66-5.66M37.07 10.93l-5.66 5.66M10.93 10.93l5.66 5.66M37.07 37.07l-5.66-5.66" stroke="#5E9BCD" stroke-width="3"/></svg>
+                    </div>
+                    <div class="carousel-message">Enjoy Your Ride</div>
+                    <div class="carousel-submessage">Sit back, relax, and enjoy a safe and comfortable journey.</div>
+                </div>
+                <div class="carousel-dots">
+                    <span class="carousel-dot active"></span>
+                    <span class="carousel-dot"></span>
+                    <span class="carousel-dot"></span>
+                </div>
             </div>
-            <div class="carousel-message">Get Rides in Instant</div>
-            <div class="carousel-submessage">Quickly request rides with just a few taps.</div>
-        </div>
-        <div class="carousel-slide">
-            <div class="carousel-icon">
-                <!-- Steering Wheel SVG -->
-                <svg width="48" height="48" fill="none" viewBox="0 0 48 48"><circle cx="24" cy="24" r="20" stroke="#5E9BCD" stroke-width="3"/><circle cx="24" cy="24" r="6" stroke="#5E9BCD" stroke-width="3"/><path d="M24 30v8M24 10v8M10.93 37.07l5.66-5.66M37.07 10.93l-5.66 5.66M10.93 10.93l5.66 5.66M37.07 37.07l-5.66-5.66" stroke="#5E9BCD" stroke-width="3"/></svg>
-            </div>
-            <div class="carousel-message">Enjoy Your Ride</div>
-            <div class="carousel-submessage">Sit back, relax, and enjoy a safe and comfortable journey.</div>
-        </div>
-        <div class="carousel-dots">
-            <span class="carousel-dot active"></span>
-            <span class="carousel-dot"></span>
-            <span class="carousel-dot"></span>
-        </div>
-    </div>
-    <button id="google-login-btn" class="btn-google">
-        <i class="fab fa-google"></i> Sign in with Google
-    </button>
-</div>
-
-       <!-- Ride Request Section -->
-<div id="ride-request-section" class="hidden">
-    <h2>Request a Ride</h2>
-    <div class="input-group input-group-inline">
-        <label for="origin-input">Origin</label>
-        <div class="input-inline-wrap">
-            <input type="text" id="origin-input" placeholder="Enter origin">
-            <button id="select-origin-map-btn" class="btn-secondary" type="button">
-                <i class="fas fa-map-marker-alt"></i> Select on Map
+            <button id="google-login-btn" class="btn-google">
+                <i class="fab fa-google"></i> Sign in with Google
             </button>
         </div>
-    </div>
-    <div class="input-group input-group-inline">
-        <label for="destination-input">Destination</label>
-        <div class="input-inline-wrap">
-            <input type="text" id="destination-input" placeholder="Enter destination">
-            <button id="select-destination-map-btn" class="btn-secondary" type="button">
-                <i class="fas fa-map-marker-alt"></i> Select on Map
+
+        <!-- Ride Request Section -->
+        <div id="ride-request-section" class="hidden">
+            <h2>Request a Ride</h2>
+            <div class="input-group input-group-inline">
+                <label for="origin-input">Origin</label>
+                <div class="input-inline-wrap">
+                    <input type="text" id="origin-input" placeholder="Enter origin">
+                    <button id="select-origin-map-btn" class="btn-secondary" type="button">
+                        <i class="fas fa-map-marker-alt"></i> Select on Map
+                    </button>
+                </div>
+            </div>
+            <div class="input-group input-group-inline">
+                <label for="destination-input">Destination</label>
+                <div class="input-inline-wrap">
+                    <input type="text" id="destination-input" placeholder="Enter destination">
+                    <button id="select-destination-map-btn" class="btn-secondary" type="button">
+                        <i class="fas fa-map-marker-alt"></i> Select on Map
+                    </button>
+                </div>
+            </div>
+            <div class="input-group input-group-row">
+                <div class="input-half">
+                    <label for="bags-input">Bags</label>
+                    <input type="number" id="bags-input" min="0" value="0">
+                </div>
+                <div class="input-half">
+                    <label for="persons-input">Persons</label>
+                    <input type="number" id="persons-input" min="1" value="1">
+                </div>
+            </div>
+            <div class="input-group input-group-row">
+                <label class="toggle-label">
+                    <label for="ride-datetime-input">Ride Date & Time:</label>
+                    <input type="datetime-local" id="ride-datetime-input" required>
+                </label>
+                <label class="toggle-label">
+                    <span>Round Trip</span>
+                    <input type="checkbox" id="round-trip-input" class="toggle-switch">
+                    <span class="slider"></span>
+                </label>
+            </div>
+            <div class="input-group" id="return-datetime-group" style="display:none;">
+                <label for="return-datetime-input">Return Date & Time:</label>
+                <input type="datetime-local" id="return-datetime-input">
+            </div>
+            <button id="request-ride-btn" class="btn-primary">Request Ride</button>
+            <!-- PWA Install Button -->
+            <button id="install-pwa-btn" class="btn-secondary hidden" style="margin-top: 1em;">
+                <i class="fas fa-download"></i> Install App
             </button>
         </div>
-    </div>
-    <div class="input-group input-group-row">
-        <div class="input-half">
-            <label for="bags-input">Bags</label>
-            <input type="number" id="bags-input" min="0" value="0">
+
+        <!-- User Profile View -->
+        <div id="profile-view" class="hidden">
+            <form id="user-profile-form" class="p-4 rounded-lg shadow-sm" autocomplete="off">
+                <h3 class="text-xl mb-4">Your Profile</h3>
+                <div class="input-group">
+                    <label for="profile-first-name">First Name</label>
+                    <input type="text" id="profile-first-name" name="firstName" required>
+                </div>
+                <div class="input-group">
+                    <label for="profile-last-name">Last Name</label>
+                    <input type="text" id="profile-last-name" name="lastName" required>
+                </div>
+                <div class="input-group">
+                    <label for="profile-phone">Phone Number (optional)</label>
+                    <input type="text" id="profile-phone" name="phone" pattern="^[0-9+\-\s()]*$">
+                </div>
+                <div class="input-group">
+                    <label for="profile-email">Email Address</label>
+                    <input type="email" id="user-email" name="email" required readonly>
+                </div>
+                <button type="submit" class="btn-primary mt-4">Save Profile</button>
+                <button type="button" id="profile-back-btn" class="btn-secondary mt-4" style="margin-left: 1em;">Back</button>
+            </form>
         </div>
-        <div class="input-half">
-            <label for="persons-input">Persons</label>
-            <input type="number" id="persons-input" min="1" value="1">
-        </div>
     </div>
-    <div class="input-group input-group-row">
-        <label class="toggle-label">
-            <label for="ride-datetime-input">Ride Date & Time:</label>
-            <input type="datetime-local" id="ride-datetime-input" required>
-        </label>
-        <label class="toggle-label">
-            <span>Round Trip</span>
-            <input type="checkbox" id="round-trip-input" class="toggle-switch">
-            <span class="slider"></span>
-        </label>
-    </div>
-    <button id="request-ride-btn" class="btn-primary">Request Ride</button>
-    <!-- PWA Install Button -->
-    <button id="install-pwa-btn" class="btn-secondary hidden" style="margin-top: 1em;">
-        <i class="fas fa-download"></i> Install App
-    </button>
-</div>
-
-         <!-- User Profile View -->
-    <div id="profile-view" class="hidden">
-        <form id="user-profile-form" class="p-4 rounded-lg shadow-sm" autocomplete="off">
-            <h3 class="text-xl mb-4">Your Profile</h3>
-            <div class="input-group">
-                <label for="profile-first-name">First Name</label>
-                <input type="text" id="profile-first-name" name="firstName" required>
-            </div>
-            <div class="input-group">
-                <label for="profile-last-name">Last Name</label>
-                <input type="text" id="profile-last-name" name="lastName" required>
-            </div>
-            <div class="input-group">
-                <label for="profile-phone">Phone Number (optional)</label>
-                <input type="text" id="profile-phone" name="phone" pattern="^[0-9+\-\s()]*$">
-            </div>
-            <div class="input-group">
-                <label for="profile-email">Email Address</label>
-                <input type="email" id="user-email" name="email" required readonly>
-            </div>
-            <button type="submit" class="btn-primary mt-4">Save Profile</button>
-            <button type="button" id="profile-back-btn" class="btn-secondary mt-4" style="margin-left: 1em;">Back</button>
-        </form>
-    </div>
-
-
-
-
-
-    </div>
-
-   
-
 
     <!-- Ride History Modal -->
     <div id="ride-history-modal" class="modal">
@@ -196,6 +192,7 @@
                 <p>Bags: <span id="quote-bags"></span></p>
                 <p>Persons: <span id="quote-persons"></span></p>
                 <p class="quote-detail"><strong>Date & Time:</strong> <span id="quote-datetime"></span></p>
+                <p><strong>Return Date & Time:</strong> <span id="quote-return-datetime"></span></p>
                 <p>After Hours: <span id="quote-afterHours"></span></p>
                 <p>Round Trip: <span id="quote-roundtrip"></span></p>
                 <p>Fare: <span id="quote-fare" class="text-xl font-bold"></span></p>
@@ -216,5 +213,17 @@
     <script src="config.js"></script>
     <!-- Main JS as module -->
     <script type="module" src="src/js/main.js"></script>
+    <script>
+    // Show/hide return date/time for round trip
+    document.addEventListener('DOMContentLoaded', function() {
+        const roundTripInput = document.getElementById('round-trip-input');
+        const returnGroup = document.getElementById('return-datetime-group');
+        if (roundTripInput && returnGroup) {
+            roundTripInput.addEventListener('change', () => {
+                returnGroup.style.display = roundTripInput.checked ? 'block' : 'none';
+            });
+        }
+    });
+    </script>
 </body>
 </html>

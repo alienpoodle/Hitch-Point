@@ -24,6 +24,7 @@ export async function calculateRoute() {
     const personsInput = document.getElementById('persons-input');
     const rideDateTimeInput = document.getElementById('ride-datetime-input');
     const roundTripInput = document.getElementById('round-trip-input');
+    const returnDateTimeInput = document.getElementById('return-datetime-input');
     if (!originInput || !destinationInput || !rideDateTimeInput) return;
     const origin = originInput.value;
     const destination = destinationInput.value;
@@ -31,8 +32,13 @@ export async function calculateRoute() {
     const persons = parseInt(personsInput?.value, 10) || 1;
     const isRoundTrip = roundTripInput?.checked || false;
     const rideDateTimeValue = rideDateTimeInput.value;
+    const returnDateTimeValue = isRoundTrip && returnDateTimeInput ? returnDateTimeInput.value : null;
     if (!origin || !destination || !rideDateTimeValue) {
         showToast("Please enter origin, destination, and ride date/time.", "warning");
+        return;
+    }
+    if (isRoundTrip && !returnDateTimeValue) {
+        showToast("Please enter a return date/time for your round trip.", "warning");
         return;
     }
     if (!window.google || !window.google.maps) {
@@ -44,6 +50,14 @@ export async function calculateRoute() {
     if (isNaN(rideDateObj.getTime())) {
         showToast("Invalid ride date/time.", "error");
         return;
+    }
+    let returnDateObj = null;
+    if (isRoundTrip) {
+        returnDateObj = new Date(returnDateTimeValue);
+        if (isNaN(returnDateObj.getTime())) {
+            showToast("Invalid return date/time.", "error");
+            return;
+        }
     }
     const isAfter = isAfterHours(rideDateObj);
 
@@ -70,6 +84,7 @@ export async function calculateRoute() {
                     const quoteRoundTrip = document.getElementById('quote-roundtrip');
                     const quoteFare = document.getElementById('quote-fare');
                     const quoteDateTime = document.getElementById('quote-datetime');
+                    const quoteReturnDateTime = document.getElementById('quote-return-datetime');
                     if (quoteDistance) quoteDistance.textContent = leg.distance.text;
                     if (quoteDuration) quoteDuration.textContent = leg.duration.text;
                     if (quoteOrigin) quoteOrigin.textContent = origin;
@@ -79,6 +94,7 @@ export async function calculateRoute() {
                     if (quoteAfterHours) quoteAfterHours.textContent = isAfter ? "Yes" : "No";
                     if (quoteRoundTrip) quoteRoundTrip.textContent = isRoundTrip ? "Yes" : "No";
                     if (quoteDateTime) quoteDateTime.textContent = rideDateObj.toLocaleString();
+                    if (quoteReturnDateTime) quoteReturnDateTime.textContent = isRoundTrip && returnDateObj ? returnDateObj.toLocaleString() : '';
                     const distanceKm = leg.distance.value / 1000;
                     let fareXCD = BASE_FARE_XCD + (distanceKm * DEFAULT_PER_KM_RATE_XCD);
                     if (bags > 0) fareXCD += bags * COST_PER_ADDITIONAL_BAG_XCD;
@@ -103,6 +119,7 @@ export async function calculateRoute() {
                                 afterHours: isAfter,
                                 roundTrip: isRoundTrip,
                                 rideDateTime: rideDateObj.toISOString(),
+                                returnDateTime: isRoundTrip && returnDateObj ? returnDateObj.toISOString() : null,
                                 status: 'quoted',
                                 timestamp: serverTimestamp()
                             });
@@ -130,12 +147,14 @@ export function resetRideForm() {
     const personsInput = document.getElementById('persons-input');
     const rideDateTimeInput = document.getElementById('ride-datetime-input');
     const roundTripInput = document.getElementById('round-trip-input');
+    const returnDateTimeInput = document.getElementById('return-datetime-input');
     if (originInput) originInput.value = '';
     if (destinationInput) destinationInput.value = '';
     if (bagsInput) bagsInput.value = 0;
     if (personsInput) personsInput.value = 1;
     if (rideDateTimeInput) rideDateTimeInput.value = '';
     if (roundTripInput) roundTripInput.checked = false;
+    if (returnDateTimeInput) returnDateTimeInput.value = '';
 }
 
 export function printQuote() {
