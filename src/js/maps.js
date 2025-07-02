@@ -1,4 +1,4 @@
-import { openModal, showToast } from './ui.js';
+import { openModal, showToast, closeModal } from './ui.js';
 
 let map, geocoder, selectedMarker;
 let isGoogleMapsReady = false;
@@ -15,7 +15,7 @@ export async function loadGoogleMapsScript(apiKey) {
     isGoogleMapsLoading = true;
     mapLoadPromise = new Promise((resolve, reject) => {
         const script = document.createElement('script');
-        script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&features=marker`;
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
         script.async = true;
         script.onload = () => {
             isGoogleMapsReady = true;
@@ -36,6 +36,16 @@ export function openMapModal(mode) {
     openModal('map-modal');
     setTimeout(() => {
         initMapForSelection();
+        // Add click-outside-to-close logic
+        const modal = document.getElementById('map-modal');
+        if (modal) {
+            // Remove any previous listener to avoid stacking
+            modal.onclick = (e) => {
+                if (e.target === modal) {
+                    closeModal('map-modal');
+                }
+            };
+        }
     }, 300);
 }
 
@@ -71,16 +81,10 @@ function initMapForSelection() {
 
 function placeMarkerAndGetAddress(location) {
     // Remove previous marker if exists
-    if (selectedMarker) selectedMarker.map = null;
+    if (selectedMarker) selectedMarker.setMap(null);
 
-    // Check for AdvancedMarkerElement
-    if (!google.maps.marker || !google.maps.marker.AdvancedMarkerElement) {
-        showToast("AdvancedMarkerElement is not available. Please check your Maps API version and features.", "error");
-        return;
-    }
-
-    const { AdvancedMarkerElement } = google.maps.marker;
-    selectedMarker = new AdvancedMarkerElement({
+    // Use classic Marker
+    selectedMarker = new google.maps.Marker({
         map: map,
         position: location,
         title: "Selected Location"
