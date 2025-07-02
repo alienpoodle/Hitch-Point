@@ -76,6 +76,30 @@
     }
 }
 
+.input-group-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 1em;
+    margin-bottom: 1em;
+}
+.input-col {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+.input-col label {
+    margin-bottom: 0.3em;
+    font-weight: 500;
+}
+.input-col input[type="number"] {
+    max-width: 60px;
+    width: 100%;
+    box-sizing: border-box;
+}
+.input-col .toggle-label {
+    margin-bottom: 0;
+}
+
 /* Toggle switch styling */
 .toggle-label {
     display: flex;
@@ -171,11 +195,9 @@
 }
 
 #ride-request-section {
-    padding: 1em;
-    border: 1px solid #cbd5e1;
-    border-radius: 6px;
-    background: #fff;
-    margin-bottom: 1em;
+    max-width: 440px;
+    margin-left: 5em;
+    margin-right: 5em;
 }
 
 /* Profile form specific */

@@ -109,25 +109,28 @@
                     </button>
                 </div>
             </div>
-            <div class="input-group input-group-row">
-                <div class="input-half">
+            <div class="input-group input-group-grid">
+                <div class="input-col">
                     <label for="bags-input">Bags</label>
                     <input type="number" id="bags-input" min="0" value="0">
                 </div>
-                <div class="input-half">
+                <div class="input-col">
                     <label for="persons-input">Persons</label>
                     <input type="number" id="persons-input" min="1" value="1">
+                </div>
+                <div class="input-col"></div>
+                <div class="input-col">
+                    <label class="toggle-label" style="margin-bottom:0;">
+                        <span>Round Trip</span>
+                        <input type="checkbox" id="round-trip-input" class="toggle-switch">
+                        <span class="slider"></span>
+                    </label>
                 </div>
             </div>
             <div class="input-group input-group-row">
                 <label class="toggle-label">
                     <label for="ride-datetime-input">Ride Date & Time:</label>
                     <input type="datetime-local" id="ride-datetime-input" required>
-                </label>
-                <label class="toggle-label">
-                    <span>Round Trip</span>
-                    <input type="checkbox" id="round-trip-input" class="toggle-switch">
-                    <span class="slider"></span>
                 </label>
             </div>
             <div class="input-group" id="return-datetime-group" style="display:none;">
