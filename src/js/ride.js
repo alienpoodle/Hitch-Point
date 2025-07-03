@@ -1,7 +1,66 @@
-import { BASE_FARE_XCD, DEFAULT_PER_KM_RATE_XCD, AFTER_HOURS_SURCHARGE_PERCENTAGE, XCD_TO_USD_EXCHANGE_RATE, COST_PER_ADDITIONAL_BAG_XCD, COST_PER_ADDITIONAL_PERSON_XCD, FREE_PERSON_COUNT } from './constants.js';
-import { db, currentUserId } from './firebase.js';
-import { showToast, openModal, hideLoadingOverlay, showLoadingOverlay } from './ui.js';
-import { collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+import { showToast, showLoadingOverlay, hideLoadingOverlay } from './ui.js';
+
+export function setupMultipointPickup() {
+    const routePointsList = document.getElementById('route-points-list');
+    const addPickupBtn = document.getElementById('add-pickup-btn');
+
+    function updateLabels() {
+        const points = routePointsList.querySelectorAll('.route-point');
+        points.forEach((group, idx) => {
+            const label = group.querySelector('.input-group-text');
+            if (idx === 0) {
+                label.textContent = 'Start';
+                label.className = 'input-group-text bg-primary text-white';
+            } else if (idx === points.length - 1) {
+                label.textContent = 'Finish';
+                label.className = 'input-group-text bg-secondary text-white';
+            } else {
+                label.textContent = `Pickup ${idx}`;
+                label.className = 'input-group-text bg-info text-white';
+            }
+            // Show remove button only for pickup points
+            let removeBtn = group.querySelector('.remove-pickup-btn');
+            if (idx > 0 && idx < points.length - 1) {
+                if (!removeBtn) {
+                    removeBtn = document.createElement('button');
+                    removeBtn.type = 'button';
+                    removeBtn.className = 'btn btn-outline-danger btn-sm remove-pickup-btn';
+                    removeBtn.title = 'Remove Pickup';
+                    removeBtn.innerHTML = '<i class="fas fa-times"></i>';
+                    removeBtn.onclick = () => {
+                        group.remove();
+                        updateLabels();
+                    };
+                    group.appendChild(removeBtn);
+                }
+            } else if (removeBtn) {
+                removeBtn.remove();
+            }
+        });
+    }
+
+    if (addPickupBtn && routePointsList) {
+        addPickupBtn.addEventListener('click', () => {
+            const points = routePointsList.querySelectorAll('.route-point');
+            const newIdx = points.length - 1;
+            // Insert before the last (finish) point
+            const finishGroup = points[points.length - 1];
+            const pickupGroup = document.createElement('div');
+            pickupGroup.className = 'input-group mb-2 route-point';
+            pickupGroup.setAttribute('data-index', newIdx);
+            pickupGroup.innerHTML = `
+                <span class="input-group-text bg-info text-white">Pickup ${newIdx}</span>
+                <input type="text" class="form-control route-point-input" placeholder="Enter pickup point" required>
+                <button class="btn btn-outline-secondary select-map-btn" type="button" title="Pin on Map">
+                    <i class="fas fa-map-marker-alt"></i>
+                </button>
+            `;
+            routePointsList.insertBefore(pickupGroup, finishGroup);
+            updateLabels();
+        });
+    }
+    updateLabels();
+}
 
 export function setupRideListeners() {
     const requestRideBtn = document.getElementById('request-ride-btn');
@@ -9,6 +68,9 @@ export function setupRideListeners() {
 
     const printQuoteBtn = document.getElementById('print-quote-btn');
     if (printQuoteBtn) printQuoteBtn.addEventListener('click', printQuote);
+
+    // Multipoint setup
+    setupMultipointPickup();
 }
 
 function isAfterHours(dateObj) {
@@ -18,27 +80,32 @@ function isAfterHours(dateObj) {
 }
 
 export async function calculateRoute() {
-    const originInput = document.getElementById('origin-input');
-    const destinationInput = document.getElementById('destination-input');
+    const routeInputs = document.querySelectorAll('.route-point-input');
+    if (routeInputs.length < 2) {
+        showToast("Please enter at least a start and finish point.", "warning");
+        return;
+    }
+    const points = Array.from(routeInputs).map(input => input.value.trim()).filter(Boolean);
+    if (points.length < 2) {
+        showToast("Please enter all route points.", "warning");
+        return;
+    }
     const bagsInput = document.getElementById('bags-input');
     const personsInput = document.getElementById('persons-input');
     const rideDateTimeInput = document.getElementById('ride-datetime-input');
     const roundTripInput = document.getElementById('round-trip-input');
     const returnDateTimeInput = document.getElementById('return-datetime-input');
-    if (!originInput || !destinationInput || !rideDateTimeInput) return;
-    const origin = originInput.value;
-    const destination = destinationInput.value;
     const bags = parseInt(bagsInput?.value, 10) || 0;
     const persons = parseInt(personsInput?.value, 10) || 1;
     const isRoundTrip = roundTripInput?.checked || false;
     const rideDateTimeValue = rideDateTimeInput.value;
     const returnDateTimeValue = isRoundTrip && returnDateTimeInput ? returnDateTimeInput.value : null;
-    if (!origin || !destination || !rideDateTimeValue) {
-        showToast("Please enter origin, destination, and ride date/time.", "warning");
+    if (!rideDateTimeValue) {
+        showToast("Please select a ride date and time.", "warning");
         return;
     }
     if (isRoundTrip && !returnDateTimeValue) {
-        showToast("Please enter a return date/time for your round trip.", "warning");
+        showToast("Please select a return date and time.", "warning");
         return;
     }
     if (!window.google || !window.google.maps) {
@@ -48,90 +115,57 @@ export async function calculateRoute() {
     // Parse date/time
     const rideDateObj = new Date(rideDateTimeValue);
     if (isNaN(rideDateObj.getTime())) {
-        showToast("Invalid ride date/time.", "error");
+        showToast("Invalid ride date/time.", "warning");
         return;
     }
     let returnDateObj = null;
     if (isRoundTrip) {
         returnDateObj = new Date(returnDateTimeValue);
         if (isNaN(returnDateObj.getTime())) {
-            showToast("Invalid return date/time.", "error");
+            showToast("Invalid return date/time.", "warning");
             return;
         }
     }
-    const isAfter = isAfterHours(rideDateObj);
+    const afterHours = isAfterHours(rideDateObj);
 
     showLoadingOverlay();
     try {
         const directionsService = new google.maps.DirectionsService();
         directionsService.route(
             {
-                origin,
-                destination,
+                origin: points[0],
+                destination: points[points.length - 1],
+                waypoints: points.slice(1, -1).map(address => ({ location: address, stopover: true })),
                 travelMode: google.maps.TravelMode.DRIVING
             },
             async (result, status) => {
                 hideLoadingOverlay();
-                if (status === "OK" && result.routes.length > 0) {
-                    const leg = result.routes[0].legs[0];
-                    const quoteDistance = document.getElementById('quote-distance');
-                    const quoteDuration = document.getElementById('quote-duration');
-                    const quoteOrigin = document.getElementById('quote-origin');
-                    const quoteDestination = document.getElementById('quote-destination');
-                    const quoteBags = document.getElementById('quote-bags');
-                    const quotePersons = document.getElementById('quote-persons');
-                    const quoteAfterHours = document.getElementById('quote-afterHours');
-                    const quoteRoundTrip = document.getElementById('quote-roundtrip');
-                    const quoteFare = document.getElementById('quote-fare');
-                    const quoteDateTime = document.getElementById('quote-datetime');
-                    const quoteReturnDateTime = document.getElementById('quote-return-datetime');
-                    if (quoteDistance) quoteDistance.textContent = leg.distance.text;
-                    if (quoteDuration) quoteDuration.textContent = leg.duration.text;
-                    if (quoteOrigin) quoteOrigin.textContent = origin;
-                    if (quoteDestination) quoteDestination.textContent = destination;
-                    if (quoteBags) quoteBags.textContent = bags > 0 ? `${bags} bag(s)` : "No bags";
-                    if (quotePersons) quotePersons.textContent = persons > 1 ? `${persons} person(s)` : "1 person";
-                    if (quoteAfterHours) quoteAfterHours.textContent = isAfter ? "Yes" : "No";
-                    if (quoteRoundTrip) quoteRoundTrip.textContent = isRoundTrip ? "Yes" : "No";
-                    if (quoteDateTime) quoteDateTime.textContent = rideDateObj.toLocaleString();
-                    if (quoteReturnDateTime) quoteReturnDateTime.textContent = isRoundTrip && returnDateObj ? returnDateObj.toLocaleString() : '';
-                    const distanceKm = leg.distance.value / 1000;
-                    let fareXCD = BASE_FARE_XCD + (distanceKm * DEFAULT_PER_KM_RATE_XCD);
-                    if (bags > 0) fareXCD += bags * COST_PER_ADDITIONAL_BAG_XCD;
-                    if (persons > FREE_PERSON_COUNT) fareXCD += (persons - FREE_PERSON_COUNT) * COST_PER_ADDITIONAL_PERSON_XCD;
-                    if (isAfter) fareXCD += fareXCD * AFTER_HOURS_SURCHARGE_PERCENTAGE;
-                    if (isRoundTrip) fareXCD *= 2;
-                    const fareUSD = fareXCD * XCD_TO_USD_EXCHANGE_RATE;
-                    if (quoteFare) quoteFare.textContent = `${Math.round(fareXCD)} XCD / $${Math.round(fareUSD)} USD`;
-                    openModal('quote-display-modal');
-                    if (db && currentUserId) {
-                        try {
-                            await addDoc(collection(db, "rides"), {
-                                userId: currentUserId,
-                                origin,
-                                destination,
-                                distance: leg.distance.text,
-                                duration: leg.duration.text,
-                                fareXCD: fareXCD.toFixed(2),
-                                fareUSD: fareUSD.toFixed(2),
-                                bags,
-                                persons,
-                                afterHours: isAfter,
-                                roundTrip: isRoundTrip,
-                                rideDateTime: rideDateObj.toISOString(),
-                                returnDateTime: isRoundTrip && returnDateObj ? returnDateObj.toISOString() : null,
-                                status: 'quoted',
-                                timestamp: serverTimestamp()
-                            });
-                            showToast("Ride quote saved to history!", "success");
-                            resetRideForm();
-                        } catch (err) {
-                            showToast("Failed to save ride request.", "error");
-                        }
-                    }
-                } else {
-                    showToast("Could not calculate route. Please check your locations.", "error");
+                if (status !== 'OK' || !result.routes.length) {
+                    showToast("Could not calculate route. Please check your points.", "error");
+                    return;
                 }
+                // Example: sum up distance/duration
+                let totalDistance = 0, totalDuration = 0;
+                result.routes[0].legs.forEach(leg => {
+                    totalDistance += leg.distance.value;
+                    totalDuration += leg.duration.value;
+                });
+                // Show quote modal, fill in details, etc.
+                document.getElementById('quote-origin').textContent = points[0];
+                document.getElementById('quote-destination').textContent = points[points.length - 1];
+                document.getElementById('quote-distance').textContent = (totalDistance / 1000).toFixed(2) + " km";
+                document.getElementById('quote-duration').textContent = Math.round(totalDuration / 60) + " min";
+                document.getElementById('quote-bags').textContent = bags;
+                document.getElementById('quote-persons').textContent = persons;
+                document.getElementById('quote-datetime').textContent = rideDateObj.toLocaleString();
+                document.getElementById('quote-return-datetime').textContent = isRoundTrip && returnDateObj ? returnDateObj.toLocaleString() : "-";
+                document.getElementById('quote-afterHours').textContent = afterHours ? "Yes" : "No";
+                document.getElementById('quote-roundtrip').textContent = isRoundTrip ? "Yes" : "No";
+                // Example fare calculation
+                let fare = 20 + (totalDistance / 1000) * 2 + (afterHours ? 10 : 0) + (isRoundTrip ? 15 : 0);
+                document.getElementById('quote-fare').textContent = "$" + fare.toFixed(2);
+                const quoteModal = new bootstrap.Modal(document.getElementById('quote-display-modal'));
+                quoteModal.show();
             }
         );
     } catch (err) {
@@ -141,47 +175,20 @@ export async function calculateRoute() {
 }
 
 export function resetRideForm() {
-    const originInput = document.getElementById('origin-input');
-    const destinationInput = document.getElementById('destination-input');
+    const routeInputs = document.querySelectorAll('.route-point-input');
+    routeInputs.forEach(input => input.value = "");
     const bagsInput = document.getElementById('bags-input');
     const personsInput = document.getElementById('persons-input');
     const rideDateTimeInput = document.getElementById('ride-datetime-input');
     const roundTripInput = document.getElementById('round-trip-input');
     const returnDateTimeInput = document.getElementById('return-datetime-input');
-    if (originInput) originInput.value = '';
-    if (destinationInput) destinationInput.value = '';
-    if (bagsInput) bagsInput.value = 0;
-    if (personsInput) personsInput.value = 1;
-    if (rideDateTimeInput) rideDateTimeInput.value = '';
+    if (bagsInput) bagsInput.value = "0";
+    if (personsInput) personsInput.value = "1";
+    if (rideDateTimeInput) rideDateTimeInput.value = "";
     if (roundTripInput) roundTripInput.checked = false;
-    if (returnDateTimeInput) returnDateTimeInput.value = '';
+    if (returnDateTimeInput) returnDateTimeInput.value = "";
 }
 
 export function printQuote() {
-    const modal = document.getElementById('quote-display-modal');
-    if (!modal) return;
-    const printContents = modal.querySelector('.modal-quote-content').innerHTML;
-    const win = window.open('', '', 'height=600,width=400');
-    win.document.write(`
-        <html>
-        <head>
-            <title>HitchPoint - Ride Quote</title>
-            <style>
-                body { font-family: Arial, sans-serif; padding: 20px; }
-                h1 { color: #5E9BCD; }
-                .quote-detail { margin: 10px 0; }
-                .fare { font-size: 24px; font-weight: bold; color: #FFD700; }
-            </style>
-        </head>
-        <body>
-            <h1>HitchPoint Ride Quote</h1>
-            ${printContents}
-            <p style="margin-top: 30px; font-size: 12px; color: #666;">
-                Generated on ${new Date().toLocaleString()}
-            </p>
-        </body>
-        </html>
-    `);
-    win.document.close();
-    win.print();
+    window.print();
 }

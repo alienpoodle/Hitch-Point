@@ -1,4 +1,4 @@
-import { openModal, showToast, closeModal } from './ui.js';
+import { showToast, openModal } from './ui.js';
 
 let map, geocoder, selectedMarker;
 let isGoogleMapsReady = false;
@@ -39,21 +39,17 @@ export function openMapModal(mode) {
         // Add click-outside-to-close logic
         const modal = document.getElementById('map-modal');
         if (modal) {
-            // Remove any previous listener to avoid stacking
-            modal.onclick = (e) => {
+            modal.addEventListener('click', (e) => {
                 if (e.target === modal) {
-                    closeModal('map-modal');
+                    modal.classList.remove('show');
                 }
-            };
+            });
         }
     }, 300);
 }
 
 function initMapForSelection() {
-    if (!isGoogleMapsReady || !window.google || !window.google.maps) {
-        showToast("Google Maps is not loaded yet. Please try again.", "error");
-        return;
-    }
+    if (!isGoogleMapsReady || !window.google || !window.google.maps) return;
     const mapDiv = document.getElementById('map');
     if (!mapDiv) return;
     mapDiv.innerHTML = "";
@@ -90,35 +86,34 @@ function placeMarkerAndGetAddress(location) {
         title: "Selected Location"
     });
 
-    if (!geocoder) geocoder = new google.maps.Geocoder();
+    if (!geocoder) return;
     geocoder.geocode({ location }, (results, status) => {
         if (status === "OK" && results[0]) {
             const address = results[0].formatted_address;
-            if (mapSelectionMode === 'origin') {
-                const originInput = document.getElementById('origin-input');
-                if (originInput) originInput.value = address;
-            } else if (mapSelectionMode === 'destination') {
-                const destinationInput = document.getElementById('destination-input');
-                if (destinationInput) destinationInput.value = address;
+            if (mapSelectionMode.startsWith('route-point-')) {
+                if (window._currentRoutePointInput) window._currentRoutePointInput.value = address;
             }
+            showToast("Location selected!", "success");
         } else {
-            showToast("Could not get address for selected location.", "error");
+            showToast("Could not get address for this location.", "warning");
         }
     });
 }
 
 export function setupMapListeners(apiKey) {
     loadGoogleMapsScript(apiKey).then(() => {
-        // Origin map button
-        const selectOriginBtn = document.getElementById('select-origin-map-btn');
-        if (selectOriginBtn) {
-            selectOriginBtn.addEventListener('click', () => openMapModal('origin'));
-        }
-        // Destination map button
-        const selectDestinationBtn = document.getElementById('select-destination-map-btn');
-        if (selectDestinationBtn) {
-            selectDestinationBtn.addEventListener('click', () => openMapModal('destination'));
-        }
+        // Delegate map pinning to all select-map-btns
+        document.body.addEventListener('click', function(e) {
+            if (e.target.closest('.select-map-btn')) {
+                const btn = e.target.closest('.select-map-btn');
+                const group = btn.closest('.route-point');
+                if (!group) return;
+                const idx = Array.from(group.parentNode.children).indexOf(group);
+                openMapModal('route-point-' + idx);
+                // Store the input to fill after map selection
+                window._currentRoutePointInput = group.querySelector('.route-point-input');
+            }
+        });
     }).catch(() => {
         showToast("Failed to load Google Maps.", "error");
     });

@@ -4,209 +4,219 @@
     <meta charset="UTF-8">
     <title>Hitch Point</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Base variables and resets -->
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
+    <!-- Custom styles -->
     <link rel="stylesheet" href="src/css/base.css">
-    <!-- Feature/component styles -->
     <link rel="stylesheet" href="src/css/navbar.css">
     <link rel="stylesheet" href="src/css/modal.css">
     <link rel="stylesheet" href="src/css/history.css">
     <link rel="stylesheet" href="src/css/toast.css">
     <link rel="stylesheet" href="src/css/forms.css">
-    <!-- Utility classes -->
     <link rel="stylesheet" href="src/css/utility.css">
-    <!-- External libraries -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 </head>
-<body>
-    <!-- Centered Navbar -->
-    <div class="navbar-wrapper">
-        <nav id="main-navbar" class="navbar hidden">
-            <div class="navbar-logo">
-                <img src="src/images/logo.png" alt="Hitch Point Logo" class="navbar-logo-img">
-            </div>
-            <div class="navbar-menu">
-                <button id="navbar-hamburger" class="navbar-hamburger" aria-label="Menu">
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                </button>
-                <div id="navbar-dropdown" class="navbar-dropdown">
-                    <button id="navbar-profile" class="btn-secondary">Profile</button>
-                    <button id="navbar-view-history" class="btn-secondary">Ride History</button>
-                    <button id="navbar-logout" class="btn-secondary">Log Out</button>
-                </div>
-            </div>
-        </nav>
-    </div>
+<body class="bg-light">
 
-    <div id="app-container">
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm mb-4">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="#">
+                <img src="src/images/logo.png" alt="Hitch Point Logo" width="40" height="40" class="me-2">
+                <span class="fw-bold">Hitch Point</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse justify-content-end" id="navbarNavDropdown">
+                <ul class="navbar-nav">
+                    <li class="nav-item"><button id="navbar-profile" class="btn btn-outline-primary me-2">Profile</button></li>
+                    <li class="nav-item"><button id="navbar-view-history" class="btn btn-outline-secondary me-2">Ride History</button></li>
+                    <li class="nav-item"><button id="navbar-logout" class="btn btn-outline-danger">Log Out</button></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container" style="max-width: 500px;">
         <!-- Toast notifications -->
-        <div id="toast-container"></div>
+        <div id="toast-container" class="position-fixed top-0 end-0 p-3" style="z-index: 1100;"></div>
+
         <!-- Loading overlay -->
-        <div id="loading-overlay">
-            <div class="spinner"></div>
+        <div id="loading-overlay" class="position-fixed top-0 start-0 w-100 h-100 d-none align-items-center justify-content-center bg-white bg-opacity-75" style="z-index: 1200;">
+            <div class="spinner-border text-primary" role="status"></div>
         </div>
 
         <!-- Logged out view -->
-        <div id="logged-out-view">
-            <div class="signin-logo-container">
-                <img src="src/images/logo.png" alt="Hitch Point Logo" class="signin-logo-img">
+        <div id="logged-out-view" class="text-center my-5">
+            <img src="src/images/logo.png" alt="Hitch Point Logo" class="mb-3" style="width: 80px;">
+            <div id="login-carousel" class="carousel slide mb-4" data-bs-ride="carousel">
+                <div class="carousel-inner">
+                    <div class="carousel-item active">
+                        <div class="mb-2"><i class="fas fa-home fa-2x text-primary"></i></div>
+                        <h5>Welcome to Hitch Point</h5>
+                        <p class="text-muted">Easily pinpoint your pickup and drop-off locations on the map.</p>
+                    </div>
+                    <div class="carousel-item">
+                        <div class="mb-2"><i class="fas fa-bolt fa-2x text-warning"></i></div>
+                        <h5>Get Rides in Instant</h5>
+                        <p class="text-muted">Quickly request rides with just a few taps.</p>
+                    </div>
+                    <div class="carousel-item">
+                        <div class="mb-2"><i class="fas fa-steering-wheel fa-2x text-success"></i></div>
+                        <h5>Enjoy Your Ride</h5>
+                        <p class="text-muted">Sit back, relax, and enjoy a safe and comfortable journey.</p>
+                    </div>
+                </div>
+                <button class="carousel-control-prev" type="button" data-bs-target="#login-carousel" data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon"></span>
+                </button>
+                <button class="carousel-control-next" type="button" data-bs-target="#login-carousel" data-bs-slide="next">
+                    <span class="carousel-control-next-icon"></span>
+                </button>
             </div>
-            <div class="carousel" id="login-carousel">
-                <div class="carousel-slide active">
-                    <div class="carousel-icon">
-                        <!-- Home SVG -->
-                        <svg width="48" height="48" fill="none" viewBox="0 0 48 48"><path d="M8 20L24 8l16 12v16a4 4 0 0 1-4 4H12a4 4 0 0 1-4-4V20z" stroke="#5E9BCD" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><rect x="18" y="28" width="12" height="12" rx="2" stroke="#5E9BCD" stroke-width="3"/></svg>
-                    </div>
-                    <div class="carousel-message">Welcome to Hitch Point</div>
-                    <div class="carousel-submessage">Easily pinpoint your pickup and drop-off locations on the map.</div>
-                </div>
-                <div class="carousel-slide">
-                    <div class="carousel-icon">
-                        <!-- Lightning Bolt SVG -->
-                        <svg width="48" height="48" fill="none" viewBox="0 0 48 48"><path d="M24 4L10 28h12v16l14-24H26L24 4z" stroke="#5E9BCD" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                    </div>
-                    <div class="carousel-message">Get Rides in Instant</div>
-                    <div class="carousel-submessage">Quickly request rides with just a few taps.</div>
-                </div>
-                <div class="carousel-slide">
-                    <div class="carousel-icon">
-                        <!-- Steering Wheel SVG -->
-                        <svg width="48" height="48" fill="none" viewBox="0 0 48 48"><circle cx="24" cy="24" r="20" stroke="#5E9BCD" stroke-width="3"/><circle cx="24" cy="24" r="6" stroke="#5E9BCD" stroke-width="3"/><path d="M24 30v8M24 10v8M10.93 37.07l5.66-5.66M37.07 10.93l-5.66 5.66M10.93 10.93l5.66 5.66M37.07 37.07l-5.66-5.66" stroke="#5E9BCD" stroke-width="3"/></svg>
-                    </div>
-                    <div class="carousel-message">Enjoy Your Ride</div>
-                    <div class="carousel-submessage">Sit back, relax, and enjoy a safe and comfortable journey.</div>
-                </div>
-                <div class="carousel-dots">
-                    <span class="carousel-dot active"></span>
-                    <span class="carousel-dot"></span>
-                    <span class="carousel-dot"></span>
-                </div>
-            </div>
-            <button id="google-login-btn" class="btn-google">
-                <i class="fab fa-google"></i> Sign in with Google
+            <button id="google-login-btn" class="btn btn-danger w-100">
+                <i class="fab fa-google me-2"></i> Sign in with Google
             </button>
         </div>
 
         <!-- Ride Request Section -->
-        <div id="ride-request-section" class="hidden">
-            <h2>Request a Ride</h2>
-            <div class="input-group input-group-inline">
-                <label for="origin-input">Origin</label>
-                <div class="input-inline-wrap">
-                    <input type="text" id="origin-input" placeholder="Enter origin">
-                    <button id="select-origin-map-btn" class="btn-secondary" type="button">
-                        <i class="fas fa-map-marker-alt"></i> Pin it
+        <div id="ride-request-section" class="d-none">
+            <h2 class="mb-4">Request a Ride</h2>
+            <form id="ride-request-form">
+                <div class="mb-3">
+                    <label class="form-label">Route Points</label>
+                    <div id="route-points-list">
+                        <div class="input-group mb-2 route-point" data-index="0">
+                            <span class="input-group-text bg-primary text-white">Start</span>
+                            <input type="text" class="form-control route-point-input" placeholder="Enter starting point" required>
+                            <button class="btn btn-outline-secondary select-map-btn" type="button" title="Pin on Map">
+                                <i class="fas fa-map-marker-alt"></i>
+                            </button>
+                        </div>
+                        <div class="input-group mb-2 route-point" data-index="1">
+                            <span class="input-group-text bg-secondary text-white">Finish</span>
+                            <input type="text" class="form-control route-point-input" placeholder="Enter destination" required>
+                            <button class="btn btn-outline-secondary select-map-btn" type="button" title="Pin on Map">
+                                <i class="fas fa-map-marker-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <button id="add-pickup-btn" type="button" class="btn btn-outline-primary btn-sm mt-2">
+                        <i class="fas fa-plus"></i> Add Pickup Point
                     </button>
                 </div>
-            </div>
-            <div class="input-group input-group-inline">
-                <label for="destination-input">Destination</label>
-                <div class="input-inline-wrap">
-                    <input type="text" id="destination-input" placeholder="Enter destination">
-                    <button id="select-destination-map-btn" class="btn-secondary" type="button">
-                        <i class="fas fa-map-marker-alt"></i> Pin it
-                    </button>
+                <div class="row mb-3">
+                    <div class="col">
+                        <label for="bags-input" class="form-label">Bags</label>
+                        <input type="number" id="bags-input" class="form-control" min="0" value="0">
+                    </div>
+                    <div class="col">
+                        <label for="persons-input" class="form-label">Persons</label>
+                        <input type="number" id="persons-input" class="form-control" min="1" value="1">
+                    </div>
+                    <div class="col d-flex align-items-end">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="round-trip-input">
+                            <label class="form-check-label" for="round-trip-input">Round Trip</label>
+                        </div>
+                    </div>
                 </div>
-            </div>
-            <div class="input-group input-group-grid">
-                <div class="input-col">
-                    <label for="bags-input">Bags</label>
-                    <input type="number" id="bags-input" min="0" value="0">
+                <div class="mb-3">
+                    <label for="ride-datetime-input" class="form-label">Ride Date & Time</label>
+                    <input type="datetime-local" id="ride-datetime-input" class="form-control" required>
                 </div>
-                <div class="input-col">
-                    <label for="persons-input">Persons</label>
-                    <input type="number" id="persons-input" min="1" value="1">
+                <div class="mb-3 d-none" id="return-datetime-group">
+                    <label for="return-datetime-input" class="form-label">Return Date & Time</label>
+                    <input type="datetime-local" id="return-datetime-input" class="form-control">
                 </div>
-                <div class="input-col">
-                    <label class="toggle-label" style="margin-bottom:0;">
-                        <span>Round Trip</span>
-                        <input type="checkbox" id="round-trip-input" class="toggle-switch">
-                        <span class="slider"></span>
-                    </label>
-                </div>
-            </div>
-            <div class="input-group input-group-row">
-                <label class="toggle-label">
-                    <label for="ride-datetime-input">Ride Date & Time:</label>
-                    <input type="datetime-local" id="ride-datetime-input" required>
-                </label>
-            </div>
-            <div class="input-group" id="return-datetime-group" style="display:none;">
-                <label for="return-datetime-input">Return Date & Time:</label>
-                <input type="datetime-local" id="return-datetime-input">
-            </div>
-            <button id="request-ride-btn" class="btn-primary">Request Ride</button>
-            <!-- PWA Install Button -->
-            <button id="install-pwa-btn" class="btn-secondary hidden" style="margin-top: 1em;">
-                <i class="fas fa-download"></i> Install App
-            </button>
+                <button id="request-ride-btn" type="button" class="btn btn-primary w-100 mb-2">Request Ride</button>
+                <button id="install-pwa-btn" type="button" class="btn btn-outline-primary w-100 d-none">
+                    <i class="fas fa-download"></i> Install App
+                </button>
+            </form>
         </div>
 
         <!-- User Profile View -->
-    <div id="profile-view" class="hidden">
-        <form id="user-profile-form" autocomplete="off">
-            <h3 class="text-xl mb-4">Your Profile</h3>
-            <div class="input-group">
-                <label for="profile-first-name">First Name</label>
-                <input type="text" id="profile-first-name" name="firstName" required>
-            </div>
-            <div class="input-group">
-                <label for="profile-last-name">Last Name</label>
-                <input type="text" id="profile-last-name" name="lastName" required>
-            </div>
-            <div class="input-group">
-                <label for="profile-phone">Phone Number (optional)</label>
-                <input type="text" id="profile-phone" name="phone" pattern="^[0-9+\-\s()]*$">
-            </div>
-            <div class="input-group">
-                <label for="profile-email">Email Address</label>
-                <input type="email" id="user-email" name="email" required readonly>
-            </div>
-            <button type="submit" class="btn-primary mt-4">Save Profile</button>
-            <button type="button" id="profile-back-btn" class="btn-secondary mt-4" style="margin-left: 1em;">Back</button>
-        </form>
-    </div>
+        <div id="profile-view" class="d-none">
+            <form id="user-profile-form" autocomplete="off" class="bg-white rounded shadow-sm p-4 mt-4">
+                <h3 class="mb-4">Your Profile</h3>
+                <div class="mb-3">
+                    <label for="profile-first-name" class="form-label">First Name</label>
+                    <input type="text" id="profile-first-name" name="firstName" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label for="profile-last-name" class="form-label">Last Name</label>
+                    <input type="text" id="profile-last-name" name="lastName" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label for="profile-phone" class="form-label">Phone Number (optional)</label>
+                    <input type="text" id="profile-phone" name="phone" class="form-control" pattern="^[0-9+\-\s()]*$">
+                </div>
+                <div class="mb-3">
+                    <label for="profile-email" class="form-label">Email Address</label>
+                    <input type="email" id="user-email" name="email" class="form-control" required readonly>
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary flex-fill">Save Profile</button>
+                    <button type="button" id="profile-back-btn" class="btn btn-secondary flex-fill">Back</button>
+                </div>
+            </form>
+        </div>
+    </main>
 
     <!-- Ride History Modal -->
-    <div id="ride-history-modal" class="modal">
-        <div class="modal-content modal-large">
-            <div class="modal-header">
-                <h3>Ride History</h3>
-                <button class="modal-close-button" onclick="window.closeModal('ride-history-modal')">&times;</button>
+    <div class="modal fade" id="ride-history-modal" tabindex="-1" aria-labelledby="rideHistoryLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="rideHistoryLabel">Ride History</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div id="ride-history-body" class="modal-body"></div>
             </div>
-            <div id="ride-history-body" class="modal-body"></div>
         </div>
     </div>
 
     <!-- Quote Display Modal -->
-    <div id="quote-display-modal" class="modal">
-        <div class="modal-content">
-            <button class="modal-close-button" onclick="window.closeModal('quote-display-modal')">&times;</button>
-            <h3>Estimated Ride Quote</h3>
-            <div class="modal-quote-content">
-                <p class="font-semibold">Quote Details:</p>
-                <p>Origin: <span id="quote-origin"></span></p>
-                <p>Destination: <span id="quote-destination"></span></p>
-                <p>Distance: <span id="quote-distance"></span></p>
-                <p>Duration: <span id="quote-duration"></span></p>
-                <p>Bags: <span id="quote-bags"></span></p>
-                <p>Persons: <span id="quote-persons"></span></p>
-                <p class="quote-detail"><strong>Date & Time:</strong> <span id="quote-datetime"></span></p>
-                <p><strong>Return Date & Time:</strong> <span id="quote-return-datetime"></span></p>
-                <p>After Hours: <span id="quote-afterHours"></span></p>
-                <p>Round Trip: <span id="quote-roundtrip"></span></p>
-                <p>Fare: <span id="quote-fare" class="text-xl font-bold"></span></p>
-                <button id="print-quote-btn" class="btn-secondary mt-4">Print Quote</button>
+    <div class="modal fade" id="quote-display-modal" tabindex="-1" aria-labelledby="quoteModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="quoteModalLabel">Estimated Ride Quote</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body modal-quote-content">
+                    <p class="fw-semibold">Quote Details:</p>
+                    <p>Origin: <span id="quote-origin"></span></p>
+                    <p>Destination: <span id="quote-destination"></span></p>
+                    <p>Distance: <span id="quote-distance"></span></p>
+                    <p>Duration: <span id="quote-duration"></span></p>
+                    <p>Bags: <span id="quote-bags"></span></p>
+                    <p>Persons: <span id="quote-persons"></span></p>
+                    <p class="quote-detail"><strong>Date & Time:</strong> <span id="quote-datetime"></span></p>
+                    <p><strong>Return Date & Time:</strong> <span id="quote-return-datetime"></span></p>
+                    <p>After Hours: <span id="quote-afterHours"></span></p>
+                    <p>Round Trip: <span id="quote-roundtrip"></span></p>
+                    <p>Fare: <span id="quote-fare" class="fs-4 fw-bold"></span></p>
+                    <button id="print-quote-btn" class="btn btn-outline-secondary mt-3">Print Quote</button>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- Map Modal -->
-    <div id="map-modal" class="modal">
-        <div class="modal-content modal-large">
-            <button class="modal-close-button" onclick="window.closeModal('map-modal')">&times;</button>
-            <div id="map" style="height: 400px; width: 100%;"></div>
+    <div class="modal fade" id="map-modal" tabindex="-1" aria-labelledby="mapModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="mapModalLabel">Select Location</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-0">
+                    <div id="map" style="height: 400px; width: 100%;"></div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -214,6 +224,8 @@
     <script src="config.js"></script>
     <!-- Main JS as module -->
     <script type="module" src="src/js/main.js"></script>
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ENjdO4Dr2bkBIFxQpeoA6VKHr7Wl9EXeU1z9OYhHTP1Q0nQUdV8QwG5yXWl5yX04" crossorigin="anonymous"></script>
     <script>
     // Show/hide return date/time for round trip
     document.addEventListener('DOMContentLoaded', function() {
@@ -221,7 +233,7 @@
         const returnGroup = document.getElementById('return-datetime-group');
         if (roundTripInput && returnGroup) {
             roundTripInput.addEventListener('change', () => {
-                returnGroup.style.display = roundTripInput.checked ? 'block' : 'none';
+                returnGroup.classList.toggle('d-none', !roundTripInput.checked);
             });
         }
     });

@@ -7,6 +7,7 @@ import { setupPWA } from './pwa.js';
 import { showLoadingOverlay, hideLoadingOverlay } from './ui.js';
 import { initProfileFeature } from './profile.js';
 
+
 document.addEventListener('DOMContentLoaded', () => {
     showLoadingOverlay();
     initFirebase((user) => {
