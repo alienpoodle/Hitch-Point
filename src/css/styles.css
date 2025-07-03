@@ -1,0 +1,132 @@
+/* Hitch Point - Custom Styles (Bootstrap handles layout, forms, modals, navbars, etc.) */
+
+/* Color Variables */
+:root {
+    --primary-color: #5E9BCD;
+    --primary-hover-color: #4178a6;
+    --secondary-color: #7AB87C;
+    --secondary-hover-color: #5e9b62;
+    --accent-color: #FFD700;
+    --accent-hover-color: #FFC300;
+    --google-red: #db4437;
+    --google-red-hover: #c0392b;
+    --bg-light-gray: #f7fafc;
+    --bg-white: #ffffff;
+    --border-light: #e5e7eb;
+    --text-gray-dark: #1f2937;
+    --text-gray-medium: #6b7280;
+    --text-blue-light: #5E9BCD;
+    --bg-blue-light: #eaf4fb;
+    --border-blue-light: #b6d2ea;
+    --bg-info-light: #eafbe7;
+    --border-info-light: #b6eac2;
+    --text-info-dark: #2d6a4f;
+}
+
+/* Base Styles */
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--bg-light-gray);
+    min-height: 100vh;
+}
+
+#app-container {
+    background-color: var(--bg-white);
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    padding: 32px 16px;
+    width: 100%;
+    max-width: 420px;
+    margin: 32px auto 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+@media (min-width: 600px) {
+    #app-container {
+        max-width: 480px;
+    }
+}
+
+/* Utility Classes */
+.mt-4 {
+    margin-top: 1em !important;
+}
+
+/* Ride History Table Tweaks */
+.truncate {
+    max-width: 200px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.fare-amount {
+    font-weight: 600;
+    color: var(--primary-color);
+}
+.status-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+.status-quoted {
+    background-color: var(--bg-blue-light);
+    color: var(--primary-color);
+}
+.status-completed {
+    background-color: var(--bg-info-light);
+    color: var(--text-info-dark);
+}
+
+/* Toast Notifications */
+#toast-container {
+    position: fixed;
+    top: 24px;
+    right: 24px;
+    z-index: 3000;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.toast {
+    min-width: 220px;
+    max-width: 350px;
+    background: var(--bg-white);
+    color: var(--text-gray-dark);
+    border-left: 6px solid var(--primary-color);
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    padding: 14px 18px;
+    font-size: 1rem;
+    font-weight: 500;
+    opacity: 1;
+    transition: opacity 0.4s;
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.toast.info { border-left-color: var(--primary-color);}
+.toast.success { border-left-color: var(--secondary-color);}
+.toast.error { border-left-color: var(--google-red);}
+.toast.warning { border-left-color: var(--accent-color);}
+.toast::before {
+    content: '\f05a'; /* Info icon */
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+    font-size: 1.2rem;
+    margin-right: 8px;
+}
+.toast.success::before { content: '\f00c'; }
+.toast.error::before { content: '\f057'; }
+.toast.warning::before { content: '\f071'; }

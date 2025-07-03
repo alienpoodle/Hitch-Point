@@ -1,15 +1,8 @@
-const CACHE_NAME = 'hitch-point-cache-v1';
+const CACHE_NAME = 'hitch-point-cache-v1.2';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
-  '/src/css/base.css',
-  '/src/css/navbar.css',
-  '/src/css/modal.css',
-  '/src/css/ride-request.css',
-  '/src/css/history.css',
-  '/src/css/toast.css',
-  '/src/css/forms.css',
-  '/src/css/utility.css',
+  '/src/css/styles.css',
   '/src/js/main.js',
   '/src/js/firebase.js',
   '/src/js/auth.js',
