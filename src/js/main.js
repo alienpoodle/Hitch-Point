@@ -7,7 +7,6 @@ import { setupPWA } from './pwa.js';
 import { showLoadingOverlay, hideLoadingOverlay } from './ui.js';
 import { initProfileFeature } from './profile.js';
 
-
 document.addEventListener('DOMContentLoaded', () => {
     showLoadingOverlay();
     initFirebase((user) => {
@@ -15,18 +14,21 @@ document.addEventListener('DOMContentLoaded', () => {
         const loggedOutView = document.getElementById('logged-out-view');
         const rideRequestSection = document.getElementById('ride-request-section');
         const mainNavbar = document.getElementById('main-navbar');
+        const profileView = document.getElementById('profile-view');
         if (user) {
-            if (loggedOutView) loggedOutView.classList.add('hidden');
-            if (rideRequestSection) rideRequestSection.classList.remove('hidden');
-            if (mainNavbar) mainNavbar.classList.remove('hidden');
+            if (loggedOutView) loggedOutView.classList.add('d-none');
+            if (rideRequestSection) rideRequestSection.classList.remove('d-none');
+            if (mainNavbar) mainNavbar.classList.remove('d-none');
+            if (profileView) profileView.classList.add('d-none');
             const userEmailElem = document.getElementById('user-email');
             if (userEmailElem) userEmailElem.textContent = user.email || "N/A";
             const userIdElem = document.getElementById('user-id');
             if (userIdElem) userIdElem.textContent = user.uid;
         } else {
-            if (loggedOutView) loggedOutView.classList.remove('hidden');
-            if (rideRequestSection) rideRequestSection.classList.add('hidden');
-            if (mainNavbar) mainNavbar.classList.add('hidden');
+            if (loggedOutView) loggedOutView.classList.remove('d-none');
+            if (rideRequestSection) rideRequestSection.classList.add('d-none');
+            if (mainNavbar) mainNavbar.classList.add('d-none');
+            if (profileView) profileView.classList.add('d-none');
         }
         hideLoadingOverlay();
     });
@@ -36,29 +38,27 @@ document.addEventListener('DOMContentLoaded', () => {
     setupRideListeners();
     setupHistoryListeners();
     setupPWA();
-    
+
     const profileView = document.getElementById('profile-view');
     const rideRequestSection = document.getElementById('ride-request-section');
     const navbarProfileBtn = document.getElementById('navbar-profile');
-    // Removed duplicate profileBackBtn logic
 
     function showProfileView() {
         if (profileView && rideRequestSection) {
-            profileView.classList.remove('hidden');
-            rideRequestSection.classList.add('hidden');
+            profileView.classList.remove('d-none');
+            rideRequestSection.classList.add('d-none');
         }
     }
     function hideProfileView() {
         if (profileView && rideRequestSection) {
-            profileView.classList.add('hidden');
-            rideRequestSection.classList.remove('hidden');
+            profileView.classList.add('d-none');
+            rideRequestSection.classList.remove('d-none');
         }
     }
 
     if (navbarProfileBtn) {
         navbarProfileBtn.addEventListener('click', showProfileView);
     }
-    // Removed duplicate profileBackBtn event listener
 
     // Hamburger menu toggle logic
     const navbarHamburger = document.getElementById('navbar-hamburger');
@@ -75,7 +75,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Carousel logic for login screen
+    // Carousel logic for login screen (if using Bootstrap carousel, this may not be needed)
     const slides = document.querySelectorAll('#login-carousel .carousel-slide');
     const dots = document.querySelectorAll('#login-carousel .carousel-dot');
     let currentSlide = 0;
@@ -106,6 +106,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    showSlide(0);
-    resetCarouselTimer();
+    if (slides.length && dots.length) {
+        showSlide(0);
+        resetCarouselTimer();
+    }
 });
