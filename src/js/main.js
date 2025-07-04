@@ -9,29 +9,24 @@ import { initProfileFeature } from './profile.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     showLoadingOverlay();
-    initFirebase((user) => {
-        // Show/hide UI based on user state
-        const loggedOutView = document.getElementById('logged-out-view');
-        const rideRequestSection = document.getElementById('ride-request-section');
-        const mainNavbar = document.getElementById('main-navbar');
-        const profileView = document.getElementById('profile-view');
-        if (user) {
-            if (loggedOutView) loggedOutView.classList.add('d-none');
-            if (rideRequestSection) rideRequestSection.classList.remove('d-none');
-            if (mainNavbar) mainNavbar.classList.remove('d-none');
-            if (profileView) profileView.classList.add('d-none');
-            const userEmailElem = document.getElementById('user-email');
-            if (userEmailElem) userEmailElem.textContent = user.email || "N/A";
-            const userIdElem = document.getElementById('user-id');
-            if (userIdElem) userIdElem.textContent = user.uid;
-        } else {
-            if (loggedOutView) loggedOutView.classList.remove('d-none');
-            if (rideRequestSection) rideRequestSection.classList.add('d-none');
-            if (mainNavbar) mainNavbar.classList.add('d-none');
-            if (profileView) profileView.classList.add('d-none');
-        }
-        hideLoadingOverlay();
-    });
+initFirebase((user) => {
+    const loggedOutView = document.getElementById('logged-out-view');
+    const rideRequestSection = document.getElementById('ride-request-section');
+    const mainNavbar = document.getElementById('main-navbar');
+    const profileView = document.getElementById('profile-view');
+    if (user) {
+        if (loggedOutView) loggedOutView.classList.add('d-none');
+        if (rideRequestSection) rideRequestSection.classList.remove('d-none');
+        if (mainNavbar) mainNavbar.classList.remove('d-none');
+        if (profileView) profileView.classList.add('d-none');
+    } else {
+        if (loggedOutView) loggedOutView.classList.remove('d-none');
+        if (rideRequestSection) rideRequestSection.classList.add('d-none');
+        if (mainNavbar) mainNavbar.classList.add('d-none');
+        if (profileView) profileView.classList.add('d-none');
+    }
+    hideLoadingOverlay();
+});
     setupAuthListeners();
     setupMapListeners(window.firebaseConfig.googleMapsApiKey);
     initProfileFeature();
@@ -42,6 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const profileView = document.getElementById('profile-view');
     const rideRequestSection = document.getElementById('ride-request-section');
     const navbarProfileBtn = document.getElementById('navbar-profile');
+    const profileBackBtn = document.getElementById('profile-back-btn');
 
     function showProfileView() {
         if (profileView && rideRequestSection) {
@@ -58,6 +54,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (navbarProfileBtn) {
         navbarProfileBtn.addEventListener('click', showProfileView);
+    }
+    if (profileBackBtn) {
+        profileBackBtn.addEventListener('click', hideProfileView);
     }
 
     // Hamburger menu toggle logic
