@@ -49,12 +49,13 @@ export function setupMultipointPickup() {
             pickupGroup.className = 'input-group mb-2 route-point';
             pickupGroup.setAttribute('data-index', newIdx);
             pickupGroup.innerHTML = `
-                <span class="input-group-text bg-info text-white">Pickup ${newIdx}</span>
-                <input type="text" class="form-control route-point-input" placeholder="Enter pickup point" required>
-                <button class="btn btn-outline-secondary select-map-btn" type="button" title="Pin on Map">
-                    <i class="fas fa-map-marker-alt"></i>
-                </button>
-            `;
+                    <span class="input-group-text bg-info text-white">Pickup ${newIdx}</span>
+                    <input type="text" class="form-control route-point-input" placeholder="Enter pickup point" required>
+                    <button class="btn btn-outline-secondary select-map-btn" type="button" title="Pin on Map"
+                        data-bs-toggle="modal" data-bs-target="#map-modal">
+                        <i class="fas fa-map-marker-alt"></i>
+                    </button>
+                `;
             routePointsList.insertBefore(pickupGroup, finishGroup);
             updateLabels();
         });

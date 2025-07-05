@@ -74,39 +74,21 @@ initFirebase((user) => {
         });
     }
 
-    // Carousel logic for login screen (if using Bootstrap carousel, this may not be needed)
-    const slides = document.querySelectorAll('#login-carousel .carousel-slide');
-    const dots = document.querySelectorAll('#login-carousel .carousel-dot');
-    let currentSlide = 0;
-    let carouselTimer = null;
+let activeRouteInput = null;
 
-    function showSlide(index) {
-        slides.forEach((slide, i) => {
-            slide.classList.toggle('active', i === index);
-            dots[i].classList.toggle('active', i === index);
-        });
-        currentSlide = index;
-    }
-
-    function nextSlide() {
-        let next = (currentSlide + 1) % slides.length;
-        showSlide(next);
-    }
-
-    function resetCarouselTimer() {
-        if (carouselTimer) clearInterval(carouselTimer);
-        carouselTimer = setInterval(nextSlide, 3000);
-    }
-
-    dots.forEach((dot, idx) => {
-        dot.addEventListener('click', () => {
-            showSlide(idx);
-            resetCarouselTimer();
-        });
-    });
-
-    if (slides.length && dots.length) {
-        showSlide(0);
-        resetCarouselTimer();
+document.addEventListener('click', function(e) {
+    const btn = e.target.closest('.select-map-btn');
+    if (btn) {
+        activeRouteInput = btn.closest('.input-group').querySelector('.route-point-input');
     }
 });
+
+
+window.setRoutePointFromMap = function(address) {
+    if (activeRouteInput) {
+        activeRouteInput.value = address;
+    }
+    //close the modal
+    const mapModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('map-modal'));
+    mapModal.hide();
+};
