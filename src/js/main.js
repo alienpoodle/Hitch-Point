@@ -92,3 +92,5 @@ window.setRoutePointFromMap = function(address) {
     const mapModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('map-modal'));
     mapModal.hide();
 };
+
+});
