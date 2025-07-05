@@ -9,24 +9,25 @@ import { initProfileFeature } from './profile.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     showLoadingOverlay();
-initFirebase((user) => {
-    const loggedOutView = document.getElementById('logged-out-view');
-    const rideRequestSection = document.getElementById('ride-request-section');
-    const mainNavbar = document.getElementById('main-navbar');
-    const profileView = document.getElementById('profile-view');
-    if (user) {
-        if (loggedOutView) loggedOutView.classList.add('d-none');
-        if (rideRequestSection) rideRequestSection.classList.remove('d-none');
-        if (mainNavbar) mainNavbar.classList.remove('d-none');
-        if (profileView) profileView.classList.add('d-none');
-    } else {
-        if (loggedOutView) loggedOutView.classList.remove('d-none');
-        if (rideRequestSection) rideRequestSection.classList.add('d-none');
-        if (mainNavbar) mainNavbar.classList.add('d-none');
-        if (profileView) profileView.classList.add('d-none');
-    }
-    hideLoadingOverlay();
-});
+    initFirebase((user) => {
+        const loggedOutView = document.getElementById('logged-out-view');
+        const rideRequestSection = document.getElementById('ride-request-section');
+        const mainNavbar = document.getElementById('main-navbar');
+        const profileView = document.getElementById('profile-view');
+        if (user) {
+            if (loggedOutView) loggedOutView.classList.add('d-none');
+            if (rideRequestSection) rideRequestSection.classList.remove('d-none');
+            if (mainNavbar) mainNavbar.classList.remove('d-none');
+            if (profileView) profileView.classList.add('d-none');
+        } else {
+            if (loggedOutView) loggedOutView.classList.remove('d-none');
+            if (rideRequestSection) rideRequestSection.classList.add('d-none');
+            if (mainNavbar) mainNavbar.classList.add('d-none');
+            if (profileView) profileView.classList.add('d-none');
+        }
+        hideLoadingOverlay();
+    });
+
     setupAuthListeners();
     setupMapListeners(window.firebaseConfig.googleMapsApiKey);
     initProfileFeature();
@@ -59,38 +60,25 @@ initFirebase((user) => {
         profileBackBtn.addEventListener('click', hideProfileView);
     }
 
-    // Hamburger menu toggle logic
-    const navbarHamburger = document.getElementById('navbar-hamburger');
-    const navbarDropdown = document.getElementById('navbar-dropdown');
-    if (navbarHamburger && navbarDropdown) {
-        navbarHamburger.addEventListener('click', (e) => {
-            e.stopPropagation();
-            navbarDropdown.classList.toggle('show');
-        });
-        document.addEventListener('click', (e) => {
-            if (!navbarDropdown.contains(e.target) && !navbarHamburger.contains(e.target)) {
-                navbarDropdown.classList.remove('show');
-            }
-        });
-    }
+    
 
-let activeRouteInput = null;
+    // Track which route input should be filled after map pin
+    let activeRouteInput = null;
 
-document.addEventListener('click', function(e) {
-    const btn = e.target.closest('.select-map-btn');
-    if (btn) {
-        activeRouteInput = btn.closest('.input-group').querySelector('.route-point-input');
-    }
-});
+    document.addEventListener('click', function(e) {
+        const btn = e.target.closest('.select-map-btn');
+        if (btn) {
+            activeRouteInput = btn.closest('.input-group').querySelector('.route-point-input');
+        }
+    });
 
-
-window.setRoutePointFromMap = function(address) {
-    if (activeRouteInput) {
-        activeRouteInput.value = address;
-    }
-    //close the modal
-    const mapModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('map-modal'));
-    mapModal.hide();
-};
-
+    // Called after user selects a location on the map
+    window.setRoutePointFromMap = function(address) {
+        if (activeRouteInput) {
+            activeRouteInput.value = address;
+        }
+        // Close the modal
+        const mapModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('map-modal'));
+        mapModal.hide();
+    };
 });
