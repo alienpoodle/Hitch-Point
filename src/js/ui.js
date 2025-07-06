@@ -1,40 +1,63 @@
-export function showToast(message, type = "info", duration = 3500) {
-    const container = document.getElementById('toast-container');
-    if (!container) return;
+export function showToast(message, type = 'info') {
+    const toastContainer = document.getElementById('toast-container');
+    if (!toastContainer) {
+        console.warn("Toast container not found.");
+        return;
+    }
+
     const toast = document.createElement('div');
-    toast.className = 'toast ' + type;
-    toast.textContent = message;
-    container.appendChild(toast);
-    setTimeout(() => {
-        toast.style.opacity = "0";
-        setTimeout(() => container.removeChild(toast), 400);
-    }, duration);
+    toast.className = `toast align-items-center text-white bg-${type} border-0 show`;
+    toast.setAttribute('role', 'alert');
+    toast.setAttribute('aria-live', 'assertive');
+    toast.setAttribute('aria-atomic', 'true');
+    toast.innerHTML = `
+        <div class="d-flex">
+            <div class="toast-body">${message}</div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+    `;
+
+    toastContainer.appendChild(toast);
+
+    const bsToast = new bootstrap.Toast(toast, { delay: 3000 }); // Auto-hide after 3 seconds
+    bsToast.show();
+
+    // Remove toast from DOM after it fades out
+    toast.addEventListener('hidden.bs.toast', () => {
+        toast.remove();
+    });
 }
 
-export function showConfirm(message) {
-    return new Promise((resolve) => {
-        const confirmed = window.confirm(message);
-        resolve(confirmed);
-    });
+
+export function openModal(modalId) {
+    const modalElement = document.getElementById(modalId);
+    if (modalElement) {
+        const modal = bootstrap.Modal.getOrCreateInstance(modalElement);
+        modal.show();
+    } else {
+        console.error(`Modal element with ID "${modalId}" not found.`);
+        showToast(`Error: Modal "${modalId}" not found.`, 'danger');
+    }
+}
+
+export function hideModal(modalId) {
+    const modalElement = document.getElementById(modalId);
+    if (modalElement) {
+        const modal = bootstrap.Modal.getOrCreateInstance(modalElement);
+        modal.hide();
+    }
 }
 
 export function showLoadingOverlay() {
     const overlay = document.getElementById('loading-overlay');
-    if (overlay) overlay.classList.add('show');
+    if (overlay) {
+        overlay.classList.remove('d-none');
+    }
 }
 
 export function hideLoadingOverlay() {
     const overlay = document.getElementById('loading-overlay');
-    if (overlay) overlay.classList.remove('show');
+    if (overlay) {
+        overlay.classList.add('d-none');
+    }
 }
-
-export function openModal(modalId) {
-    const modal = document.getElementById(modalId);
-    if (modal) modal.classList.add('show');
-}
-
-export function closeModal(modalId) {
-    const modal = document.getElementById(modalId);
-    if (modal) modal.classList.remove('show');
-}
-window.closeModal = closeModal;

@@ -2,13 +2,13 @@ import { BASE_FARE_XCD, DEFAULT_PER_KM_RATE_XCD, AFTER_HOURS_SURCHARGE_PERCENTAG
 import { db, currentUserId } from './firebase.js'; // Ensure currentUserId is correctly populated from firebase.js
 import { showToast, openModal, hideLoadingOverlay, showLoadingOverlay } from './ui.js';
 import { collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-import { loadGoogleMapsScript } from './maps.js';
+// import { loadGoogleMapsScript } from './maps.js'; // REMOVED: Managed by main.js and maps.js globally
 
 let debounceTimeout; // For debouncing the real-time calculation
 
 export function setupRideListeners() {
     const requestRideBtn = document.getElementById('request-ride-btn');
-    if (requestRideBtn) requestRideBtn.addEventListener('click', submitRideRequest); // Renamed function for clarity
+    if (requestRideBtn) requestRideBtn.addEventListener('click', submitRideRequest);
 
     const printQuoteBtn = document.getElementById('print-quote-btn');
     if (printQuoteBtn) printQuoteBtn.addEventListener('click', printQuote);
@@ -44,7 +44,8 @@ export function setupRideListeners() {
     }
 
     // Initial calculation on page load (if form fields are pre-filled)
-    debounceRealtimeQuote();
+    // Add a slight delay to ensure Maps API might be ready from app.js init
+    setTimeout(debounceRealtimeQuote, 500);
 }
 
 /**
@@ -61,15 +62,15 @@ function debounceRealtimeQuote() {
     if (statusMessage) statusMessage.textContent = "Getting route and fare...";
     if (quoteDisplay) quoteDisplay.style.display = 'block'; // Ensure it's visible
 
-    debounceTimeout = setTimeout(triggerRealtimeQuoteCalculation, 700); // Adjust debounce time as needed (e.g., 500-1000ms)
+    debounceTimeout = setTimeout(triggerRealtimeQuoteCalculation, 700);
 }
 
 /**
  * Gathers form inputs and triggers the quote calculation for real-time display.
  */
 async function triggerRealtimeQuoteCalculation() {
-    const origin = document.getElementById('origin-input')?.value;
-    const destination = document.getElementById('destination-input')?.value;
+    const origin = document.getElementById('origin-input')?.value.trim(); // Trim whitespace
+    const destination = document.getElementById('destination-input')?.value.trim(); // Trim whitespace
     const bags = parseInt(document.getElementById('bags-input')?.value, 10) || 0;
     const persons = parseInt(document.getElementById('persons-input')?.value, 10) || 1;
     const isRoundTrip = document.getElementById('round-trip-input')?.checked || false;
@@ -79,6 +80,15 @@ async function triggerRealtimeQuoteCalculation() {
     const quoteDisplay = document.getElementById('realtime-quote-display');
     const fareDisplay = document.getElementById('realtime-fare-display');
     const statusMessage = document.getElementById('realtime-status-message');
+
+    // Make sure Google Maps API is ready before proceeding with calculation
+    if (!window.google || !window.google.maps || !window.google.maps.DirectionsService) {
+        if (fareDisplay) fareDisplay.textContent = "N/A";
+        if (statusMessage) statusMessage.textContent = "Maps not ready. Try again in a moment.";
+        if (quoteDisplay) quoteDisplay.style.display = 'block'; // Keep visible to show error
+        console.warn("Google Maps API (DirectionsService) not ready for real-time quote calculation.");
+        return;
+    }
 
     if (!origin || !destination || !rideDateTime) {
         if (fareDisplay) fareDisplay.textContent = "N/A";
@@ -101,9 +111,9 @@ async function triggerRealtimeQuoteCalculation() {
     } catch (error) {
         console.error("Error in real-time quote calculation:", error);
         if (fareDisplay) fareDisplay.textContent = "Error";
-        if (statusMessage) statusMessage.textContent = "Could not calculate fare. Try again.";
+        if (statusMessage) statusMessage.textContent = "Could not calculate fare. Try again. (" + error.message + ")";
         if (quoteDisplay) quoteDisplay.style.display = 'block'; // Keep it visible to show error
-        showToast("Error getting real-time quote.", "danger"); // Small toast, not too intrusive
+        showToast("Error getting real-time quote: " + error.message, "danger");
     }
 }
 
@@ -113,7 +123,11 @@ async function triggerRealtimeQuoteCalculation() {
  * Does NOT interact with the DOM for display or with Firestore.
  */
 async function getCalculatedQuote({ origin, destination, bags, persons, isRoundTrip, rideDateTime, returnDateTime }) {
-    await loadGoogleMapsScript(); // Ensure Maps API is loaded
+    // Rely on app.js and maps.js to load the script globally.
+    // Ensure google.maps and DirectionsService are available.
+    if (!window.google || !window.google.maps || !window.google.maps.DirectionsService) {
+        throw new Error("Google Maps DirectionsService not available.");
+    }
 
     return new Promise((resolve, reject) => {
         const directionsService = new google.maps.DirectionsService();
@@ -128,6 +142,7 @@ async function getCalculatedQuote({ origin, destination, bags, persons, isRoundT
                     const leg = result.routes[0].legs[0];
 
                     // Determine after hours based on rideDateTime or returnDateTime for round trips
+                    // Ensure rideDateTime is a valid string/Date object for parsing
                     const afterHours = isAfterHours(rideDateTime) || (isRoundTrip && isAfterHours(returnDateTime));
 
                     // --- Fare Calculation ---
@@ -206,8 +221,8 @@ function updateRealtimeQuoteDisplay(quoteDetails) {
  * Handles the final submission of the ride request, opening the modal and saving to Firestore.
  */
 export async function submitRideRequest() {
-    const origin = document.getElementById('origin-input')?.value;
-    const destination = document.getElementById('destination-input')?.value;
+    const origin = document.getElementById('origin-input')?.value.trim();
+    const destination = document.getElementById('destination-input')?.value.trim();
     const bags = parseInt(document.getElementById('bags-input')?.value, 10) || 0;
     const persons = parseInt(document.getElementById('persons-input')?.value, 10) || 1;
     const isRoundTrip = document.getElementById('round-trip-input')?.checked || false;
@@ -233,32 +248,21 @@ export async function submitRideRequest() {
         });
 
         // Update the modal content with the final calculated quote
-        const quoteDistance = document.getElementById('quote-distance');
-        const quoteDuration = document.getElementById('quote-duration');
-        const quoteOrigin = document.getElementById('quote-origin');
-        const quoteDestination = document.getElementById('quote-destination');
-        const quoteBags = document.getElementById('quote-bags');
-        const quotePersons = document.getElementById('quote-persons');
-        const quoteRoundTrip = document.getElementById('quote-roundtrip');
-        const quoteFare = document.getElementById('quote-fare');
-        const quotePickupTime = document.getElementById('quote-pickup-time');
-        const quoteReturnPickupTime = document.getElementById('quote-return-pickup-time');
-        const quoteAfterHours = document.getElementById('quote-afterHours');
-
-        if (quoteDistance) quoteDistance.textContent = quoteDetails.distance;
-        if (quoteDuration) quoteDuration.textContent = quoteDetails.duration;
-        if (quoteOrigin) quoteOrigin.textContent = quoteDetails.origin;
-        if (quoteDestination) quoteDestination.textContent = quoteDetails.destination;
-        if (quoteBags) quoteBags.textContent = quoteDetails.bags > 0 ? `${quoteDetails.bags} bag(s)` : "No bags";
-        if (quotePersons) quotePersons.textContent = quoteDetails.persons > 0 ? `${quoteDetails.persons} person(s)` : "1 person";
-        if (quoteRoundTrip) quoteRoundTrip.textContent = quoteDetails.roundTrip ? "Yes" : "No";
-        if (quotePickupTime) quotePickupTime.textContent = quoteDetails.rideDateTime ? new Date(quoteDetails.rideDateTime).toLocaleString() : "Not set";
-        if (quoteReturnPickupTime) quoteReturnPickupTime.textContent = (quoteDetails.roundTrip && quoteDetails.returnDateTime) ? new Date(quoteDetails.returnDateTime).toLocaleString() : "N/A";
-        if (quoteAfterHours) quoteAfterHours.textContent = quoteDetails.afterHours ? "Yes" : "No";
-        if (quoteFare) quoteFare.textContent = `${quoteDetails.fareXCD} XCD / $${quoteDetails.fareUSD} USD`;
+        document.getElementById('quote-distance').textContent = quoteDetails.distance;
+        document.getElementById('quote-duration').textContent = quoteDetails.duration;
+        document.getElementById('quote-origin').textContent = quoteDetails.origin;
+        document.getElementById('quote-destination').textContent = quoteDetails.destination;
+        document.getElementById('quote-bags').textContent = quoteDetails.bags > 0 ? `${quoteDetails.bags} bag(s)` : "No bags";
+        document.getElementById('quote-persons').textContent = quoteDetails.persons > 0 ? `${quoteDetails.persons} person(s)` : "1 person";
+        document.getElementById('quote-roundtrip').textContent = quoteDetails.roundTrip ? "Yes" : "No";
+        document.getElementById('quote-pickup-time').textContent = quoteDetails.rideDateTime ? new Date(quoteDetails.rideDateTime).toLocaleString() : "Not set";
+        document.getElementById('quote-return-pickup-time').textContent = (quoteDetails.roundTrip && quoteDetails.returnDateTime) ? new Date(quoteDetails.returnDateTime).toLocaleString() : "N/A";
+        document.getElementById('quote-afterHours').textContent = quoteDetails.afterHours ? "Yes" : "No";
+        document.getElementById('quote-fare').textContent = `${quoteDetails.fareXCD} XCD / $${quoteDetails.fareUSD} USD`;
 
         openModal('quote-display-modal'); // Open the modal after updating its content
 
+        // Proceed to save to Firestore ONLY AFTER the modal is shown to the user
         if (db && currentUserId) {
             try {
                 await addDoc(collection(db, "rides"), {
@@ -279,21 +283,20 @@ export async function submitRideRequest() {
                     timestamp: serverTimestamp()
                 });
                 showToast("Ride quote saved to history!", "success");
-                resetRideForm();
+                resetRideForm(); // Reset form AFTER successful save
             } catch (err) {
-                console.error("Failed to save ride request:", err);
+                console.error("Failed to save ride request to Firestore:", err);
                 showToast("Failed to save ride request. Please try again.", "danger");
             }
         } else {
-            showToast("Please log in to save your ride request.", "warning");
+            showToast("Please log in to save your ride request to history.", "warning");
         }
 
     } catch (error) {
-        hideLoadingOverlay();
-        console.error("Error processing ride request:", error);
-        showToast("Error processing ride request. Please try again.", "danger");
+        console.error("Error processing ride request for submission:", error);
+        showToast("Error processing ride request: " + error.message, "danger");
     } finally {
-        hideLoadingOverlay(); // Ensure overlay is hidden even if there's an error before Firestore save
+        hideLoadingOverlay(); // Ensure overlay is hidden in all cases
     }
 }
 
@@ -306,33 +309,31 @@ export async function submitRideRequest() {
  */
 function isAfterHours(dtString) {
     if (!dtString) return false;
+    // Attempt to create a Date object. If parsing fails, Date will be "Invalid Date"
     const dt = new Date(dtString);
+    if (isNaN(dt.getTime())) { // Check if date is valid
+        console.warn("Invalid date string for after-hours check:", dtString);
+        return false;
+    }
     const hour = dt.getHours();
+    // Use logical OR for clear conditions: (before 6 AM) OR (at or after 8 PM)
     return hour < 6 || hour >= 20;
 }
 
 export function resetRideForm() {
-    const originInput = document.getElementById('origin-input');
-    const destinationInput = document.getElementById('destination-input');
-    const bagsInput = document.getElementById('bags-input');
-    const personsInput = document.getElementById('persons-input');
-    const roundTripInput = document.getElementById('round-trip-input');
-    const pickupTimeInput = document.getElementById('pickup-time-input');
-    const returnPickupTimeInput = document.getElementById('return-pickup-time-input');
+    document.getElementById('origin-input').value = '';
+    document.getElementById('destination-input').value = '';
+    document.getElementById('bags-input').value = '0';
+    document.getElementById('persons-input').value = '1';
+    document.getElementById('round-trip-input').checked = false;
+    document.getElementById('pickup-time-input').value = '';
+    document.getElementById('return-pickup-time-input').value = '';
 
-    if (pickupTimeInput) pickupTimeInput.value = '';
-    if (returnPickupTimeInput) returnPickupTimeInput.value = '';
-    if (originInput) originInput.value = '';
-    if (destinationInput) destinationInput.value = '';
-    if (bagsInput) bagsInput.value = '0';
-    if (personsInput) personsInput.value = '1';
-    if (roundTripInput) {
-        roundTripInput.checked = false;
-        const returnPickupTimeGroup = document.getElementById('return-pickup-time-group');
-        if (returnPickupTimeGroup) {
-            returnPickupTimeGroup.style.display = 'none';
-        }
+    const returnPickupTimeGroup = document.getElementById('return-pickup-time-group');
+    if (returnPickupTimeGroup) {
+        returnPickupTimeGroup.style.display = 'none';
     }
+
     // Clear and hide real-time quote display on form reset
     const quoteDisplay = document.getElementById('realtime-quote-display');
     if (quoteDisplay) {
@@ -344,7 +345,10 @@ export function resetRideForm() {
 
 export function printQuote() {
     const modal = document.getElementById('quote-display-modal');
-    if (!modal) return;
+    if (!modal) {
+        showToast("Quote display modal not found for printing.", "warning");
+        return;
+    }
     const printContentsElement = modal.querySelector('.modal-quote-content');
     if (!printContentsElement) {
         showToast("Quote content not found for printing.", "warning");
@@ -352,32 +356,34 @@ export function printQuote() {
     }
     const printContents = printContentsElement.innerHTML;
 
-    const win = window.open('', '', 'height=600,width=400');
+    const win = window.open('', '_blank', 'height=600,width=800'); // Increased width
     win.document.write(`
         <html>
         <head>
             <title>HitchPoint - Ride Quote</title>
             <style>
-                body { font-family: Arial, sans-serif; padding: 20px; color: #333; }
-                h1 { color: #5E9BCD; margin-bottom: 20px; }
-                .quote-detail { margin: 10px 0; font-size: 14px; }
-                .quote-detail strong { display: inline-block; width: 120px; }
-                .fare { font-size: 24px; font-weight: bold; color: #FFD700; margin-top: 20px; }
+                body { font-family: Arial, sans-serif; padding: 20px; color: #333; line-height: 1.6; }
+                h1 { color: #5E9BCD; margin-bottom: 20px; text-align: center; }
+                .quote-detail { margin: 10px 0; font-size: 15px; }
+                .quote-detail strong { display: inline-block; width: 150px; font-weight: bold; }
+                .fare { font-size: 28px; font-weight: bold; color: #007bff; margin-top: 30px; text-align: center; } /* Changed color for better print */
                 p { margin-bottom: 5px; }
                 @media print {
                     .no-print { display: none; }
+                    body { -webkit-print-color-adjust: exact; } /* For backgrounds/colors */
                 }
             </style>
         </head>
         <body>
             <h1>HitchPoint Ride Quote</h1>
             ${printContents}
-            <p style="margin-top: 30px; font-size: 12px; color: #666;">
-                Generated on ${new Date().toLocaleString()}
+            <p style="margin-top: 40px; font-size: 13px; color: #666; text-align: center;">
+                Generated on ${new Date().toLocaleString()} (All prices are estimates and may vary.)
             </p>
         </body>
         </html>
     `);
     win.document.close();
     win.print();
+    win.close(); // close the print window after printing
 }
