@@ -1,7 +1,7 @@
 import { db, auth } from './firebase.js';
 import { doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-import { showConfirm, showToast } from './ui.js'; 
+import { showToast } from './ui.js'; 
 
 const profileForm = document.getElementById('user-profile-form');
 const firstNameInput = document.getElementById('profile-first-name');
