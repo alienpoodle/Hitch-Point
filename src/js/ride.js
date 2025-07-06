@@ -151,7 +151,7 @@ export async function calculateRoute() {
                     totalDistance += leg.distance.value;
                     totalDuration += leg.duration.value;
                 });
-                // Show quote modal, fill in details, etc.
+                // Show quote modal, fill in details.
                 document.getElementById('quote-origin').textContent = points[0];
                 document.getElementById('quote-destination').textContent = points[points.length - 1];
                 document.getElementById('quote-distance').textContent = (totalDistance / 1000).toFixed(2) + " km";

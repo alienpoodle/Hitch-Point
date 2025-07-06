@@ -35,7 +35,7 @@ function resetProfileForm() {
 export function initProfileFeature() {
     onAuthStateChanged(auth, async user => {
         if (user && profileForm && firstNameInput && lastNameInput && phoneInput && emailInput && backBtn) {
-            // Always use Google account email, never allow editing
+            // Always use Google account email, never allow editing - to be revised
             emailInput.value = user.email || '';
             emailInput.readOnly = true;
             emailInput.setAttribute('readonly', 'readonly');

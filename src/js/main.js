@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         hideLoadingOverlay();
     });
-
+    // Initialize Firebase and set up listeners
     setupAuthListeners();
     setupMapListeners(window.firebaseConfig.googleMapsApiKey);
     initProfileFeature();

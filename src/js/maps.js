@@ -6,6 +6,7 @@ let isGoogleMapsLoading = false;
 let mapLoadPromise = null;
 let mapSelectionMode = 'none';
 
+// Load Google Maps script with Places library
 export async function loadGoogleMapsScript(apiKey) {
     if (isGoogleMapsLoading && mapLoadPromise) return mapLoadPromise;
     if (window.google && window.google.maps) {
