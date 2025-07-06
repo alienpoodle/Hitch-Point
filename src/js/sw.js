@@ -1,4 +1,4 @@
-const CACHE_NAME = 'hitch-point-cache-v1.3';
+const CACHE_NAME = 'hitch-point-cache-v1.3.1';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
