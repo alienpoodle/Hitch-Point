@@ -2,7 +2,7 @@ import { BASE_FARE_XCD, DEFAULT_PER_KM_RATE_XCD, AFTER_HOURS_SURCHARGE_PERCENTAG
 import { db, currentUserId } from './firebase.js'; // Ensure currentUserId is correctly populated from firebase.js
 import { showToast, openModal, hideLoadingOverlay, showLoadingOverlay } from './ui.js';
 import { collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-import { loadGoogleMapsApi } from './maps.js';
+import { loadGoogleMapsScript } from './maps.js';
 
 let debounceTimeout; // For debouncing the real-time calculation
 
@@ -113,7 +113,7 @@ async function triggerRealtimeQuoteCalculation() {
  * Does NOT interact with the DOM for display or with Firestore.
  */
 async function getCalculatedQuote({ origin, destination, bags, persons, isRoundTrip, rideDateTime, returnDateTime }) {
-    await loadGoogleMapsApi(); // Ensure Maps API is loaded
+    await loadGoogleMapsScript(); // Ensure Maps API is loaded
 
     return new Promise((resolve, reject) => {
         const directionsService = new google.maps.DirectionsService();
