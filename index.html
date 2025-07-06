@@ -137,6 +137,17 @@
                 <input type="datetime-local" id="return-pickup-time-input" name="return-pickup-time">
             </div>
         </div>
+        <div id="realtime-quote-display" class="mt-3 p-3 border rounded" style="display: none;">
+            <h5>Estimated Trip Cost</h5>
+            <p class="mb-1">Distance: <span id="realtime-distance-display"></span></p>
+            <p class="mb-1">Duration: <span id="realtime-duration-display"></span></p>
+            <p class="mb-1">Persons: <span id="realtime-persons-display"></span></p>
+            <p class="mb-1">Bags: <span id="realtime-bags-display"></span></p>
+            <p class="mb-1">Round Trip: <span id="realtime-roundtrip-display"></span></p>
+            <p class="mb-1">After Hours: <span id="realtime-afterhours-display"></span></p>
+            <h4 class="mb-0">Fare: <span id="realtime-fare-display" class="text-primary">Calculating...</span></h4>
+            <small class="text-muted"><span id="realtime-status-message">Enter details to get a quote.</span></small>
+        </div>
         <button id="request-ride-btn" class="btn-primary">Request Ride</button>
         <!-- PWA Install Button -->
         <button id="install-pwa-btn" class="btn-secondary hidden" style="margin-top: 1em;">
