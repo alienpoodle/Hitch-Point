@@ -1,5 +1,6 @@
+// rides.js
 import { BASE_FARE_XCD, DEFAULT_PER_KM_RATE_XCD, AFTER_HOURS_SURCHARGE_PERCENTAGE, XCD_TO_USD_EXCHANGE_RATE, COST_PER_ADDITIONAL_BAG_XCD, COST_PER_ADDITIONAL_PERSON_XCD, FREE_PERSON_COUNT } from './constants.js';
-import { db, currentUserId } from './firebase.js';
+import { db, currentUserId } from './firebase.js'; // Ensure currentUserId is correctly populated from firebase.js
 import { showToast, openModal, hideLoadingOverlay, showLoadingOverlay } from './ui.js';
 import { collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 import { loadGoogleMapsApi } from './maps.js';
@@ -23,11 +24,16 @@ export function setupRideListeners() {
     }
 }
 
+/**
+ * Checks if a given time falls into after-hours.
+ * After hours: before 6 AM or at/after 8 PM (20:00).
+ * @param {string} dtString - ISO 8601 formatted date-time string.
+ * @returns {boolean}
+ */
 function isAfterHours(dtString) {
     if (!dtString) return false;
     const dt = new Date(dtString);
     const hour = dt.getHours();
-    // Example: after hours is before 6am or after 8pm
     return hour < 6 || hour >= 20;
 }
 
@@ -40,21 +46,35 @@ export async function calculateRoute() {
     const pickupTimeInput = document.getElementById('pickup-time-input');
     const returnPickupTimeInput = document.getElementById('return-pickup-time-input');
 
-    if (!originInput || !destinationInput) return;
+    if (!originInput || !destinationInput || !pickupTimeInput) {
+        // Added pickupTimeInput check here for mandatory time
+        showToast("Please ensure all required fields (Origin, Destination, Pickup Time) are filled.", "warning");
+        return;
+    }
+
     const origin = originInput.value;
     const destination = destinationInput.value;
     const bags = parseInt(bagsInput?.value, 10) || 0;
     const persons = parseInt(personsInput?.value, 10) || 1;
     const isRoundTrip = roundTripInput?.checked || false;
-    const pickupTime = pickupTimeInput?.value || null;
-    const returnPickupTime = (isRoundTrip && returnPickupTimeInput) ? returnPickupTimeInput.value : null;
 
-    if (!origin || !destination) {
-        showToast("Please enter both origin and destination.", "warning");
+    // Use rideDateTime for the primary pickup time for consistency with main.js
+    const rideDateTime = pickupTimeInput.value; 
+    // Use returnDateTime for the return leg pickup time for consistency
+    const returnDateTime = (isRoundTrip && returnPickupTimeInput) ? returnPickupTimeInput.value : null;
+
+    if (!origin || !destination || !rideDateTime) { // Re-check after getting values
+        showToast("Please enter both origin, destination, and pickup time.", "warning");
         return;
     }
+
+    // Input validation for date/time format if needed
+    // Example: if (isNaN(new Date(rideDateTime).getTime())) { showToast("Invalid pickup time", "danger"); return; }
+    // Same for returnDateTime
+
     await loadGoogleMapsApi();
     showLoadingOverlay();
+
     try {
         const directionsService = new google.maps.DirectionsService();
         directionsService.route(
@@ -79,29 +99,54 @@ export async function calculateRoute() {
                     const quoteReturnPickupTime = document.getElementById('quote-return-pickup-time');
                     const quoteAfterHours = document.getElementById('quote-afterHours');
 
+                    // Determine after hours based on rideDateTime or returnDateTime for round trips
+                    const afterHours = isAfterHours(rideDateTime) || (isRoundTrip && isAfterHours(returnDateTime));
+
+                    // --- Fare Calculation ---
+                    const distanceKm = leg.distance.value / 1000;
+                    let fareXCD = BASE_FARE_XCD + (distanceKm * DEFAULT_PER_KM_RATE_XCD);
+
+                    // Additional Bags
+                    if (bags > 0) {
+                        fareXCD += bags * COST_PER_ADDITIONAL_BAG_XCD;
+                    }
+
+                    // Additional Persons (above FREE_PERSON_COUNT)
+                    if (persons > FREE_PERSON_COUNT) {
+                        fareXCD += (persons - FREE_PERSON_COUNT) * COST_PER_ADDITIONAL_PERSON_XCD;
+                    }
+
+                    // After Hours Surcharge
+                    if (afterHours) {
+                        fareXCD += fareXCD * AFTER_HOURS_SURCHARGE_PERCENTAGE;
+                    }
+
+                    // Round Trip (doubles the entire calculated fare up to this point)
+                    if (isRoundTrip) {
+                        fareXCD *= 2;
+                    }
+                    
+                    const fareUSD = fareXCD * XCD_TO_USD_EXCHANGE_RATE;
+
+                    // --- Update Quote Display ---
                     if (quoteDistance) quoteDistance.textContent = leg.distance.text;
                     if (quoteDuration) quoteDuration.textContent = leg.duration.text;
                     if (quoteOrigin) quoteOrigin.textContent = origin;
                     if (quoteDestination) quoteDestination.textContent = destination;
                     if (quoteBags) quoteBags.textContent = bags > 0 ? `${bags} bag(s)` : "No bags";
-                    if (quotePersons) quotePersons.textContent = persons > 1 ? `${persons} person(s)` : "1 person";
+                    // Only show persons if > FREE_PERSON_COUNT or if persons > 0
+                    if (quotePersons) quotePersons.textContent = persons > 0 ? `${persons} person(s)` : "1 person";
                     if (quoteRoundTrip) quoteRoundTrip.textContent = isRoundTrip ? "Yes" : "No";
-                    if (quotePickupTime) quotePickupTime.textContent = pickupTime ? new Date(pickupTime).toLocaleString() : "Not set";
-                    if (quoteReturnPickupTime) quoteReturnPickupTime.textContent = (isRoundTrip && returnPickupTime) ? new Date(returnPickupTime).toLocaleString() : "N/A";
-
-                    // Determine after hours for either pickup time or return pickup time
-                    const afterHours = isAfterHours(pickupTime) || (isRoundTrip && isAfterHours(returnPickupTime));
+                    if (quotePickupTime) quotePickupTime.textContent = rideDateTime ? new Date(rideDateTime).toLocaleString() : "Not set";
+                    if (quoteReturnPickupTime) quoteReturnPickupTime.textContent = (isRoundTrip && returnDateTime) ? new Date(returnDateTime).toLocaleString() : "N/A";
                     if (quoteAfterHours) quoteAfterHours.textContent = afterHours ? "Yes" : "No";
-
-                    const distanceKm = leg.distance.value / 1000;
-                    let fareXCD = BASE_FARE_XCD + (distanceKm * DEFAULT_PER_KM_RATE_XCD);
-                    if (bags > 0) fareXCD += bags * COST_PER_ADDITIONAL_BAG_XCD;
-                    if (persons > FREE_PERSON_COUNT) fareXCD += (persons - FREE_PERSON_COUNT) * COST_PER_ADDITIONAL_PERSON_XCD;
-                    if (afterHours) fareXCD += fareXCD * AFTER_HOURS_SURCHARGE_PERCENTAGE;
-                    if (isRoundTrip) fareXCD *= 2;
-                    const fareUSD = fareXCD * XCD_TO_USD_EXCHANGE_RATE;
-                    if (quoteFare) quoteFare.textContent = `${Math.round(fareXCD)} XCD / $${Math.round(fareUSD)} USD`;
+                    
+                    // Display fares with two decimal places for currency consistency
+                    if (quoteFare) quoteFare.textContent = `${fareXCD.toFixed(2)} XCD / $${fareUSD.toFixed(2)} USD`;
+                    
                     openModal('quote-display-modal');
+
+                    // --- Save to Firestore ---
                     if (db && currentUserId) {
                         try {
                             await addDoc(collection(db, "rides"), {
@@ -110,31 +155,36 @@ export async function calculateRoute() {
                                 destination,
                                 distance: leg.distance.text,
                                 duration: leg.duration.text,
-                                fareXCD: fareXCD.toFixed(2),
-                                fareUSD: fareUSD.toFixed(2),
+                                fareXCD: fareXCD.toFixed(2), // Store as string with 2 decimals
+                                fareUSD: fareUSD.toFixed(2), // Store as string with 2 decimals
                                 bags,
                                 persons,
                                 afterHours,
                                 roundTrip: isRoundTrip,
-                                pickupTime,
-                                returnPickupTime,
-                                status: 'quoted',
+                                rideDateTime: rideDateTime, // Standardized field name
+                                returnDateTime: returnDateTime, // Standardized field name
+                                status: 'quoted', // Initial status
                                 timestamp: serverTimestamp()
                             });
                             showToast("Ride quote saved to history!", "success");
                             resetRideForm();
                         } catch (err) {
-                            showToast("Failed to save ride request.", "error");
+                            console.error("Failed to save ride request:", err); // Log the error for debugging
+                            showToast("Failed to save ride request. Please try again.", "danger"); // Changed to error type
                         }
+                    } else {
+                        // This case implies user not logged in or db not initialized
+                        showToast("Please log in to save your ride request.", "warning");
                     }
                 } else {
-                    showToast("Could not calculate route. Please check your locations.", "error");
+                    showToast("Could not calculate route. Please check your locations.", "danger"); // Changed to danger type
                 }
             }
         );
     } catch (err) {
         hideLoadingOverlay();
-        showToast("Error calculating route.", "error");
+        console.error("Error calculating route:", err); // Log the error for debugging
+        showToast("Error calculating route. Please try again.", "danger"); // Changed to danger type
     }
 }
 
@@ -146,29 +196,49 @@ export function resetRideForm() {
     const roundTripInput = document.getElementById('round-trip-input');
     const pickupTimeInput = document.getElementById('pickup-time-input');
     const returnPickupTimeInput = document.getElementById('return-pickup-time-input');
+
     if (pickupTimeInput) pickupTimeInput.value = '';
     if (returnPickupTimeInput) returnPickupTimeInput.value = '';
     if (originInput) originInput.value = '';
     if (destinationInput) destinationInput.value = '';
-    if (bagsInput) bagsInput.value = 0;
-    if (personsInput) personsInput.value = 1;
-    if (roundTripInput) roundTripInput.checked = false;
+    if (bagsInput) bagsInput.value = '0'; // Set to string '0' for consistency with input type number
+    if (personsInput) personsInput.value = '1'; // Set to string '1' for consistency with input type number
+    if (roundTripInput) {
+        roundTripInput.checked = false;
+        // Ensure return pickup time group is hidden when form is reset
+        const returnPickupTimeGroup = document.getElementById('return-pickup-time-group');
+        if (returnPickupTimeGroup) {
+            returnPickupTimeGroup.style.display = 'none';
+        }
+    }
 }
 
 export function printQuote() {
     const modal = document.getElementById('quote-display-modal');
     if (!modal) return;
-    const printContents = modal.querySelector('.modal-quote-content').innerHTML;
+    // Get the element containing the content to print, assuming it's correctly within the modal
+    const printContentsElement = modal.querySelector('.modal-quote-content'); 
+    if (!printContentsElement) {
+        showToast("Quote content not found for printing.", "warning");
+        return;
+    }
+    const printContents = printContentsElement.innerHTML;
+
     const win = window.open('', '', 'height=600,width=400');
     win.document.write(`
         <html>
         <head>
             <title>HitchPoint - Ride Quote</title>
             <style>
-                body { font-family: Arial, sans-serif; padding: 20px; }
-                h1 { color: #5E9BCD; }
-                .quote-detail { margin: 10px 0; }
-                .fare { font-size: 24px; font-weight: bold; color: #FFD700; }
+                body { font-family: Arial, sans-serif; padding: 20px; color: #333; }
+                h1 { color: #5E9BCD; margin-bottom: 20px; }
+                .quote-detail { margin: 10px 0; font-size: 14px; }
+                .quote-detail strong { display: inline-block; width: 120px; }
+                .fare { font-size: 24px; font-weight: bold; color: #FFD700; margin-top: 20px; }
+                p { margin-bottom: 5px; }
+                @media print {
+                    .no-print { display: none; }
+                }
             </style>
         </head>
         <body>
