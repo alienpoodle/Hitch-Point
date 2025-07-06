@@ -54,7 +54,7 @@ export function openMapModal(inputElement) { // Pass the input element directly
 
     // Use a small delay to ensure modal is rendered and visible before initializing map
     setTimeout(() => {
-        initMapForSelection();.
+        initMapForSelection();
     }, 300); // Small delay to ensure modal is visible and sized correctly
 }
 
