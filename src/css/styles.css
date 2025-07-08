@@ -130,3 +130,174 @@ body {
 .toast.success::before { content: '\f00c'; }
 .toast.error::before { content: '\f057'; }
 .toast.warning::before { content: '\f071'; }
+
+/* Fare Breakdown Styles */
+.fare-breakdown-container {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 20px;
+    margin-top: 20px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.fare-breakdown-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #212529;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #5E9BCD;
+}
+
+.fare-section {
+    margin-bottom: 20px;
+}
+
+.fare-section-title {
+    font-size: 1rem;
+    font-weight: 500;
+    color: #495057;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.fare-line-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #e9ecef;
+    transition: background-color 0.2s;
+}
+
+.fare-line-item:hover {
+    background-color: #e9ecef;
+    padding-left: 10px;
+    padding-right: 10px;
+    margin-left: -10px;
+    margin-right: -10px;
+}
+
+.fare-label {
+    flex: 1;
+    color: #495057;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.fare-label i {
+    color: #5E9BCD;
+    width: 20px;
+    text-align: center;
+}
+
+.fare-note {
+    display: block;
+    font-size: 0.85rem;
+    color: #6c757d;
+    margin-top: 2px;
+    margin-left: 28px;
+}
+
+.fare-amount {
+    font-weight: 500;
+    color: #212529;
+    text-align: right;
+    min-width: 100px;
+}
+
+/* Special styling for different line items */
+.fare-subtotal {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 2px solid #dee2e6;
+    font-weight: 600;
+}
+
+.fare-surcharge {
+    background-color: #fff3cd;
+    margin: 10px -10px;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+.fare-surcharge .fare-amount {
+    color: #856404;
+}
+
+.fare-oneway-total {
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+.fare-roundtrip {
+    background-color: #d1ecf1;
+    margin: 10px -10px;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+.fare-final-total {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 3px solid #5E9BCD;
+    font-size: 1.25rem;
+    font-weight: 700;
+}
+
+.fare-final-total .fare-amount {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+}
+
+.fare-xcd {
+    color: #5E9BCD;
+}
+
+.fare-usd {
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+
+/* Responsive adjustments */
+@media (max-width: 576px) {
+    .fare-breakdown-container {
+        padding: 15px;
+    }
+    
+    .fare-line-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+    }
+    
+    .fare-amount {
+        align-self: flex-start;
+        margin-left: 28px;
+    }
+    
+    .fare-final-total .fare-amount {
+        align-items: flex-start;
+    }
+}
+
+/* Print styles */
+@media print {
+    .fare-breakdown-container {
+        border: 2px solid #000;
+        background: white;
+    }
+    
+    .fare-line-item:hover {
+        background-color: transparent;
+        padding-left: 0;
+        padding-right: 0;
+        margin-left: 0;
+        margin-right: 0;
+    }
+}

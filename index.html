@@ -139,6 +139,9 @@
                     <p class="mb-1">After Hours: <span id="realtime-afterhours-display"></span></p>
                     <h4 class="mb-0">Fare: <span id="realtime-fare-display" class="text-primary">Calculating...</span></h4>
                     <small class="text-muted"><span id="realtime-status-message">Enter details to get a quote.</span></small>
+                    <div id="realtime-fare-breakdown" class="mt-3" style="display: none;">
+                        <!-- Fare breakdown will be inserted here by JavaScript -->
+                    </div>
                 </div>
                 <button id="request-ride-btn" type="button" class="btn btn-primary w-100 mb-2">Request Ride</button>
                 <button id="install-pwa-btn" type="button" class="btn btn-outline-primary w-100 d-none">
@@ -209,6 +212,10 @@
                     <p>After Hours: <span id="quote-afterHours"></span></p>
                     <p>Round Trip: <span id="quote-roundtrip"></span></p>
                     <p>Fare: <span id="quote-fare" class="fs-4 fw-bold"></span></p>
+                    <div id="quote-fare-breakdown" class="mt-3">
+                        <!-- Fare breakdown will be inserted here by JavaScript -->
+                    </div>
+                    
                     <button id="print-quote-btn" class="btn btn-outline-secondary mt-3">Print Quote</button>
                 </div>
             </div>
