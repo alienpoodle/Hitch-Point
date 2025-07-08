@@ -5,15 +5,12 @@
     <title>Hitch Point</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" href="src/images/favicon.ico" type="image/x-icon">
-    <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
-    <!-- Custom styles (single file) -->
     <link rel="stylesheet" href="src/css/styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 </head>
 <body class="bg-light">
 
-    <!-- Navbar (hidden until sign-in) -->
     <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm mb-4 d-none" id="main-navbar">
         <div class="container">
             <a class="navbar-brand d-flex align-items-center" href="#">
@@ -26,7 +23,7 @@
             <div class="collapse navbar-collapse justify-content-end" id="navbarNavDropdown">
                 <ul class="navbar-nav">
                     <li class="nav-item"><button id="navbar-profile" class="btn btn-outline-primary me-2">Profile</button></li>
-                    <li class="nav-item"><button id="navbar-view-history" class="btn btn-outline-secondary me-2" 
+                    <li class="nav-item"><button id="navbar-view-history" class="btn btn-outline-secondary me-2"
                         data-bs-toggle="modal" data-bs-target="#ride-history-modal">Ride History</button>
                     </li>
                     <li class="nav-item"><button id="navbar-logout" class="btn btn-outline-danger">Log Out</button></li>
@@ -36,15 +33,12 @@
     </nav>
 
     <main class="container" style="max-width: 500px;">
-        <!-- Toast notifications -->
         <div id="toast-container" class="position-fixed top-0 end-0 p-3" style="z-index: 1100;"></div>
 
-        <!-- Loading overlay -->
         <div id="loading-overlay" class="position-fixed top-0 start-0 w-100 h-100 d-none align-items-center justify-content-center bg-white bg-opacity-75" style="z-index: 1200;">
             <div class="spinner-border text-primary" role="status"></div>
         </div>
 
-        <!-- Logged out view -->
         <div id="logged-out-view" class="text-center my-5">
             <img src="src/images/logo.png" alt="Hitch Point Logo" class="mb-3" style="width: 80px;">
             <div id="login-carousel" class="carousel slide mb-4" data-bs-ride="carousel">
@@ -77,7 +71,6 @@
             </button>
         </div>
 
-        <!-- Ride Request Section -->
         <div id="ride-request-section" class="d-none">
             <h2 class="mb-4">Request a Ride</h2>
             <form id="ride-request-form">
@@ -86,7 +79,7 @@
                     <div id="route-points-list">
                         <div class="input-group mb-2 route-point" data-index="0">
                             <span class="input-group-text bg-primary text-white">Start</span>
-                            <input type="text" class="form-control route-point-input" placeholder="Enter starting point" required>
+                            <input type="text" id="origin-input" class="form-control route-point-input" placeholder="Enter starting point" required>
                             <button class="btn btn-outline-secondary select-map-btn" type="button" title="Pin on Map"
                                     data-bs-toggle="modal" data-bs-target="#map-modal">
                                 <i class="fas fa-map-marker-alt"></i>
@@ -94,7 +87,7 @@
                         </div>
                         <div class="input-group mb-2 route-point" data-index="1">
                             <span class="input-group-text bg-secondary text-white">Finish</span>
-                            <input type="text" class="form-control route-point-input" placeholder="Enter destination" required>
+                            <input type="text" id="destination-input" class="form-control route-point-input" placeholder="Enter destination" required>
                             <button class="btn btn-outline-secondary select-map-btn" type="button" title="Pin on Map"
                                     data-bs-toggle="modal" data-bs-target="#map-modal">
                                 <i class="fas fa-map-marker-alt"></i>
@@ -122,12 +115,12 @@
                     </div>
                 </div>
                 <div class="mb-3">
-                    <label for="ride-datetime-input" class="form-label">Ride Date & Time</label>
-                    <input type="datetime-local" id="ride-datetime-input" class="form-control" required>
+                    <label for="pickup-time-input" class="form-label">Ride Date & Time</label>
+                    <input type="datetime-local" id="pickup-time-input" class="form-control" required>
                 </div>
-                <div class="mb-3 d-none" id="return-datetime-group">
-                    <label for="return-datetime-input" class="form-label">Return Date & Time</label>
-                    <input type="datetime-local" id="return-datetime-input" class="form-control">
+                <div class="mb-3 d-none" id="return-pickup-time-group">
+                    <label for="return-pickup-time-input" class="form-label">Return Date & Time</label>
+                    <input type="datetime-local" id="return-pickup-time-input" class="form-control">
                 </div>
                 <div id="realtime-quote-display" class="mt-3 p-3 border rounded" style="display: none;">
                     <h5>Estimated Trip Cost</h5>
@@ -140,8 +133,7 @@
                     <h4 class="mb-0">Fare: <span id="realtime-fare-display" class="text-primary">Calculating...</span></h4>
                     <small class="text-muted"><span id="realtime-status-message">Enter details to get a quote.</span></small>
                     <div id="realtime-fare-breakdown" class="mt-3" style="display: none;">
-                        <!-- Fare breakdown will be inserted here by JavaScript -->
-                    </div>
+                        </div>
                 </div>
                 <button id="request-ride-btn" type="button" class="btn btn-primary w-100 mb-2">Request Ride</button>
                 <button id="install-pwa-btn" type="button" class="btn btn-outline-primary w-100 d-none">
@@ -150,7 +142,6 @@
             </form>
         </div>
 
-        <!-- User Profile View -->
         <div id="profile-view" class="d-none">
             <form id="user-profile-form" autocomplete="off" class="bg-white rounded shadow-sm p-4 mt-4">
                 <h3 class="mb-4">Your Profile</h3>
@@ -178,7 +169,6 @@
         </div>
     </main>
 
-    <!-- Ride History Modal -->
     <div class="modal fade" id="ride-history-modal" tabindex="-1" aria-labelledby="rideHistoryLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">
@@ -191,7 +181,6 @@
         </div>
     </div>
 
-    <!-- Quote Display Modal -->
     <div class="modal fade" id="quote-display-modal" tabindex="-1" aria-labelledby="quoteModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
@@ -213,16 +202,14 @@
                     <p>Round Trip: <span id="quote-roundtrip"></span></p>
                     <p>Fare: <span id="quote-fare" class="fs-4 fw-bold"></span></p>
                     <div id="quote-fare-breakdown" class="mt-3">
-                        <!-- Fare breakdown will be inserted here by JavaScript -->
-                    </div>
-                    
+                        </div>
+
                     <button id="print-quote-btn" class="btn btn-outline-secondary mt-3">Print Quote</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Map Modal -->
     <div class="modal fade" id="map-modal" tabindex="-1" aria-labelledby="mapModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">
@@ -237,21 +224,19 @@
         </div>
     </div>
 
-    <!-- Config -->
     <script src="config.js"></script>
-    <!-- Bootstrap 5 JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
     <script>
       window.bootstrap = bootstrap;
     </script>
-    <!-- Main JS as module -->
     <script type="module" src="src/js/main.js"></script>
-   
+
     <script>
     // Show/hide return date/time for round trip
     document.addEventListener('DOMContentLoaded', function() {
         const roundTripInput = document.getElementById('round-trip-input');
-        const returnGroup = document.getElementById('return-datetime-group');
+        // CORRECTED ID: return-pickup-time-group (was return-datetime-group)
+        const returnGroup = document.getElementById('return-pickup-time-group');
         if (roundTripInput && returnGroup) {
             roundTripInput.addEventListener('change', () => {
                 returnGroup.classList.toggle('d-none', !roundTripInput.checked);
