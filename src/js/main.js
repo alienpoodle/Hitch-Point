@@ -1,4 +1,3 @@
-// app.js
 import { initFirebase } from './firebase.js';
 import { setupAuthListeners } from './auth.js';
 import { setupMapListeners, openMapModal as mapsOpenMapModal } from './maps.js'; // Renamed openMapModal to avoid conflict
@@ -79,28 +78,5 @@ document.addEventListener('DOMContentLoaded', () => {
         profileBackBtn.addEventListener('click', hideProfileView);
     }
 
-    // --- Map Selection Logic (Updated) ---
-    // The previous window._currentRoutePointInput is no longer needed
-    // as openMapModal in maps.js now directly takes the input element.
-    // The logic below for `setRoutePointFromMap` is now redundant if maps.js handles it directly.
-
-    // This block is now fully handled within maps.js via placeMarkerAndGetAddress
-    // and should be removed if maps.js correctly dispatches events and hides the modal.
-    /*
-    document.addEventListener('click', function(e) {
-        const btn = e.target.closest('.select-map-btn');
-        if (btn) {
-            activeRouteInput = btn.closest('.input-group').querySelector('.route-point-input');
-        }
-    });
-
-    window.setRoutePointFromMap = function(address) {
-        if (activeRouteInput) {
-            activeRouteInput.value = address;
-        }
-        const mapModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('map-modal'));
-        mapModal.hide();
-    };
-    */
  
 });

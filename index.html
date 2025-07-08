@@ -81,15 +81,19 @@
                             <span class="input-group-text bg-primary text-white">Start</span>
                             <input type="text" id="origin-input" class="form-control route-point-input" placeholder="Enter starting point" required>
                             <button class="btn btn-outline-secondary select-map-btn" type="button" title="Pin on Map"
-                                    data-bs-toggle="modal" data-bs-target="#map-modal">
+                                        data-bs-toggle="modal" data-bs-target="#map-modal">
                                 <i class="fas fa-map-marker-alt"></i>
                             </button>
                         </div>
+
+                        <div id="pickup-points-container">
+                            </div>
+
                         <div class="input-group mb-2 route-point" data-index="1">
                             <span class="input-group-text bg-secondary text-white">Finish</span>
                             <input type="text" id="destination-input" class="form-control route-point-input" placeholder="Enter destination" required>
                             <button class="btn btn-outline-secondary select-map-btn" type="button" title="Pin on Map"
-                                    data-bs-toggle="modal" data-bs-target="#map-modal">
+                                        data-bs-toggle="modal" data-bs-target="#map-modal">
                                 <i class="fas fa-map-marker-alt"></i>
                             </button>
                         </div>
@@ -130,10 +134,15 @@
                     <p class="mb-1">Bags: <span id="realtime-bags-display"></span></p>
                     <p class="mb-1">Round Trip: <span id="realtime-roundtrip-display"></span></p>
                     <p class="mb-1">After Hours: <span id="realtime-afterhours-display"></span></p>
+
+                    <p class="mb-1 quote-detail pickup-points-display-group" style="display: none;">
+                        <strong>Pickup Points:</strong> <ul id="realtime-pickup-points-list" class="list-unstyled mb-0"></ul>
+                    </p>
+
                     <h4 class="mb-0">Fare: <span id="realtime-fare-display" class="text-primary">Calculating...</span></h4>
                     <small class="text-muted"><span id="realtime-status-message">Enter details to get a quote.</span></small>
                     <div id="realtime-fare-breakdown" class="mt-3" style="display: none;">
-                        </div>
+                    </div>
                 </div>
                 <button id="request-ride-btn" type="button" class="btn btn-primary w-100 mb-2">Request Ride</button>
                 <button id="install-pwa-btn" type="button" class="btn btn-outline-primary w-100 d-none">
@@ -200,9 +209,14 @@
                     <p><strong>Return Date & Time:</strong> <span id="quote-return-datetime"></span></p>
                     <p>After Hours: <span id="quote-afterHours"></span></p>
                     <p>Round Trip: <span id="quote-roundtrip"></span></p>
+
+                    <p class="quote-detail pickup-points-display-group" style="display: none;">
+                        <strong>Pickup Points:</strong> <ul id="quote-pickup-points-list" class="list-unstyled mb-0"></ul>
+                    </p>
+
                     <p>Fare: <span id="quote-fare" class="fs-4 fw-bold"></span></p>
                     <div id="quote-fare-breakdown" class="mt-3">
-                        </div>
+                    </div>
 
                     <button id="print-quote-btn" class="btn btn-outline-secondary mt-3">Print Quote</button>
                 </div>
@@ -235,7 +249,6 @@
     // Show/hide return date/time for round trip
     document.addEventListener('DOMContentLoaded', function() {
         const roundTripInput = document.getElementById('round-trip-input');
-        // CORRECTED ID: return-pickup-time-group (was return-datetime-group)
         const returnGroup = document.getElementById('return-pickup-time-group');
         if (roundTripInput && returnGroup) {
             roundTripInput.addEventListener('change', () => {

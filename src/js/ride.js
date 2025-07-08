@@ -1,9 +1,11 @@
 import { BASE_FARE_XCD, DEFAULT_PER_KM_RATE_XCD, AFTER_HOURS_SURCHARGE_PERCENTAGE, XCD_TO_USD_EXCHANGE_RATE, COST_PER_ADDITIONAL_BAG_XCD, COST_PER_ADDITIONAL_PERSON_XCD, FREE_PERSON_COUNT } from './constants.js';
-import { db, currentUserId } from './firebase.js'; // Ensure currentUserId is correctly populated from firebase.js
+import { db, currentUserId } from './firebase.js'; 
 import { showToast, openModal, hideLoadingOverlay, showLoadingOverlay } from './ui.js';
 import { collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
 let debounceTimeout; // For debouncing the real-time calculation
+let pickupPointCount = 0;
+const MAX_PICKUP_POINTS = 6; 
 
 export function setupRideListeners() {
     const requestRideBtn = document.getElementById('request-ride-btn');
@@ -15,23 +17,37 @@ export function setupRideListeners() {
     const roundTripInput = document.getElementById('round-trip-input');
     const returnPickupTimeGroup = document.getElementById('return-pickup-time-group');
 
-    // Attach event listeners for real-time quote calculation
-    const inputsToMonitor = [
-        document.getElementById('origin-input'),
-        document.getElementById('destination-input'),
-        document.getElementById('bags-input'),
-        document.getElementById('persons-input'),
-        document.getElementById('round-trip-input'),
-        document.getElementById('pickup-time-input'),
-        document.getElementById('return-pickup-time-input')
-    ];
+    const addPickupBtn = document.getElementById('add-pickup-btn');
+    const pickupPointsContainer = document.getElementById('pickup-points-container'); 
 
-    inputsToMonitor.forEach(input => {
-        if (input) {
-            input.addEventListener('input', debounceRealtimeQuote);
-            input.addEventListener('change', debounceRealtimeQuote); // For checkboxes/date inputs
-        }
+    if (addPickupBtn && pickupPointsContainer) {
+        addPickupBtn.addEventListener('click', addPickupPointField);
+    }
+
+    // Attach event listeners for real-time quote calculation
+    // Collect all relevant inputs, including initial and dynamic pickup points
+    const getInputsToMonitor = () => {
+        const inputs = [
+            document.getElementById('origin-input'),
+            document.getElementById('destination-input'),
+            document.getElementById('bags-input'),
+            document.getElementById('persons-input'),
+            document.getElementById('round-trip-input'),
+            document.getElementById('pickup-time-input'),
+            document.getElementById('return-pickup-time-input')
+        ].filter(Boolean); // Filter out nulls if elements aren't found
+
+        // Add dynamically created pickup point inputs
+        document.querySelectorAll('.pickup-point-input').forEach(input => inputs.push(input));
+        return inputs;
+    };
+
+    // Initial setup for existing inputs
+    getInputsToMonitor().forEach(input => {
+        input.addEventListener('input', debounceRealtimeQuote);
+        input.addEventListener('change', debounceRealtimeQuote); // For checkboxes/date inputs
     });
+
 
     if (roundTripInput && returnPickupTimeGroup) {
         roundTripInput.addEventListener('change', () => {
@@ -43,9 +59,103 @@ export function setupRideListeners() {
     }
 
     // Initial calculation on page load (if form fields are pre-filled)
-    // Add a slight delay to ensure Maps API might be ready from app.js init
+    // Add a slight delay to ensure Maps API might be ready from main.js init
     setTimeout(debounceRealtimeQuote, 500);
 }
+
+/**
+ * Adds a new input field for an additional pickup point.
+ */
+function addPickupPointField() {
+    const pickupPointsContainer = document.getElementById('pickup-points-container');
+    const addPickupBtn = document.getElementById('add-pickup-btn');
+
+    if (!pickupPointsContainer) {
+        console.error("Pickup points container not found.");
+        showToast("Error: Cannot add pickup point. Container missing.", "danger");
+        return;
+    }
+
+    if (pickupPointCount >= MAX_PICKUP_POINTS) {
+        showToast(`You can add a maximum of ${MAX_PICKUP_POINTS} additional pickup points.`, "info");
+        if (addPickupBtn) addPickupBtn.disabled = true; // Disable if max reached
+        return;
+    }
+
+    pickupPointCount++;
+
+    const newPickupFieldDiv = document.createElement('div');
+    newPickupFieldDiv.className = 'form-group mb-3 pickup-point-group';
+    newPickupFieldDiv.innerHTML = `
+        <label for="pickup-point-${pickupPointCount}" class="form-label">Additional Pickup Point ${pickupPointCount}:</label>
+        <div class="input-group">
+            <input type="text" class="form-control pickup-point-input" id="pickup-point-${pickupPointCount}" placeholder="Enter address or location" aria-label="Additional pickup point ${pickupPointCount}">
+            <button class="btn btn-outline-danger remove-pickup-btn" type="button" data-pickup-id="pickup-point-${pickupPointCount}">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    `;
+
+    pickupPointsContainer.appendChild(newPickupFieldDiv);
+
+    // Attach event listeners to the new input and remove button
+    const newPickupInput = document.getElementById(`pickup-point-${pickupPointCount}`);
+    if (newPickupInput) {
+        newPickupInput.addEventListener('input', debounceRealtimeQuote);
+        newPickupInput.addEventListener('change', debounceRealtimeQuote); // For autocompletes
+    }
+
+    const removeBtn = newPickupFieldDiv.querySelector('.remove-pickup-btn');
+    if (removeBtn) {
+        removeBtn.addEventListener('click', removePickupPointField);
+    }
+
+    debounceRealtimeQuote(); // Recalculate quote with new field
+    showToast(`Added pickup point field.`, "success");
+
+    // Check and update button state
+    if (addPickupBtn && pickupPointCount >= MAX_PICKUP_POINTS) {
+        addPickupBtn.disabled = true;
+    }
+}
+
+/**
+ * Removes a dynamically added pickup point input field.
+ * @param {Event} event - The click event from the remove button.
+ */
+function removePickupPointField(event) {
+    const button = event.currentTarget;
+    const pickupId = button.dataset.pickupId;
+    const fieldToRemove = document.getElementById(pickupId)?.closest('.pickup-point-group');
+
+    if (fieldToRemove) {
+        fieldToRemove.remove();
+        pickupPointCount--; // Decrement count
+
+        // Re-number remaining fields for clean display
+        document.querySelectorAll('.pickup-point-group').forEach((group, index) => {
+            const label = group.querySelector('.form-label');
+            const input = group.querySelector('.pickup-point-input');
+            const removeBtn = group.querySelector('.remove-pickup-btn');
+
+            const newIndex = index + 1;
+            if (label) label.textContent = `Additional Pickup Point ${newIndex}:`;
+            if (input) {
+                input.id = `pickup-point-${newIndex}`;
+                input.setAttribute('aria-label', `Additional pickup point ${newIndex}`);
+            }
+            if (removeBtn) removeBtn.dataset.pickupId = `pickup-point-${newIndex}`;
+        });
+
+        // Re-enable add button if it was disabled
+        const addPickupBtn = document.getElementById('add-pickup-btn');
+        if (addPickupBtn) addPickupBtn.disabled = false;
+
+        debounceRealtimeQuote(); // Recalculate quote
+        showToast("Pickup point removed.", "info");
+    }
+}
+
 
 /**
  * Debounces the call to triggerRealtimeQuoteCalculation.
@@ -79,26 +189,32 @@ async function triggerRealtimeQuoteCalculation() {
     const rideDateTime = document.getElementById('pickup-time-input')?.value || null;
     const returnDateTime = (isRoundTrip && document.getElementById('return-pickup-time-input')) ? document.getElementById('return-pickup-time-input').value : null;
 
+    // Collect all dynamic pickup points
+    const pickupPoints = Array.from(document.querySelectorAll('.pickup-point-input'))
+                               .map(input => ({ location: input.value.trim() }))
+                               .filter(wp => wp.location); // Filter out empty strings
+
     const quoteDisplay = document.getElementById('realtime-quote-display');
     const fareDisplay = document.getElementById('realtime-fare-display');
     const statusMessage = document.getElementById('realtime-status-message');
-    const breakdownContainer = document.getElementById('realtime-fare-breakdown'); // Get breakdown container
+    const breakdownContainer = document.getElementById('realtime-fare-breakdown');
 
     // Make sure Google Maps API is ready before proceeding with calculation
     if (!window.google || !window.google.maps || !window.google.maps.DirectionsService) {
         if (fareDisplay) fareDisplay.textContent = "N/A";
         if (statusMessage) statusMessage.textContent = "Maps not ready. Try again in a moment.";
-        if (quoteDisplay) quoteDisplay.style.display = 'block'; // Keep visible to show error
-        if (breakdownContainer) breakdownContainer.style.display = 'none'; // Hide breakdown
+        if (quoteDisplay) quoteDisplay.style.display = 'block';
+        if (breakdownContainer) breakdownContainer.style.display = 'none';
         console.warn("Google Maps API (DirectionsService) not ready for real-time quote calculation.");
         return;
     }
 
+    // Check if at least origin and destination are provided, and primary pickup time
     if (!origin || !destination || !rideDateTime) {
         if (fareDisplay) fareDisplay.textContent = "N/A";
         if (statusMessage) statusMessage.textContent = "Enter Origin, Destination, & Pickup Time.";
-        if (quoteDisplay) quoteDisplay.style.display = 'none'; // Hide if not enough info
-        if (breakdownContainer) breakdownContainer.style.display = 'none'; // Hide breakdown
+        if (quoteDisplay) quoteDisplay.style.display = 'none';
+        if (breakdownContainer) breakdownContainer.style.display = 'none';
         return;
     }
 
@@ -110,45 +226,61 @@ async function triggerRealtimeQuoteCalculation() {
             persons,
             isRoundTrip,
             rideDateTime,
-            returnDateTime
+            returnDateTime,
+            pickupPoints // Pass the collected pickup points
         });
-        updateRealtimeQuoteDisplay(quoteDetails); // Now this function handles everything including breakdown
+        updateRealtimeQuoteDisplay(quoteDetails);
     } catch (error) {
         console.error("Error in real-time quote calculation:", error);
         if (fareDisplay) fareDisplay.textContent = "Error";
-        if (statusMessage) statusMessage.textContent = "Could not calculate fare. Try again. (" + error.message + ")";
-        if (quoteDisplay) quoteDisplay.style.display = 'block'; // Keep it visible to show error
-        if (breakdownContainer) breakdownContainer.style.display = 'none'; // Hide breakdown on error
+        if (statusMessage) statusMessage.textContent = `Could not calculate fare: ${error.message}.`;
+        if (quoteDisplay) quoteDisplay.style.display = 'block';
+        if (breakdownContainer) breakdownContainer.style.display = 'none';
         showToast("Error getting real-time quote: " + error.message, "danger");
     }
 }
 
 /**
- * Performs the core fare calculation and route lookup.
+ * Performs the core fare calculation and route lookup, now handling multiple waypoints.
  * Returns a promise that resolves with the calculated quote details.
  * Does NOT interact with the DOM for display or with Firestore.
  */
-async function getCalculatedQuote({ origin, destination, bags, persons, isRoundTrip, rideDateTime, returnDateTime }) {
+async function getCalculatedQuote({ origin, destination, bags, persons, isRoundTrip, rideDateTime, returnDateTime, pickupPoints = [] }) {
     if (!window.google || !window.google.maps || !window.google.maps.DirectionsService) {
         throw new Error("Google Maps DirectionsService not available.");
     }
 
     return new Promise((resolve, reject) => {
         const directionsService = new google.maps.DirectionsService();
+
+        const request = {
+            origin: origin,
+            destination: destination,
+            travelMode: google.maps.TravelMode.DRIVING,
+            waypoints: pickupPoints, // Add the collected pickup points as waypoints
+            optimizeWaypoints: true // Optional: let Google optimize the route through waypoints
+        };
+
         directionsService.route(
-            {
-                origin,
-                destination,
-                travelMode: google.maps.TravelMode.DRIVING
-            },
+            request,
             (result, status) => {
                 if (status === "OK" && result.routes.length > 0) {
-                    const leg = result.routes[0].legs[0];
+                    let totalDistanceValue = 0; // in meters
+                    let totalDurationValue = 0; // in seconds
+
+                    // Sum distances and durations from all legs
+                    result.routes[0].legs.forEach(leg => {
+                        totalDistanceValue += leg.distance.value;
+                        totalDurationValue += leg.duration.value;
+                    });
+
+                    const distanceKm = totalDistanceValue / 1000;
+                    const distanceText = (totalDistanceValue / 1000).toFixed(1) + " km";
+                    const durationText = Math.ceil(totalDurationValue / 60) + " mins"; // Convert seconds to minutes
 
                     const afterHours = isAfterHours(rideDateTime) || (isRoundTrip && isAfterHours(returnDateTime));
 
                     // --- Fare Calculation ---
-                    const distanceKm = leg.distance.value / 1000; // Numeric distance in KM
                     let fareXCD = BASE_FARE_XCD + (distanceKm * DEFAULT_PER_KM_RATE_XCD);
 
                     if (bags > 0) {
@@ -164,7 +296,7 @@ async function getCalculatedQuote({ origin, destination, bags, persons, isRoundT
                     }
 
                     if (isRoundTrip) {
-                        fareXCD *= 2;
+                        fareXCD *= 1.5; // Original fare + 50%
                     }
 
                     const fareUSD = fareXCD * XCD_TO_USD_EXCHANGE_RATE;
@@ -172,9 +304,9 @@ async function getCalculatedQuote({ origin, destination, bags, persons, isRoundT
                     resolve({
                         origin,
                         destination,
-                        distance: leg.distance.text, // e.g., "10.2 km"
-                        distanceKm: distanceKm, // Numeric distance for breakdown calculation
-                        duration: leg.duration.text,
+                        distance: distanceText,
+                        distanceKm: distanceKm,
+                        duration: durationText,
                         fareXCD: fareXCD.toFixed(2),
                         fareUSD: fareUSD.toFixed(2),
                         bags,
@@ -183,6 +315,7 @@ async function getCalculatedQuote({ origin, destination, bags, persons, isRoundT
                         roundTrip: isRoundTrip,
                         rideDateTime,
                         returnDateTime,
+                        pickupPoints: pickupPoints.map(wp => wp.location), // Store just the location strings
                         status: 'quoted'
                     });
 
@@ -197,7 +330,7 @@ async function getCalculatedQuote({ origin, destination, bags, persons, isRoundT
 
 /**
  * Generates a detailed fare breakdown object
- * @param {Object} params - Calculation parameters
+ * @param {Object} params - Calculation parameters including distanceKm, bags, persons, afterHours, isRoundTrip
  * @returns {Object} Detailed breakdown of all fare components
  */
 function generateFareBreakdown({ distanceKm, bags, persons, afterHours, isRoundTrip }) {
@@ -214,7 +347,8 @@ function generateFareBreakdown({ distanceKm, bags, persons, afterHours, isRoundT
         subtotal: 0,
         afterHoursCharge: 0,
         oneWayTotal: 0,
-        roundTripMultiplier: isRoundTrip ? 2 : 1,
+        // Round trip multiplier for breakdown clarity 
+        roundTripMultiplier: isRoundTrip ? 1.5 : 1, // Represents original + 50%
         finalTotalXCD: 0,
         finalTotalUSD: 0,
 
@@ -238,6 +372,7 @@ function generateFareBreakdown({ distanceKm, bags, persons, afterHours, isRoundT
     }
 
     breakdown.oneWayTotal = breakdown.subtotal + breakdown.afterHoursCharge;
+    //  Apply 1.5 multiplier for round trip 
     breakdown.finalTotalXCD = breakdown.oneWayTotal * breakdown.roundTripMultiplier;
     breakdown.finalTotalUSD = breakdown.finalTotalXCD * XCD_TO_USD_EXCHANGE_RATE;
 
@@ -315,9 +450,9 @@ function createFareBreakdownHTML(breakdown) {
             ${breakdown.isRoundTrip ? `
                 <div class="fare-line-item fare-roundtrip">
                     <span class="fare-label">
-                        <i class="fas fa-exchange-alt"></i> Round Trip (×2)
+                        <i class="fas fa-exchange-alt"></i> Round Trip (Additional 50%)
                     </span>
-                    <span class="fare-amount">×${breakdown.roundTripMultiplier}</span>
+                    <span class="fare-amount">×${breakdown.roundTripMultiplier.toFixed(1)}</span>
                 </div>
             ` : ''}
 
@@ -348,6 +483,7 @@ function updateRealtimeQuoteDisplay(quoteDetails) {
     const fareDisplay = document.getElementById('realtime-fare-display');
     const statusMessage = document.getElementById('realtime-status-message');
     const breakdownContainer = document.getElementById('realtime-fare-breakdown');
+    const pickupPointsList = document.getElementById('realtime-pickup-points-list'); // Added for displaying pickup points
 
     if (quoteDisplay) quoteDisplay.style.display = 'block';
 
@@ -360,9 +496,20 @@ function updateRealtimeQuoteDisplay(quoteDetails) {
     if (fareDisplay) fareDisplay.textContent = `${quoteDetails.fareXCD} XCD / $${quoteDetails.fareUSD} USD`;
     if (statusMessage) statusMessage.textContent = "Quote updated.";
 
+    // Update Pickup Points List display
+    if (pickupPointsList) {
+        if (quoteDetails.pickupPoints && quoteDetails.pickupPoints.length > 0) {
+            pickupPointsList.innerHTML = quoteDetails.pickupPoints.map(p => `<li>${p}</li>`).join('');
+            pickupPointsList.closest('.pickup-points-display-group').style.display = 'block'; // Show the group
+        } else {
+            pickupPointsList.innerHTML = '';
+            pickupPointsList.closest('.pickup-points-display-group').style.display = 'none'; // Hide the group if no points
+        }
+    }
+
+
     // ADD FARE BREAKDOWN
     if (breakdownContainer) {
-        // Use the numeric distanceKm already available in quoteDetails
         const breakdown = generateFareBreakdown({
             distanceKm: quoteDetails.distanceKm,
             bags: quoteDetails.bags,
@@ -388,6 +535,11 @@ export async function submitRideRequest() {
     const rideDateTime = document.getElementById('pickup-time-input')?.value || null;
     const returnDateTime = (isRoundTrip && document.getElementById('return-pickup-time-input')) ? document.getElementById('return-pickup-time-input').value : null;
 
+    // Collect all dynamic pickup points for submission
+    const pickupPoints = Array.from(document.querySelectorAll('.pickup-point-input'))
+                               .map(input => ({ location: input.value.trim() }))
+                               .filter(wp => wp.location);
+
     if (!origin || !destination || !rideDateTime) {
         showToast("Please enter Origin, Destination, and Pickup Time before requesting a ride.", "warning");
         return;
@@ -403,7 +555,8 @@ export async function submitRideRequest() {
             persons,
             isRoundTrip,
             rideDateTime,
-            returnDateTime
+            returnDateTime,
+            pickupPoints // Pass the pickup points to the submission
         });
 
         // Update the modal content with the final calculated quote
@@ -419,10 +572,22 @@ export async function submitRideRequest() {
         document.getElementById('quote-afterHours').textContent = quoteDetails.afterHours ? "Yes" : "No";
         document.getElementById('quote-fare').textContent = `${quoteDetails.fareXCD} XCD / $${quoteDetails.fareUSD} USD`;
 
+        // Update modal pickup points list
+        const modalPickupPointsList = document.getElementById('quote-pickup-points-list');
+        if (modalPickupPointsList) {
+            if (quoteDetails.pickupPoints && quoteDetails.pickupPoints.length > 0) {
+                modalPickupPointsList.innerHTML = quoteDetails.pickupPoints.map(p => `<li>${p}</li>`).join('');
+                modalPickupPointsList.closest('.pickup-points-display-group')?.style.display = 'block';
+            } else {
+                modalPickupPointsList.innerHTML = '';
+                modalPickupPointsList.closest('.pickup-points-display-group')?.style.display = 'none';
+            }
+        }
+
+
         // ADD FARE BREAKDOWN TO MODAL
         const modalBreakdownContainer = document.getElementById('quote-fare-breakdown');
         if (modalBreakdownContainer) {
-            // Use the numeric distanceKm from quoteDetails directly
             const breakdown = generateFareBreakdown({
                 distanceKm: quoteDetails.distanceKm,
                 bags: quoteDetails.bags,
@@ -444,6 +609,7 @@ export async function submitRideRequest() {
                     userId: currentUserId,
                     origin: quoteDetails.origin,
                     destination: quoteDetails.destination,
+                    pickupPoints: quoteDetails.pickupPoints, 
                     distance: quoteDetails.distance,
                     duration: quoteDetails.duration,
                     fareXCD: quoteDetails.fareXCD,
@@ -507,17 +673,33 @@ export function resetRideForm() {
         returnPickupTimeGroup.style.display = 'none';
     }
 
+    // Remove all dynamically added pickup point fields
+    const pickupPointsContainer = document.getElementById('pickup-points-container');
+    if (pickupPointsContainer) {
+        pickupPointsContainer.innerHTML = ''; // Clear all children
+        pickupPointCount = 0; // Reset count
+        const addPickupBtn = document.getElementById('add-pickup-btn');
+        if (addPickupBtn) addPickupBtn.disabled = false; // Re-enable the button
+    }
+
+
     // Clear and hide real-time quote display on form reset
     const quoteDisplay = document.getElementById('realtime-quote-display');
-    const breakdownContainer = document.getElementById('realtime-fare-breakdown'); // Also get breakdown container
+    const breakdownContainer = document.getElementById('realtime-fare-breakdown');
+    const realtimePickupPointsList = document.getElementById('realtime-pickup-points-list');
+
     if (quoteDisplay) {
         quoteDisplay.style.display = 'none';
         document.getElementById('realtime-fare-display').textContent = "Calculating...";
         document.getElementById('realtime-status-message').textContent = "Enter details to get quote.";
     }
     if (breakdownContainer) {
-        breakdownContainer.innerHTML = ''; // Clear breakdown content
-        breakdownContainer.style.display = 'none'; // Hide breakdown
+        breakdownContainer.innerHTML = '';
+        breakdownContainer.style.display = 'none';
+    }
+    if (realtimePickupPointsList) {
+        realtimePickupPointsList.innerHTML = '';
+        realtimePickupPointsList.closest('.pickup-points-display-group')?.style.display = 'none';
     }
 }
 
@@ -533,7 +715,6 @@ export function printQuote() {
         return;
     }
 
-    // Get the HTML for the main quote details and the breakdown
     const printContents = printContentsElement.innerHTML;
 
     const win = window.open('', '_blank', 'height=700,width=800');
@@ -546,6 +727,12 @@ export function printQuote() {
                 body { font-family: Arial, sans-serif; padding: 20px; color: #333; line-height: 1.6; }
                 h1 { color: #5E9BCD; margin-bottom: 20px; text-align: center; }
                 .quote-detail { margin: 10px 0; font-size: 15px; }
+                .quote-detail.pickup-points-display-group ul {
+                    list-style-type: disc;
+                    padding-left: 20px;
+                    margin-top: 5px;
+                    font-size: 14px;
+                }
                 .fare { font-size: 28px; font-weight: bold; color: #007bff; margin-top: 30px; text-align: center; }
                 p { margin-bottom: 5px; }
             </style>
