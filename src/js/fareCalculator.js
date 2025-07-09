@@ -1,5 +1,5 @@
 import { BASE_FARE_XCD, DEFAULT_PER_KM_RATE_XCD, AFTER_HOURS_SURCHARGE_PERCENTAGE, XCD_TO_USD_EXCHANGE_RATE, COST_PER_ADDITIONAL_BAG_XCD, COST_PER_ADDITIONAL_PERSON_XCD, FREE_PERSON_COUNT } from './constants.js';
-import { loadGoogleMapsApi } from './maps.js'; // Still needed here for DirectionsService
+import { loadGoogleMapsScript } from './maps.js';// Still needed here for DirectionsService
 
 /**
  * Performs the core fare calculation and route lookup.
