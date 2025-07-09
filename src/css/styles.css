@@ -131,6 +131,10 @@ body {
 .toast.error::before { content: '\f057'; }
 .toast.warning::before { content: '\f071'; }
 
+.hidden-element {
+    display: none !important; /* Use !important if necessary to ensure it overrides other styles */
+}
+
 /* Fare Breakdown Styles */
 .fare-breakdown-container {
     background: #f8f9fa;
