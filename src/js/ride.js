@@ -682,24 +682,25 @@ export function resetRideForm() {
         if (addPickupBtn) addPickupBtn.disabled = false; // Re-enable the button
     }
 
-
     // Clear and hide real-time quote display on form reset
     const quoteDisplay = document.getElementById('realtime-quote-display');
-    const breakdownContainer = document.getElementById('realtime-fare-breakdown');
-    const realtimePickupPointsList = document.getElementById('realtime-pickup-points-list');
+    const breakdownContainer = document.getElementById('realtime-fare-breakdown'); 
 
-    if (quoteDisplay) {
-        quoteDisplay.style.display = 'none';
-        document.getElementById('realtime-fare-display').textContent = "Calculating...";
-        document.getElementById('realtime-status-message').textContent = "Enter details to get quote.";
-    }
-    if (breakdownContainer) {
-        breakdownContainer.innerHTML = '';
-        breakdownContainer.style.display = 'none';
-    }
-    if (realtimePickupPointsList) {
-        realtimePickupPointsList.innerHTML = '';
-        realtimePickupPointsList.closest('.pickup-points-display-group')?.style.display = 'none';
+    // Add logic to clear/hide these elements if desired
+    if (quoteDisplay) quoteDisplay.style.display = 'none';
+    if (breakdownContainer) breakdownContainer.style.display = 'none';
+    // You might also want to clear any text content in these elements
+    if (document.getElementById('realtime-fare-display')) document.getElementById('realtime-fare-display').textContent = '';
+    if (document.getElementById('realtime-status-message')) document.getElementById('realtime-status-message').textContent = 'Enter ride details for a quote.';
+    if (document.getElementById('realtime-distance-display')) document.getElementById('realtime-distance-display').textContent = '';
+    if (document.getElementById('realtime-duration-display')) document.getElementById('realtime-duration-display').textContent = '';
+    if (document.getElementById('realtime-persons-display')) document.getElementById('realtime-persons-display').textContent = '';
+    if (document.getElementById('realtime-bags-display')) document.getElementById('realtime-bags-display').textContent = '';
+    if (document.getElementById('realtime-roundtrip-display')) document.getElementById('realtime-roundtrip-display').textContent = '';
+    if (document.getElementById('realtime-afterhours-display')) document.getElementById('realtime-afterhours-display').textContent = '';
+    if (document.getElementById('realtime-pickup-points-list')) {
+        document.getElementById('realtime-pickup-points-list').innerHTML = '';
+        document.getElementById('realtime-pickup-points-list').closest('.pickup-points-display-group').style.display = 'none';
     }
 }
 
