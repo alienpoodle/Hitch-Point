@@ -294,32 +294,24 @@ export function printQuote() {
     }
     const printContents = printContentsElement.innerHTML;
 
-    const win = window.open('', '', 'height=600,width=400');
-    win.document.write(`
-        <html>
-        <head>
-            <title>HitchPoint - Ride Quote</title>
-            <style>
-                body { font-family: Arial, sans-serif; padding: 20px; color: #333; }
-                h1 { color: #5E9BCD; margin-bottom: 20px; }
-                .quote-detail { margin: 10px 0; font-size: 14px; }
-                .quote-detail strong { display: inline-block; width: 120px; }
-                .fare { font-size: 24px; font-weight: bold; color: #FFD700; margin-top: 20px; }
-                p { margin-bottom: 5px; }
-                @media print {
-                    .no-print { display: none; }
-                }
-            </style>
-        </head>
-        <body>
-            <h1>HitchPoint Ride Quote</h1>
-            ${printContents}
-            <p style="margin-top: 30px; font-size: 12px; color: #666;">
-                Generated on ${new Date().toLocaleString()}
-            </p>
-        </body>
-        </html>
-    `);
-    win.document.close();
-    win.print();
+const win = window.open('', '', 'height=600,width=400');
+win.document.write(`
+    <html>
+    <head>
+        <title>HitchPoint - Ride Quote</title>
+        <style>
+            body { color: black; } /* TEMPORARY SIMPLIFICATION */
+        </style>
+    </head>
+    <body>
+        <h1>HitchPoint Ride Quote</h1>
+        ${printContents}
+        <p style="margin-top: 30px; font-size: 12px; color: #666;">
+            Generated on ${new Date().toLocaleString()}
+        </p>
+    </body>
+    </html>
+`);
+win.document.close();
+win.print();
 }
