@@ -1,14 +1,13 @@
-import { BASE_FARE_XCD, DEFAULT_PER_KM_RATE_XCD, AFTER_HOURS_SURCHARGE_PERCENTAGE, XCD_TO_USD_EXCHANGE_RATE, COST_PER_ADDITIONAL_BAG_XCD, COST_PER_ADDITIONAL_PERSON_XCD, FREE_PERSON_COUNT } from './constants.js';
 import { db, currentUserId } from './firebase.js'; // Ensure currentUserId is correctly populated from firebase.js
 import { showToast, openModal, hideLoadingOverlay, showLoadingOverlay } from './ui.js';
 import { collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-import { loadGoogleMapsApi } from './maps.js';
+import { getCalculatedQuote } from './fareCalculator.js'; // Import the calculation function
 
 let debounceTimeout; // For debouncing the real-time calculation
 
 export function setupRideListeners() {
     const requestRideBtn = document.getElementById('request-ride-btn');
-    if (requestRideBtn) requestRideBtn.addEventListener('click', submitRideRequest); // Renamed function for clarity
+    if (requestRideBtn) requestRideBtn.addEventListener('click', submitRideRequest);
 
     const printQuoteBtn = document.getElementById('print-quote-btn');
     if (printQuoteBtn) printQuoteBtn.addEventListener('click', printQuote);
@@ -108,79 +107,6 @@ async function triggerRealtimeQuoteCalculation() {
 }
 
 /**
- * Performs the core fare calculation and route lookup.
- * Returns a promise that resolves with the calculated quote details.
- * Does NOT interact with the DOM for display or with Firestore.
- */
-async function getCalculatedQuote({ origin, destination, bags, persons, isRoundTrip, rideDateTime, returnDateTime }) {
-    await loadGoogleMapsApi(); // Ensure Maps API is loaded
-
-    return new Promise((resolve, reject) => {
-        const directionsService = new google.maps.DirectionsService();
-        directionsService.route(
-            {
-                origin,
-                destination,
-                travelMode: google.maps.TravelMode.DRIVING
-            },
-            (result, status) => {
-                if (status === "OK" && result.routes.length > 0) {
-                    const leg = result.routes[0].legs[0];
-
-                    // Determine after hours based on rideDateTime or returnDateTime for round trips
-                    const afterHours = isAfterHours(rideDateTime) || (isRoundTrip && isAfterHours(returnDateTime));
-
-                    // --- Fare Calculation ---
-                    const distanceKm = leg.distance.value / 1000;
-                    let fareXCD = BASE_FARE_XCD + (distanceKm * DEFAULT_PER_KM_RATE_XCD);
-
-                    // Additional Bags
-                    if (bags > 0) {
-                        fareXCD += bags * COST_PER_ADDITIONAL_BAG_XCD;
-                    }
-
-                    // Additional Persons (above FREE_PERSON_COUNT)
-                    if (persons > FREE_PERSON_COUNT) {
-                        fareXCD += (persons - FREE_PERSON_COUNT) * COST_PER_ADDITIONAL_PERSON_XCD;
-                    }
-
-                    // After Hours Surcharge
-                    if (afterHours) {
-                        fareXCD += fareXCD * AFTER_HOURS_SURCHARGE_PERCENTAGE;
-                    }
-
-                    /// Round Trip (doubles the entire calculated fare up to this point)
-                    if (isRoundTrip) {
-                        fareXCD *= 2;
-                    }
-
-                    const fareUSD = fareXCD * XCD_TO_USD_EXCHANGE_RATE;
-
-                    resolve({
-                        origin,
-                        destination,
-                        distance: leg.distance.text,
-                        duration: leg.duration.text,
-                        fareXCD: fareXCD.toFixed(2),
-                        fareUSD: fareUSD.toFixed(2),
-                        bags,
-                        persons,
-                        afterHours,
-                        roundTrip: isRoundTrip,
-                        rideDateTime,
-                        returnDateTime,
-                        status: 'quoted' // Initial status for a new quote
-                    });
-
-                } else {
-                    reject(new Error(`Google Maps Directions API Error: ${status}`));
-                }
-            }
-        );
-    });
-}
-
-/**
  * Updates the dedicated HTML elements for real-time quote display.
  */
 function updateRealtimeQuoteDisplay(quoteDetails) {
@@ -248,6 +174,9 @@ export async function submitRideRequest() {
         const quotePickupTime = document.getElementById('quote-pickup-time');
         const quoteReturnPickupTime = document.getElementById('quote-return-pickup-time');
         const quoteAfterHours = document.getElementById('quote-afterHours');
+        // Add the pickup points list element here, if it's supposed to be updated in the modal
+        const modalPickupPointsList = document.getElementById('quote-pickup-points-list');
+
 
         if (quoteDistance) quoteDistance.textContent = quoteDetails.distance;
         if (quoteDuration) quoteDuration.textContent = quoteDetails.duration;
@@ -260,6 +189,19 @@ export async function submitRideRequest() {
         if (quoteReturnPickupTime) quoteReturnPickupTime.textContent = (quoteDetails.roundTrip && quoteDetails.returnDateTime) ? new Date(quoteDetails.returnDateTime).toLocaleString() : "N/A";
         if (quoteAfterHours) quoteAfterHours.textContent = quoteDetails.afterHours ? "Yes" : "No";
         if (quoteFare) quoteFare.textContent = `${quoteDetails.fareXCD} XCD / $${quoteDetails.fareUSD} USD`;
+
+        // Logic for pickup points (from your original query, adapted for 'quoteDetails.pickupPoints')
+        if (modalPickupPointsList) {
+            // Assuming quoteDetails might have a pickupPoints array
+            if (quoteDetails.pickupPoints && quoteDetails.pickupPoints.length > 0) {
+                modalPickupPointsList.innerHTML = quoteDetails.pickupPoints.map(p => `<li>${p}</li>`).join('');
+                modalPickupPointsList.closest('.pickup-points-display-group')?.style.display = 'block';
+            } else {
+                modalPickupPointsList.innerHTML = '';
+                modalPickupPointsList.closest('.pickup-points-display-group')?.style.display = 'none';
+            }
+        }
+
 
         openModal('quote-display-modal'); // Open the modal after updating its content
 
@@ -279,6 +221,8 @@ export async function submitRideRequest() {
                     roundTrip: quoteDetails.roundTrip,
                     rideDateTime: quoteDetails.rideDateTime,
                     returnDateTime: quoteDetails.returnDateTime,
+                    // Add pickupPoints to the Firestore document if available
+                    pickupPoints: quoteDetails.pickupPoints || [],
                     status: 'quoted',
                     timestamp: serverTimestamp()
                 });
@@ -301,18 +245,6 @@ export async function submitRideRequest() {
     }
 }
 
-/**
- * Checks if a given time falls into after-hours.
- * After hours: before 6 AM or at/after 8 PM (20:00).
- * @param {string} dtString - ISO 8601 formatted date-time string.
- * @returns {boolean}
- */
-function isAfterHours(dtString) {
-    if (!dtString) return false;
-    const dt = new Date(dtString);
-    const hour = dt.getHours();
-    return hour < 6 || hour >= 20;
-}
 
 export function resetRideForm() {
     const originInput = document.getElementById('origin-input');
@@ -342,6 +274,13 @@ export function resetRideForm() {
         quoteDisplay.style.display = 'none';
         document.getElementById('realtime-fare-display').textContent = "Calculating...";
         document.getElementById('realtime-status-message').textContent = "Enter details to get quote.";
+    }
+
+    // Also clear pickup points display on reset if they exist
+    const modalPickupPointsList = document.getElementById('quote-pickup-points-list');
+    if (modalPickupPointsList) {
+        modalPickupPointsList.innerHTML = '';
+        modalPickupPointsList.closest('.pickup-points-display-group')?.style.display = 'none';
     }
 }
 
