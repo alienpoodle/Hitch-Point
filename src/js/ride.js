@@ -191,14 +191,28 @@ export async function submitRideRequest() {
         if (quoteFare) quoteFare.textContent = `${quoteDetails.fareXCD} XCD / $${quoteDetails.fareUSD} USD`;
 
         // Logic for pickup points (from your original query, adapted for 'quoteDetails.pickupPoints')
+        // Alternative 1: Using for...of loop and explicit variable for the group
+        const pickupPointsGroup = modalPickupPointsList?.closest('.pickup-points-display-group');
+
         if (modalPickupPointsList) {
-            // Assuming quoteDetails might have a pickupPoints array
+            // Always clear the list first to ensure it's fresh for new data or hiding
+            modalPickupPointsList.innerHTML = '';
+
             if (quoteDetails.pickupPoints && quoteDetails.pickupPoints.length > 0) {
-                modalPickupPointsList.innerHTML = quoteDetails.pickupPoints.map(p => `<li>${p}</li>`).join('');
-                modalPickupPointsList.closest('.pickup-points-display-group')?.style.display = 'block';
+                for (const point of quoteDetails.pickupPoints) {
+                    const listItem = document.createElement('li');
+                    listItem.textContent = point;
+                    modalPickupPointsList.appendChild(listItem);
+                }
+                // Show the group if it exists
+                if (pickupPointsGroup) {
+                    pickupPointsGroup.style.display = 'block';
+                }
             } else {
-                modalPickupPointsList.innerHTML = '';
-                modalPickupPointsList.closest('.pickup-points-display-group')?.style.display = 'none';
+                // Hide the group if it exists
+                if (pickupPointsGroup) {
+                    pickupPointsGroup.style.display = 'none';
+                }
             }
         }
 
