@@ -291,10 +291,20 @@ export function resetRideForm() {
     }
 
     // Also clear pickup points display on reset if they exist
-    const modalPickupPointsList = document.getElementById('quote-pickup-points-list');
+const modalPickupPointsList = document.getElementById('quote-pickup-points-list');
+    
+    // Only proceed if the list element exists
     if (modalPickupPointsList) {
+        // Clear the list's content
         modalPickupPointsList.innerHTML = '';
-        modalPickupPointsList.closest('.pickup-points-display-group')?.style.display = 'none';
+
+        // Find the closest display group (using optional chaining for safety)
+        const pickupPointsGroup = modalPickupPointsList.closest('.pickup-points-display-group');
+
+        // If the group element exists, add the 'hidden-element' class to hide it
+        if (pickupPointsGroup) {
+            pickupPointsGroup.classList.add('hidden-element');
+        }
     }
 }
 
