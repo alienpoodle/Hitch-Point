@@ -133,7 +133,7 @@ export async function getCalculatedQuote({
             duration: durationDisplay,
             bags,
             persons,
-            isRoundTrip,
+            roundTrip: isRoundTrip,
             rideDateTime,
             returnDateTime,
             afterHours,
