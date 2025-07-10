@@ -1,8 +1,10 @@
+// map.js
+
 import { showToast, openModal, hideModal } from './ui.js';
 
 let map, geocoder, selectedMarker;
 export let directionsService; // Export directionsService
-export let distanceMatrixService; // Export distanceMatrixService 
+export let distanceMatrixService; // Export distanceMatrixService
 
 let isGoogleMapsReady = false;
 let isGoogleMapsLoading = false;
@@ -10,7 +12,18 @@ let mapLoadPromise = null;
 let currentInputToFill = null;
 
 // Load Google Maps script with Places and Routes libraries
-export async function loadGoogleMapsScript(apiKey) {
+// No longer needs apiKey as a parameter, it accesses it globally
+export async function loadGoogleMapsScript() {
+    // Ensure window.firebaseConfig and googleMapsApiKey exist
+    if (!window.firebaseConfig || !window.firebaseConfig.googleMapsApiKey) {
+        const errorMessage = "Google Maps API key not found in window.firebaseConfig.";
+        console.error(errorMessage);
+        // You might want to show a toast or disable map features here
+        return Promise.reject(new Error(errorMessage));
+    }
+
+    const apiKey = window.firebaseConfig.googleMapsApiKey;
+
     // If the script is already being loaded, return the existing promise
     if (isGoogleMapsLoading && mapLoadPromise) return mapLoadPromise;
 
@@ -26,7 +39,7 @@ export async function loadGoogleMapsScript(apiKey) {
     isGoogleMapsLoading = true;
     mapLoadPromise = new Promise((resolve, reject) => {
         const script = document.createElement('script');
-        // Ensure 'routes' library is included for DirectionsService
+        // Use the globally available API key
         script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places,routes&callback=initGoogleMaps`;
         script.async = true;
         script.defer = true;
@@ -138,8 +151,9 @@ function placeMarkerAndGetAddress(location) {
     });
 }
 
-export function setupMapListeners(apiKey) {
-    loadGoogleMapsScript(apiKey).then(() => {
+// setupMapListeners no longer needs to pass apiKey, as loadGoogleMapsScript handles it
+export function setupMapListeners() { // Removed apiKey parameter
+    loadGoogleMapsScript().then(() => { // Removed apiKey argument
         document.body.addEventListener('click', function(e) {
             const btn = e.target.closest('.select-map-btn');
             if (btn) {

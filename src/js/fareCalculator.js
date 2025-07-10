@@ -1,4 +1,6 @@
+// Import the Google Maps service instances and loader function from map.js
 import { directionsService, distanceMatrixService, loadGoogleMapsScript } from './map.js';
+
 
 /**
  * Calculates the estimated fare based on origin, destination, and other factors.
@@ -27,7 +29,7 @@ export async function getCalculatedQuote({
     // Ensure Google Maps API and its services are loaded and ready.
     // This call will resolve immediately if already loaded, or wait if loading/load it.
     try {
-        await loadGoogleMapsScript();
+        await loadGoogleMapsScript(); // <-- No API key passed here, map.js gets it from window.firebaseConfig
     } catch (error) {
         console.error("Failed to load Google Maps API for fare calculation:", error);
         throw new Error("Mapping services unavailable for fare calculation. Please try again.");
