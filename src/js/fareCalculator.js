@@ -1,5 +1,5 @@
 import { BASE_FARE_XCD, DEFAULT_PER_KM_RATE_XCD, AFTER_HOURS_SURCHARGE_PERCENTAGE, XCD_TO_USD_EXCHANGE_RATE, COST_PER_ADDITIONAL_BAG_XCD, COST_PER_ADDITIONAL_PERSON_XCD, FREE_PERSON_COUNT } from './constants.js';
-import { loadGoogleMapsScript } from './maps.js';// Still needed here for DirectionsService
+import { loadGoogleMapsScript(apiKey) } from './maps.js';// Still needed here for DirectionsService
 
 /**
  * Performs the core fare calculation and route lookup.
@@ -16,7 +16,7 @@ import { loadGoogleMapsScript } from './maps.js';// Still needed here for Direct
  * @returns {Promise<object>} - A promise that resolves with quote details.
  */
 export async function getCalculatedQuote({ origin, destination, bags, persons, isRoundTrip, rideDateTime, returnDateTime }) {
-    await loadGoogleMapsApi(); // Ensure Maps API is loaded
+    await loadGoogleMapsApi(apiKey); // Ensure Maps API is loaded
 
     return new Promise((resolve, reject) => {
         const directionsService = new google.maps.DirectionsService();
