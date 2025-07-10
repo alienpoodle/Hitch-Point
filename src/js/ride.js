@@ -1,14 +1,14 @@
-import { db, currentUserId } from './firebase.js';
+import { db, currentUserId } from './firebase.js'; // Ensure currentUserId is correctly obtained from firebase.js
 import { showToast, openModal, hideLoadingOverlay, showLoadingOverlay } from './ui.js';
 import { collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-import { getCalculatedQuote } from './fareCalculator.js'; // Import the calculation function
+import { getCalculatedQuote } from './fareCalculator.js';
 
-let debounceTimeout; // For debouncing the real-time calculation
-let pickupPointCounter = 0; // To assign unique IDs to dynamically added pickup points
+let debounceTimeout;
+let pickupPointCounter = 0;
 
 export function setupRideListeners() {
     const requestRideBtn = document.getElementById('request-ride-btn');
-    if (requestRideBtn) requestRideBtn.addEventListener('click', submitRideRequest);
+    if (requestRideBtn) requestRideBtn.addEventListener('click', submitRideRequest); // This button will now finalize the request
 
     const printQuoteBtn = document.getElementById('print-quote-btn');
     if (printQuoteBtn) printQuoteBtn.addEventListener('click', printQuote);
@@ -16,12 +16,9 @@ export function setupRideListeners() {
     const roundTripInput = document.getElementById('round-trip-input');
     const returnPickupTimeGroup = document.getElementById('return-pickup-time-group');
 
-    // Listener for Add Pickup Point Button
     const addPickupBtn = document.getElementById('add-pickup-btn');
     if (addPickupBtn) addPickupBtn.addEventListener('click', addPickupPointInput);
 
-
-    // Attach event listeners for real-time quote calculation to initial inputs
     const inputsToMonitor = [
         document.getElementById('origin-input'),
         document.getElementById('destination-input'),
@@ -35,21 +32,18 @@ export function setupRideListeners() {
     inputsToMonitor.forEach(input => {
         if (input) {
             input.addEventListener('input', debounceRealtimeQuote);
-            input.addEventListener('change', debounceRealtimeQuote); // For checkboxes/date inputs
+            input.addEventListener('change', debounceRealtimeQuote);
         }
     });
 
     if (roundTripInput && returnPickupTimeGroup) {
         roundTripInput.addEventListener('change', () => {
             returnPickupTimeGroup.style.display = roundTripInput.checked ? '' : 'none';
-            debounceRealtimeQuote(); // Trigger calc immediately on round trip change
+            debounceRealtimeQuote();
         });
-        // Set initial state on page load
         returnPickupTimeGroup.style.display = roundTripInput.checked ? '' : 'none';
     }
 
-    // Use event delegation for dynamically added pickup point inputs and their map/remove buttons
-    // This allows us to attach one listener to a parent, rather than many to each new element.
     document.getElementById('ride-request-form')?.addEventListener('input', (event) => {
         if (event.target.classList.contains('pickup-point-dynamic-input') ||
             event.target.id === 'origin-input' ||
@@ -61,35 +55,28 @@ export function setupRideListeners() {
     document.getElementById('ride-request-form')?.addEventListener('click', (event) => {
         if (event.target.closest('.remove-pickup-btn')) {
             event.target.closest('.route-point').remove();
-            debounceRealtimeQuote(); // Recalculate after removal
+            debounceRealtimeQuote();
         }
         if (event.target.closest('.select-map-btn')) {
-            // Identify which input field corresponds to the clicked map button
-            // This is crucial for your map.js to know where to put the selected address.
             const relatedInput = event.target.closest('.input-group').querySelector('input.form-control');
             if (relatedInput) {
-                window.activeMapInput = relatedInput; // Set a global reference for map.js to use
-                // Your map modal open function might also take this as an argument if you prefer.
+                window.activeMapInput = relatedInput;
             }
         }
     });
 
-    // Initial calculation on page load (if form fields are pre-filled)
     debounceRealtimeQuote();
 }
 
-/**
- * Adds a new input field for an additional pickup point.
- */
 function addPickupPointInput() {
     const pickupPointsContainer = document.getElementById('pickup-points-container');
     if (!pickupPointsContainer) return;
 
-    pickupPointCounter++; // Increment counter for unique IDs
+    pickupPointCounter++;
 
     const newPickupPointDiv = document.createElement('div');
     newPickupPointDiv.classList.add('input-group', 'mb-2', 'route-point');
-    newPickupPointDiv.dataset.index = `pickup-${pickupPointCounter}`; // Unique identifier
+    newPickupPointDiv.dataset.index = `pickup-${pickupPointCounter}`;
 
     newPickupPointDiv.innerHTML = `
         <span class="input-group-text bg-info text-white">Via</span>
@@ -104,31 +91,21 @@ function addPickupPointInput() {
     `;
     pickupPointsContainer.appendChild(newPickupPointDiv);
 
-    // No need to attach individual listeners here due to event delegation setup in setupRideListeners.
-    debounceRealtimeQuote(); // Trigger a calculation after adding a new input
+    debounceRealtimeQuote();
 }
 
-
-/**
- * Debounces the call to triggerRealtimeQuoteCalculation.
- * Prevents excessive API calls on rapid input.
- */
 function debounceRealtimeQuote() {
     clearTimeout(debounceTimeout);
-    // Display "Calculating..." or "Loading..." while waiting
     const fareDisplay = document.getElementById('realtime-fare-display');
     const statusMessage = document.getElementById('realtime-status-message');
     const quoteDisplay = document.getElementById('realtime-quote-display');
     if (fareDisplay) fareDisplay.textContent = "Calculating...";
     if (statusMessage) statusMessage.textContent = "Getting route and fare...";
-    if (quoteDisplay) quoteDisplay.style.display = 'block'; // Ensure it's visible
+    if (quoteDisplay) quoteDisplay.style.display = 'block';
 
-    debounceTimeout = setTimeout(triggerRealtimeQuoteCalculation, 700); // Adjust debounce time as needed (e.g., 500-1000ms)
+    debounceTimeout = setTimeout(triggerRealtimeQuoteCalculation, 700);
 }
 
-/**
- * Gathers form inputs and triggers the quote calculation for real-time display.
- */
 async function triggerRealtimeQuoteCalculation() {
     const origin = document.getElementById('origin-input')?.value;
     const destination = document.getElementById('destination-input')?.value;
@@ -138,10 +115,9 @@ async function triggerRealtimeQuoteCalculation() {
     const rideDateTime = document.getElementById('pickup-time-input')?.value || null;
     const returnDateTime = (isRoundTrip && document.getElementById('return-pickup-time-input')) ? document.getElementById('return-pickup-time-input').value : null;
 
-    // -Collect dynamic pickup points 
     const pickupPoints = Array.from(document.querySelectorAll('#pickup-points-container .pickup-point-dynamic-input'))
-                               .map(input => input.value.trim()) // Get value and trim whitespace
-                               .filter(value => value !== ''); // Only include non-empty values
+                                .map(input => input.value.trim())
+                                .filter(value => value !== '');
 
     const quoteDisplay = document.getElementById('realtime-quote-display');
     const fareDisplay = document.getElementById('realtime-fare-display');
@@ -150,7 +126,7 @@ async function triggerRealtimeQuoteCalculation() {
     if (!origin || !destination || !rideDateTime) {
         if (fareDisplay) fareDisplay.textContent = "N/A";
         if (statusMessage) statusMessage.textContent = "Enter Origin, Destination, & Pickup Time.";
-        if (quoteDisplay) quoteDisplay.style.display = 'none'; // Hide if not enough info
+        if (quoteDisplay) quoteDisplay.style.display = 'none';
         return;
     }
 
@@ -163,21 +139,18 @@ async function triggerRealtimeQuoteCalculation() {
             isRoundTrip,
             rideDateTime,
             returnDateTime,
-            pickupPoints // Pass the collected pickup points
+            pickupPoints
         });
         updateRealtimeQuoteDisplay(quoteDetails);
     } catch (error) {
         console.error("Error in real-time quote calculation:", error);
         if (fareDisplay) fareDisplay.textContent = "Error";
         if (statusMessage) statusMessage.textContent = "Could not calculate fare. Try again.";
-        if (quoteDisplay) quoteDisplay.style.display = 'block'; // Keep it visible to show error
-        showToast("Error getting real-time quote.", "danger"); // Small toast, not too intrusive
+        if (quoteDisplay) quoteDisplay.style.display = 'block';
+        showToast("Error getting real-time quote.", "danger");
     }
 }
 
-/**
- * Updates the dedicated HTML elements for real-time quote display.
- */
 function updateRealtimeQuoteDisplay(quoteDetails) {
     const quoteDisplay = document.getElementById('realtime-quote-display');
     const distanceDisplay = document.getElementById('realtime-distance-display');
@@ -192,7 +165,7 @@ function updateRealtimeQuoteDisplay(quoteDetails) {
     const realtimePickupPointsGroup = realtimePickupPointsList?.closest('.pickup-points-display-group');
 
 
-    if (quoteDisplay) quoteDisplay.style.display = 'block'; // Ensure it's visible
+    if (quoteDisplay) quoteDisplay.style.display = 'block';
 
     if (distanceDisplay) distanceDisplay.textContent = quoteDetails.distance;
     if (durationDisplay) durationDisplay.textContent = quoteDetails.duration;
@@ -203,9 +176,8 @@ function updateRealtimeQuoteDisplay(quoteDetails) {
     if (fareDisplay) fareDisplay.textContent = `${quoteDetails.fareXCD} XCD / $${quoteDetails.fareUSD} USD`;
     if (statusMessage) statusMessage.textContent = "Quote updated.";
 
-    // Update real-time pickup points display
     if (realtimePickupPointsList) {
-        realtimePickupPointsList.innerHTML = ''; // Clear previous points
+        realtimePickupPointsList.innerHTML = '';
         if (quoteDetails.pickupPoints && quoteDetails.pickupPoints.length > 0) {
             for (const point of quoteDetails.pickupPoints) {
                 const listItem = document.createElement('li');
@@ -235,17 +207,16 @@ export async function submitRideRequest() {
     const rideDateTime = document.getElementById('pickup-time-input')?.value || null;
     const returnDateTime = (isRoundTrip && document.getElementById('return-pickup-time-input')) ? document.getElementById('return-pickup-time-input').value : null;
 
-    // Collect dynamic pickup points for final submission 
     const pickupPoints = Array.from(document.querySelectorAll('#pickup-points-container .pickup-point-dynamic-input'))
-                               .map(input => input.value.trim())
-                               .filter(value => value !== '');
+                                .map(input => input.value.trim())
+                                .filter(value => value !== '');
 
     if (!origin || !destination || !rideDateTime) {
         showToast("Please enter Origin, Destination, and Pickup Time before requesting a ride.", "warning");
         return;
     }
 
-    showLoadingOverlay(); // Show loading overlay for the final submission
+    showLoadingOverlay();
 
     try {
         const quoteDetails = await getCalculatedQuote({
@@ -256,7 +227,7 @@ export async function submitRideRequest() {
             isRoundTrip,
             rideDateTime,
             returnDateTime,
-            pickupPoints // Pass the collected pickup points to the final calculation
+            pickupPoints
         });
 
         // Update the modal content with the final calculated quote
@@ -273,7 +244,6 @@ export async function submitRideRequest() {
         const quoteAfterHours = document.getElementById('quote-afterHours');
         const modalPickupPointsList = document.getElementById('quote-pickup-points-list');
 
-
         if (quoteDistance) quoteDistance.textContent = quoteDetails.distance;
         if (quoteDuration) quoteDuration.textContent = quoteDetails.duration;
         if (quoteOrigin) quoteOrigin.textContent = quoteDetails.origin;
@@ -286,12 +256,10 @@ export async function submitRideRequest() {
         if (quoteAfterHours) quoteAfterHours.textContent = quoteDetails.afterHours ? "Yes" : "No";
         if (quoteFare) quoteFare.textContent = `${quoteDetails.fareXCD} XCD / $${quoteDetails.fareUSD} USD`;
 
-        // Logic for pickup points in the modal
         const pickupPointsGroup = modalPickupPointsList?.closest('.pickup-points-display-group');
 
         if (modalPickupPointsList) {
-            modalPickupPointsList.innerHTML = ''; // Always clear the list first
-
+            modalPickupPointsList.innerHTML = '';
             if (quoteDetails.pickupPoints && quoteDetails.pickupPoints.length > 0) {
                 for (const point of quoteDetails.pickupPoints) {
                     const listItem = document.createElement('li');
@@ -308,12 +276,21 @@ export async function submitRideRequest() {
             }
         }
 
-        openModal('quote-display-modal'); // Open the modal after updating its content
+        // Open the modal before saving to Firestore, so the user sees the quote
+        openModal('quote-display-modal');
 
+        // --- IMPORTANT CHANGE HERE: Save to Firestore with 'pending' status ---
         if (db && currentUserId) {
             try {
+                // Ensure userName and userEmail are also collected if available
+                const currentUser = auth.currentUser; // Get the current user for name/email
+                const userName = currentUser ? (currentUser.displayName || currentUser.email || 'Passenger') : 'Unknown Passenger';
+                const userEmail = currentUser ? currentUser.email : 'unknown@example.com';
+
                 await addDoc(collection(db, "rides"), {
                     userId: currentUserId,
+                    userName: userName, // Added
+                    userEmail: userEmail, // Added
                     origin: quoteDetails.origin,
                     destination: quoteDetails.destination,
                     distance: quoteDetails.distance,
@@ -326,29 +303,31 @@ export async function submitRideRequest() {
                     roundTrip: quoteDetails.roundTrip,
                     rideDateTime: quoteDetails.rideDateTime,
                     returnDateTime: quoteDetails.returnDateTime,
-                    pickupPoints: quoteDetails.pickupPoints || [], // Save pickupPoints to Firestore
-                    status: 'quoted',
-                    timestamp: serverTimestamp()
+                    pickupPoints: quoteDetails.pickupPoints || [],
+                    // --- Change 'quoted' to 'pending' to make it visible to drivers ---
+                    status: 'pending', 
+                    requestedAt: serverTimestamp(), // Use requestedAt for the initial timestamp
+                    driverId: null, // Ensure these are null for unassigned rides
+                    driverName: null,
+                    assignedAt: null
                 });
-                showToast("Ride quote saved to history!", "success");
-                resetRideForm();
+                showToast("Ride requested successfully! Drivers are being notified.", "success");
+                resetRideForm(); // Reset form after successful submission
             } catch (err) {
-                console.error("Failed to save ride request:", err);
-                showToast("Failed to save ride request. Please try again.", "danger");
+                console.error("Failed to save ride request to Firestore:", err);
+                showToast("Failed to finalize ride request. Please try again.", "danger");
             }
         } else {
-            showToast("Please log in to save your ride request.", "warning");
+            showToast("Please log in to finalize your ride request.", "warning");
         }
 
     } catch (error) {
-        hideLoadingOverlay();
         console.error("Error processing ride request:", error);
-        showToast("Error processing ride request. Please try again.", "danger");
+        showToast("Error getting quote. Please check your inputs.", "danger");
     } finally {
-        hideLoadingOverlay(); // Ensure overlay is hidden even if there's an error before Firestore save
+        hideLoadingOverlay();
     }
 }
-
 
 export function resetRideForm() {
     const originInput = document.getElementById('origin-input');
@@ -372,7 +351,6 @@ export function resetRideForm() {
             returnPickupTimeGroup.style.display = 'none';
         }
     }
-    // Clear and hide real-time quote display on form reset
     const quoteDisplay = document.getElementById('realtime-quote-display');
     if (quoteDisplay) {
         quoteDisplay.style.display = 'none';
@@ -380,15 +358,12 @@ export function resetRideForm() {
         document.getElementById('realtime-status-message').textContent = "Enter details to get quote.";
     }
 
-    // --- NEW: Clear and hide dynamic pickup points on form reset ---
     const pickupPointsContainer = document.getElementById('pickup-points-container');
     if (pickupPointsContainer) {
-        pickupPointsContainer.innerHTML = ''; // Clear all dynamically added inputs
+        pickupPointsContainer.innerHTML = '';
     }
-    pickupPointCounter = 0; // Reset the counter
-    // --- END NEW ---
+    pickupPointCounter = 0;
 
-    // Also clear pickup points display in the modal preview on reset if they exist
     const modalPickupPointsList = document.getElementById('quote-pickup-points-list');
     if (modalPickupPointsList) {
         modalPickupPointsList.innerHTML = '';
@@ -421,7 +396,7 @@ export function printQuote() {
                 .fw-semibold { font-weight: 600; }
                 .fs-4 { font-size: 1.5rem; }
                 .fw-bold { font-weight: 700; }
-                .text-primary { color: #0d6efd; } /* Bootstrap primary blue */
+                .text-primary { color: #0d6efd; }
                 .list-unstyled { padding-left: 0; list-style: none; }
                 .pickup-points-display-group { margin-top: 15px; border-top: 1px solid #eee; padding-top: 10px;}
             </style>
