@@ -1,5 +1,4 @@
-// Import the Google Maps service instances and loader function from map.js
-import { directionsService, distanceMatrixService, loadGoogleMapsScript } from './map.js';
+import { directionsService, distanceMatrixService, loadGoogleMapsScript } from './maps.js';
 
 
 /**

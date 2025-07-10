@@ -1,5 +1,3 @@
-// map.js
-
 import { showToast, openModal, hideModal } from './ui.js';
 
 let map, geocoder, selectedMarker;
