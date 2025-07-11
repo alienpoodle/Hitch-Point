@@ -1,13 +1,12 @@
 import { initFirebase } from './firebase.js';
 import { setupAuthListeners } from './auth.js';
-import { setupMapListeners, loadGoogleMapsApi } from './maps.js'; 
+import { setupMapListeners, loadGoogleMapsApi } from './maps.js';
 import { setupRideListeners } from './ride.js';
 import { setupHistoryListeners } from './history.js';
 import { setupPWA } from './pwa.js';
 import { showLoadingOverlay, hideLoadingOverlay } from './ui.js';
 import { initProfileFeature } from './profile.js';
-import { initDriverFeature } from './driver.js';
-
+// REMOVED: import { initDriverFeature } from './driver.js'; // This file is not part of the passenger app
 
 document.addEventListener('DOMContentLoaded', async () => { // Keep this async
     showLoadingOverlay();
@@ -21,7 +20,7 @@ document.addEventListener('DOMContentLoaded', async () => { // Keep this async
             const mainNavbar = document.getElementById('main-navbar');
             const profileView = document.getElementById('profile-view');
             const driverRequestsSection = document.getElementById('driver-requests-section');
-            const rideHistoryModal = document.getElementById('ride-history-modal'); // Re-declared later, consider scope
+            const rideHistoryModal = document.getElementById('ride-history-modal');
             const quoteDisplayModal = document.getElementById('quote-display-modal');
             const mapModal = document.getElementById('map-modal');
             const driverRouteModal = document.getElementById('driver-route-modal');
@@ -47,8 +46,7 @@ document.addEventListener('DOMContentLoaded', async () => { // Keep this async
             }
 
             initProfileFeature();
-            initDriverFeature();
-
+            // REMOVED: initDriverFeature(); // This function is not part of the passenger app
         });
 
         // safely set up listeners and features that depend on Firebase being ready.
@@ -58,11 +56,11 @@ document.addEventListener('DOMContentLoaded', async () => { // Keep this async
         setupMapListeners(); // Call setupMapListeners after the API is loaded
 
 
-        setupRideListeners(); 
+        setupRideListeners();
         setupHistoryListeners();
         setupPWA();
 
-        // UI Initialization (can run after Firebase and main features are set up) 
+        // UI Initialization (can run after Firebase and main features are set up)
         const navbarViewHistoryBtn = document.getElementById('navbar-view-history');
         const rideHistoryModal = document.getElementById('ride-history-modal');
         const profileView = document.getElementById('profile-view');
