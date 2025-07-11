@@ -1,4 +1,4 @@
-import { db, currentUserId } from './firebase.js'; // Ensure currentUserId is correctly obtained from firebase.js
+import { db, auth, currentUserId } from './firebase.js';
 import { showToast, openModal, hideLoadingOverlay, showLoadingOverlay } from './ui.js';
 import { collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 import { getCalculatedQuote } from './fareCalculator.js';
@@ -82,7 +82,7 @@ function addPickupPointInput() {
         <span class="input-group-text bg-info text-white">Via</span>
         <input type="text" id="pickup-input-${pickupPointCounter}" class="form-control route-point-input pickup-point-dynamic-input" placeholder="Add pickup point">
         <button class="btn btn-outline-secondary select-map-btn" type="button" title="Pin on Map"
-                data-bs-toggle="modal" data-bs-target="#map-modal">
+                 data-bs-toggle="modal" data-bs-target="#map-modal">
             <i class="fas fa-map-marker-alt"></i>
         </button>
         <button class="btn btn-outline-danger remove-pickup-btn" type="button" title="Remove Pickup Point">
@@ -116,8 +116,8 @@ async function triggerRealtimeQuoteCalculation() {
     const returnDateTime = (isRoundTrip && document.getElementById('return-pickup-time-input')) ? document.getElementById('return-pickup-time-input').value : null;
 
     const pickupPoints = Array.from(document.querySelectorAll('#pickup-points-container .pickup-point-dynamic-input'))
-                                .map(input => input.value.trim())
-                                .filter(value => value !== '');
+                                 .map(input => input.value.trim())
+                                 .filter(value => value !== '');
 
     const quoteDisplay = document.getElementById('realtime-quote-display');
     const fareDisplay = document.getElementById('realtime-fare-display');
@@ -208,8 +208,8 @@ export async function submitRideRequest() {
     const returnDateTime = (isRoundTrip && document.getElementById('return-pickup-time-input')) ? document.getElementById('return-pickup-time-input').value : null;
 
     const pickupPoints = Array.from(document.querySelectorAll('#pickup-points-container .pickup-point-dynamic-input'))
-                                .map(input => input.value.trim())
-                                .filter(value => value !== '');
+                                 .map(input => input.value.trim())
+                                 .filter(value => value !== '');
 
     if (!origin || !destination || !rideDateTime) {
         showToast("Please enter Origin, Destination, and Pickup Time before requesting a ride.", "warning");
@@ -283,6 +283,12 @@ export async function submitRideRequest() {
         if (db && currentUserId) {
             try {
                 // Ensure userName and userEmail are also collected if available
+                // --- DEBUG LOGS ADDED HERE ---
+                console.log("DEBUG in ride.js (before auth.currentUser at line 286):");
+                console.log("  Is 'auth' defined?", typeof auth !== 'undefined');
+                console.log("  Value of 'auth':", auth);
+                console.log("  Is 'auth' truthy?", !!auth);
+                // --- END DEBUG LOGS ---
                 const currentUser = auth.currentUser; // Get the current user for name/email
                 const userName = currentUser ? (currentUser.displayName || currentUser.email || 'Passenger') : 'Unknown Passenger';
                 const userEmail = currentUser ? currentUser.email : 'unknown@example.com';
@@ -305,7 +311,7 @@ export async function submitRideRequest() {
                     returnDateTime: quoteDetails.returnDateTime,
                     pickupPoints: quoteDetails.pickupPoints || [],
                     // --- Change 'quoted' to 'pending' to make it visible to drivers ---
-                    status: 'pending', 
+                    status: 'pending',
                     requestedAt: serverTimestamp(), // Use requestedAt for the initial timestamp
                     driverId: null, // Ensure these are null for unassigned rides
                     driverName: null,
