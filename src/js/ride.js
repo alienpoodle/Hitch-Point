@@ -8,7 +8,7 @@ let pickupPointCounter = 0;
 
 export function setupRideListeners() {
     const requestRideBtn = document.getElementById('request-ride-btn');
-    if (requestRideBtn) requestRideBtn.addEventListener('click', submitRideRequest); // This button will now finalize the request
+    if (requestRideBtn) requestRideBtn.addEventListener('click', submitRideRequest); 
 
     const printQuoteBtn = document.getElementById('print-quote-btn');
     if (printQuoteBtn) printQuoteBtn.addEventListener('click', printQuote);
@@ -82,7 +82,7 @@ function addPickupPointInput() {
         <span class="input-group-text bg-info text-white">Via</span>
         <input type="text" id="pickup-input-${pickupPointCounter}" class="form-control route-point-input pickup-point-dynamic-input" placeholder="Add pickup point">
         <button class="btn btn-outline-secondary select-map-btn" type="button" title="Pin on Map"
-                 data-bs-toggle="modal" data-bs-target="#map-modal">
+                     data-bs-toggle="modal" data-bs-target="#map-modal">
             <i class="fas fa-map-marker-alt"></i>
         </button>
         <button class="btn btn-outline-danger remove-pickup-btn" type="button" title="Remove Pickup Point">
@@ -116,8 +116,8 @@ async function triggerRealtimeQuoteCalculation() {
     const returnDateTime = (isRoundTrip && document.getElementById('return-pickup-time-input')) ? document.getElementById('return-pickup-time-input').value : null;
 
     const pickupPoints = Array.from(document.querySelectorAll('#pickup-points-container .pickup-point-dynamic-input'))
-                                 .map(input => input.value.trim())
-                                 .filter(value => value !== '');
+                                   .map(input => input.value.trim())
+                                   .filter(value => value !== '');
 
     const quoteDisplay = document.getElementById('realtime-quote-display');
     const fareDisplay = document.getElementById('realtime-fare-display');
@@ -171,7 +171,7 @@ function updateRealtimeQuoteDisplay(quoteDetails) {
     if (durationDisplay) durationDisplay.textContent = quoteDetails.duration;
     if (personsDisplay) personsDisplay.textContent = quoteDetails.persons > 0 ? `${quoteDetails.persons} person(s)` : "1 person";
     if (bagsDisplay) bagsDisplay.textContent = quoteDetails.bags > 0 ? `${quoteDetails.bags} bag(s)` : "No bags";
-    if (roundtripDisplay) roundtripDisplay.textContent = quoteDetails.roundTrip ? "Yes" : "No";
+    if (roundtripDisplay) roundtripDisplay.textContent = quoteDetails.isRoundTrip ? "Yes" : "No"; 
     if (afterhoursDisplay) afterhoursDisplay.textContent = quoteDetails.afterHours ? "Yes" : "No";
     if (fareDisplay) fareDisplay.textContent = `${quoteDetails.fareXCD} XCD / $${quoteDetails.fareUSD} USD`;
     if (statusMessage) statusMessage.textContent = "Quote updated.";
@@ -208,8 +208,8 @@ export async function submitRideRequest() {
     const returnDateTime = (isRoundTrip && document.getElementById('return-pickup-time-input')) ? document.getElementById('return-pickup-time-input').value : null;
 
     const pickupPoints = Array.from(document.querySelectorAll('#pickup-points-container .pickup-point-dynamic-input'))
-                                 .map(input => input.value.trim())
-                                 .filter(value => value !== '');
+                                   .map(input => input.value.trim())
+                                   .filter(value => value !== '');
 
     if (!origin || !destination || !rideDateTime) {
         showToast("Please enter Origin, Destination, and Pickup Time before requesting a ride.", "warning");
@@ -250,9 +250,9 @@ export async function submitRideRequest() {
         if (quoteDestination) quoteDestination.textContent = quoteDetails.destination;
         if (quoteBags) quoteBags.textContent = quoteDetails.bags > 0 ? `${quoteDetails.bags} bag(s)` : "No bags";
         if (quotePersons) quotePersons.textContent = quoteDetails.persons > 0 ? `${quoteDetails.persons} person(s)` : "1 person";
-        if (quoteRoundTrip) quoteRoundTrip.textContent = quoteDetails.roundTrip ? "Yes" : "No";
+        if (quoteRoundTrip) quoteRoundTrip.textContent = quoteDetails.isRoundTrip ? "Yes" : "No"; // Changed to isRoundTrip here too for consistency
         if (quotePickupTime) quotePickupTime.textContent = quoteDetails.rideDateTime ? new Date(quoteDetails.rideDateTime).toLocaleString() : "Not set";
-        if (quoteReturnPickupTime) quoteReturnPickupTime.textContent = (quoteDetails.roundTrip && quoteDetails.returnDateTime) ? new Date(quoteDetails.returnDateTime).toLocaleString() : "N/A";
+        if (quoteReturnPickupTime) quoteReturnPickupTime.textContent = (quoteDetails.isRoundTrip && quoteDetails.returnDateTime) ? new Date(quoteDetails.returnDateTime).toLocaleString() : "N/A"; // Changed to isRoundTrip here too for consistency
         if (quoteAfterHours) quoteAfterHours.textContent = quoteDetails.afterHours ? "Yes" : "No";
         if (quoteFare) quoteFare.textContent = `${quoteDetails.fareXCD} XCD / $${quoteDetails.fareUSD} USD`;
 
@@ -282,21 +282,14 @@ export async function submitRideRequest() {
         // --- IMPORTANT CHANGE HERE: Save to Firestore with 'pending' status ---
         if (db && currentUserId) {
             try {
-                // Ensure userName and userEmail are also collected if available
-                // --- DEBUG LOGS ADDED HERE ---
-                console.log("DEBUG in ride.js (before auth.currentUser at line 286):");
-                console.log("  Is 'auth' defined?", typeof auth !== 'undefined');
-                console.log("  Value of 'auth':", auth);
-                console.log("  Is 'auth' truthy?", !!auth);
-                // --- END DEBUG LOGS ---
                 const currentUser = auth.currentUser; // Get the current user for name/email
                 const userName = currentUser ? (currentUser.displayName || currentUser.email || 'Passenger') : 'Unknown Passenger';
                 const userEmail = currentUser ? currentUser.email : 'unknown@example.com';
 
                 await addDoc(collection(db, "rides"), {
                     userId: currentUserId,
-                    userName: userName, // Added
-                    userEmail: userEmail, // Added
+                    userName: userName,
+                    userEmail: userEmail,
                     origin: quoteDetails.origin,
                     destination: quoteDetails.destination,
                     distance: quoteDetails.distance,
@@ -306,11 +299,10 @@ export async function submitRideRequest() {
                     bags: quoteDetails.bags,
                     persons: quoteDetails.persons,
                     afterHours: quoteDetails.afterHours,
-                    roundTrip: quoteDetails.roundTrip,
+                    isRoundTrip: quoteDetails.isRoundTrip,
                     rideDateTime: quoteDetails.rideDateTime,
                     returnDateTime: quoteDetails.returnDateTime,
                     pickupPoints: quoteDetails.pickupPoints || [],
-                    // --- Change 'quoted' to 'pending' to make it visible to drivers ---
                     status: 'pending',
                     requestedAt: serverTimestamp(), // Use requestedAt for the initial timestamp
                     driverId: null, // Ensure these are null for unassigned rides
