@@ -6,7 +6,6 @@ import { setupHistoryListeners } from './history.js';
 import { setupPWA } from './pwa.js';
 import { showLoadingOverlay, hideLoadingOverlay } from './ui.js';
 import { initProfileFeature } from './profile.js';
-import { initDriverFeature } from './driver.js';
 
 
 document.addEventListener('DOMContentLoaded', async () => { // Keep this async
