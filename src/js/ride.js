@@ -1,4 +1,4 @@
-import { db, auth, currentUserId } from './firebase.js'; // Ensure auth and currentUserId are correctly imported
+import { db, auth, currentUserId } from './firebase.js'; 
 import { showToast, openModal, hideLoadingOverlay, showLoadingOverlay } from './ui.js';
 import { collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 import { getCalculatedQuote } from './fareCalculator.js';
@@ -116,8 +116,8 @@ async function triggerRealtimeQuoteCalculation() {
     const returnDateTime = (isRoundTrip && document.getElementById('return-pickup-time-input')) ? document.getElementById('return-pickup-time-input').value : null;
 
     const pickupPoints = Array.from(document.querySelectorAll('#pickup-points-container .pickup-point-dynamic-input'))
-                                    .map(input => input.value.trim())
-                                    .filter(value => value !== '');
+                                     .map(input => input.value.trim())
+                                     .filter(value => value !== '');
 
     const quoteDisplay = document.getElementById('realtime-quote-display');
     const fareDisplay = document.getElementById('realtime-fare-display');
@@ -143,7 +143,7 @@ async function triggerRealtimeQuoteCalculation() {
         });
         updateRealtimeQuoteDisplay(quoteDetails);
     } catch (error) {
-        console.error("Error in real-time quote calculation:", error);
+        // console.error("Error in real-time quote calculation:", error); // Debugging removed
         if (fareDisplay) fareDisplay.textContent = "Error";
         if (statusMessage) statusMessage.textContent = "Could not calculate fare. Try again.";
         if (quoteDisplay) quoteDisplay.style.display = 'block';
@@ -195,11 +195,9 @@ function updateRealtimeQuoteDisplay(quoteDetails) {
     }
 }
 
----
-
-### Handles the final submission of the ride request
-
-```javascript
+/**
+ * Handles the final submission of the ride request, opening the modal and saving to Firestore.
+ */
 export async function submitRideRequest() {
     const origin = document.getElementById('origin-input')?.value;
     const destination = document.getElementById('destination-input')?.value;
@@ -210,8 +208,8 @@ export async function submitRideRequest() {
     const returnDateTime = (isRoundTrip && document.getElementById('return-pickup-time-input')) ? document.getElementById('return-pickup-time-input').value : null;
 
     const pickupPoints = Array.from(document.querySelectorAll('#pickup-points-container .pickup-point-dynamic-input'))
-                                    .map(input => input.value.trim())
-                                    .filter(value => value !== '');
+                                     .map(input => input.value.trim())
+                                     .filter(value => value !== '');
 
     if (!origin || !destination || !rideDateTime) {
         showToast("Please enter Origin, Destination, and Pickup Time before requesting a ride.", "warning");
@@ -315,7 +313,7 @@ export async function submitRideRequest() {
                 showToast("Ride requested successfully! Drivers are being notified.", "success");
                 resetRideForm(); // Reset form after successful submission
             } catch (err) {
-                console.error("Failed to save ride request to Firestore:", err);
+                // console.error("Failed to save ride request to Firestore:", err); // Debugging removed
                 showToast("Failed to finalize ride request. Please try again.", "danger");
             }
         } else {
@@ -323,9 +321,94 @@ export async function submitRideRequest() {
         }
 
     } catch (error) {
-        console.error("Error processing ride request:", error);
+        // console.error("Error processing ride request:", error); // Debugging removed
         showToast("Error getting quote. Please check your inputs.", "danger");
     } finally {
         hideLoadingOverlay();
     }
+}
+
+export function resetRideForm() {
+    const originInput = document.getElementById('origin-input');
+    const destinationInput = document.getElementById('destination-input');
+    const bagsInput = document.getElementById('bags-input');
+    const personsInput = document.getElementById('persons-input');
+    const roundTripInput = document.getElementById('round-trip-input');
+    const pickupTimeInput = document.getElementById('pickup-time-input');
+    const returnPickupTimeInput = document.getElementById('return-pickup-time-input');
+
+    if (pickupTimeInput) pickupTimeInput.value = '';
+    if (returnPickupTimeInput) returnPickupTimeInput.value = '';
+    if (originInput) originInput.value = '';
+    if (destinationInput) destinationInput.value = '';
+    if (bagsInput) bagsInput.value = '0';
+    if (personsInput) personsInput.value = '1';
+    if (roundTripInput) {
+        roundTripInput.checked = false;
+        const returnPickupTimeGroup = document.getElementById('return-pickup-time-group');
+        if (returnPickupTimeGroup) {
+            returnPickupTimeGroup.style.display = 'none';
+        }
+    }
+    const quoteDisplay = document.getElementById('realtime-quote-display');
+    if (quoteDisplay) {
+        quoteDisplay.style.display = 'none';
+        document.getElementById('realtime-fare-display').textContent = "Calculating...";
+        document.getElementById('realtime-status-message').textContent = "Enter details to get quote.";
+    }
+
+    const pickupPointsContainer = document.getElementById('pickup-points-container');
+    if (pickupPointsContainer) {
+        pickupPointsContainer.innerHTML = '';
+    }
+    pickupPointCounter = 0;
+
+    const modalPickupPointsList = document.getElementById('quote-pickup-points-list');
+    if (modalPickupPointsList) {
+        modalPickupPointsList.innerHTML = '';
+        const pickupPointsGroup = modalPickupPointsList.closest('.pickup-points-display-group');
+        if (pickupPointsGroup) {
+            pickupPointsGroup.style.display = 'none';
+        }
+    }
+}
+
+export function printQuote() {
+    const modal = document.getElementById('quote-display-modal');
+    if (!modal) return;
+    const printContentsElement = modal.querySelector('.modal-quote-content');
+    if (!printContentsElement) {
+        showToast("Quote content not found for printing.", "warning");
+        return;
+    }
+    const printContents = printContentsElement.innerHTML;
+
+    const win = window.open('', '', 'height=600,width=400');
+    win.document.write(`
+        <html>
+        <head>
+            <title>HitchPoint - Ride Quote</title>
+            <style>
+                body { color: black; font-family: sans-serif; padding: 20px; }
+                h1 { text-align: center; color: #333; }
+                p, li { margin-bottom: 5px; }
+                .fw-semibold { font-weight: 600; }
+                .fs-4 { font-size: 1.5rem; }
+                .fw-bold { font-weight: 700; }
+                .text-primary { color: #0d6efd; }
+                .list-unstyled { padding-left: 0; list-style: none; }
+                .pickup-points-display-group { margin-top: 15px; border-top: 1px solid #eee; padding-top: 10px;}
+            </style>
+        </head>
+        <body>
+            <h1>HitchPoint Ride Quote</h1>
+            ${printContents}
+            <p style="margin-top: 30px; font-size: 12px; color: #666;">
+                Generated on ${new Date().toLocaleString()}
+            </p>
+        </body>
+        </html>
+    `);
+    win.document.close();
+    win.print();
 }
