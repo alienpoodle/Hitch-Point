@@ -82,7 +82,7 @@ function addPickupPointInput() {
         <span class="input-group-text bg-info text-white">Via</span>
         <input type="text" id="pickup-input-${pickupPointCounter}" class="form-control route-point-input pickup-point-dynamic-input" placeholder="Add pickup point">
         <button class="btn btn-outline-secondary select-map-btn" type="button" title="Pin on Map"
-                             data-bs-toggle="modal" data-bs-target="#map-modal">
+                                 data-bs-toggle="modal" data-bs-target="#map-modal">
             <i class="fas fa-map-marker-alt"></i>
         </button>
         <button class="btn btn-outline-danger remove-pickup-btn" type="button" title="Remove Pickup Point">
@@ -116,8 +116,8 @@ async function triggerRealtimeQuoteCalculation() {
     const returnDateTime = (isRoundTrip && document.getElementById('return-pickup-time-input')) ? document.getElementById('return-pickup-time-input').value : null;
 
     const pickupPoints = Array.from(document.querySelectorAll('#pickup-points-container .pickup-point-dynamic-input'))
-                                       .map(input => input.value.trim())
-                                       .filter(value => value !== '');
+                                    .map(input => input.value.trim())
+                                    .filter(value => value !== '');
 
     const quoteDisplay = document.getElementById('realtime-quote-display');
     const fareDisplay = document.getElementById('realtime-fare-display');
@@ -195,9 +195,11 @@ function updateRealtimeQuoteDisplay(quoteDetails) {
     }
 }
 
-/**
- * Handles the final submission of the ride request, opening the modal and saving to Firestore.
- */
+---
+
+### Handles the final submission of the ride request
+
+```javascript
 export async function submitRideRequest() {
     const origin = document.getElementById('origin-input')?.value;
     const destination = document.getElementById('destination-input')?.value;
@@ -208,8 +210,8 @@ export async function submitRideRequest() {
     const returnDateTime = (isRoundTrip && document.getElementById('return-pickup-time-input')) ? document.getElementById('return-pickup-time-input').value : null;
 
     const pickupPoints = Array.from(document.querySelectorAll('#pickup-points-container .pickup-point-dynamic-input'))
-                                       .map(input => input.value.trim())
-                                       .filter(value => value !== '');
+                                    .map(input => input.value.trim())
+                                    .filter(value => value !== '');
 
     if (!origin || !destination || !rideDateTime) {
         showToast("Please enter Origin, Destination, and Pickup Time before requesting a ride.", "warning");
@@ -279,61 +281,42 @@ export async function submitRideRequest() {
         // Open the modal before saving to Firestore, so the user sees the quote
         openModal('quote-display-modal');
 
-        // --- IMPORTANT CHANGE HERE: Save to Firestore with 'pending' status ---
+        // Save to Firestore with 'pending' status
         if (db && currentUserId) {
             try {
                 const currentUser = auth.currentUser; // Get the current user for name/email
                 const userName = currentUser ? (currentUser.displayName || currentUser.email || 'Passenger') : 'Unknown Passenger';
                 const userEmail = currentUser ? currentUser.email : 'unknown@example.com';
 
-                // --- DEBUGGING CONSOLE LOGS ---
-                console.log("DEBUG: currentUserId (from app state):", currentUserId);
-                console.log("DEBUG: auth.currentUser (Firebase Auth object):", auth.currentUser);
-                if (auth.currentUser) {
-                    console.log("DEBUG: auth.currentUser.uid (Firebase Auth UID):", auth.currentUser.uid);
-                } else {
-                    console.log("DEBUG: No Firebase user is currently logged in.");
-                }
-
-                // --- DATA ADJUSTMENTS FOR FIRESTORE RULE COMPLIANCE ---
                 await addDoc(collection(db, "rides"), {
                     userId: currentUserId,
                     userName: userName,
                     userEmail: userEmail,
                     origin: quoteDetails.origin,
                     destination: quoteDetails.destination,
-                    // Ensure distance is a number, default to 0 if quoteDetails.distance is undefined/null
                     distance: quoteDetails.distance || 0,
-                    // Ensure duration is a number, default to 0 if quoteDetails.duration is undefined/null
                     duration: quoteDetails.duration || 0,
                     fareXCD: quoteDetails.fareXCD,
                     fareUSD: quoteDetails.fareUSD,
                     bags: quoteDetails.bags,
                     persons: quoteDetails.persons,
                     afterHours: quoteDetails.afterHours,
-                    // Note: your rule uses `roundTrip is bool`, but `quoteDetails` has `isRoundTrip`.
-                    // Ensure this matches the field name in your rule. If the rule uses 'isRoundTrip', change it.
-                    // Assuming your rule refers to 'roundTrip' for consistency with input element IDs:
                     roundTrip: quoteDetails.isRoundTrip,
                     rideDateTime: quoteDetails.rideDateTime,
-                    // Ensure returnDateTime is always present, defaulting to null if not defined
                     returnDateTime: quoteDetails.returnDateTime || null,
                     pickupPoints: quoteDetails.pickupPoints || [],
                     status: 'pending',
-                    requestedAt: serverTimestamp(), // Use requestedAt for the initial timestamp
-                    driverId: null, // Ensure these are null for unassigned rides
+                    requestedAt: serverTimestamp(),
+                    driverId: null,
                     driverName: null,
                     assignedAt: null
                 });
-                // --- END DATA ADJUSTMENTS AND ADD DOC ---
 
                 showToast("Ride requested successfully! Drivers are being notified.", "success");
                 resetRideForm(); // Reset form after successful submission
             } catch (err) {
                 console.error("Failed to save ride request to Firestore:", err);
                 showToast("Failed to finalize ride request. Please try again.", "danger");
-                console.error("Firestore Error Code:", err.code);
-                console.error("Firestore Error Message:", err.message);
             }
         } else {
             showToast("Please log in to finalize your ride request.", "warning");
@@ -345,89 +328,4 @@ export async function submitRideRequest() {
     } finally {
         hideLoadingOverlay();
     }
-}
-
-export function resetRideForm() {
-    const originInput = document.getElementById('origin-input');
-    const destinationInput = document.getElementById('destination-input');
-    const bagsInput = document.getElementById('bags-input');
-    const personsInput = document.getElementById('persons-input');
-    const roundTripInput = document.getElementById('round-trip-input');
-    const pickupTimeInput = document.getElementById('pickup-time-input');
-    const returnPickupTimeInput = document.getElementById('return-pickup-time-input');
-
-    if (pickupTimeInput) pickupTimeInput.value = '';
-    if (returnPickupTimeInput) returnPickupTimeInput.value = '';
-    if (originInput) originInput.value = '';
-    if (destinationInput) destinationInput.value = '';
-    if (bagsInput) bagsInput.value = '0';
-    if (personsInput) personsInput.value = '1';
-    if (roundTripInput) {
-        roundTripInput.checked = false;
-        const returnPickupTimeGroup = document.getElementById('return-pickup-time-group');
-        if (returnPickupTimeGroup) {
-            returnPickupTimeGroup.style.display = 'none';
-        }
-    }
-    const quoteDisplay = document.getElementById('realtime-quote-display');
-    if (quoteDisplay) {
-        quoteDisplay.style.display = 'none';
-        document.getElementById('realtime-fare-display').textContent = "Calculating...";
-        document.getElementById('realtime-status-message').textContent = "Enter details to get quote.";
-    }
-
-    const pickupPointsContainer = document.getElementById('pickup-points-container');
-    if (pickupPointsContainer) {
-        pickupPointsContainer.innerHTML = '';
-    }
-    pickupPointCounter = 0;
-
-    const modalPickupPointsList = document.getElementById('quote-pickup-points-list');
-    if (modalPickupPointsList) {
-        modalPickupPointsList.innerHTML = '';
-        const pickupPointsGroup = modalPickupPointsList.closest('.pickup-points-display-group');
-        if (pickupPointsGroup) {
-            pickupPointsGroup.style.display = 'none';
-        }
-    }
-}
-
-export function printQuote() {
-    const modal = document.getElementById('quote-display-modal');
-    if (!modal) return;
-    const printContentsElement = modal.querySelector('.modal-quote-content');
-    if (!printContentsElement) {
-        showToast("Quote content not found for printing.", "warning");
-        return;
-    }
-    const printContents = printContentsElement.innerHTML;
-
-    const win = window.open('', '', 'height=600,width=400');
-    win.document.write(`
-        <html>
-        <head>
-            <title>HitchPoint - Ride Quote</title>
-            <style>
-                body { color: black; font-family: sans-serif; padding: 20px; }
-                h1 { text-align: center; color: #333; }
-                p, li { margin-bottom: 5px; }
-                .fw-semibold { font-weight: 600; }
-                .fs-4 { font-size: 1.5rem; }
-                .fw-bold { font-weight: 700; }
-                .text-primary { color: #0d6efd; }
-                .list-unstyled { padding-left: 0; list-style: none; }
-                .pickup-points-display-group { margin-top: 15px; border-top: 1px solid #eee; padding-top: 10px;}
-            </style>
-        </head>
-        <body>
-            <h1>HitchPoint Ride Quote</h1>
-            ${printContents}
-            <p style="margin-top: 30px; font-size: 12px; color: #666;">
-                Generated on ${new Date().toLocaleString()}
-            </p>
-        </body>
-        </html>
-    `);
-    win.document.close();
-    win.print();
 }
