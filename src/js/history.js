@@ -13,7 +13,7 @@ export function showRideHistory() {
         historyBody.innerHTML = '<div class="loading-spinner-container"><div class="spinner"></div><p>Loading ride history...</p></div>';
     }
     const ridesRef = collection(db, "rides");
-    const q = query(ridesRef, where("userId", "==", currentUserId), orderBy("timestamp", "desc"));
+    const q = query(ridesRef, where("userId", "==", currentUserId), orderBy("requestedAt", "desc"));
     let unsubscribe = null; // Declare unsubscribe here to ensure it's always available
     try {
         unsubscribe = onSnapshot(q,
@@ -47,21 +47,40 @@ export function showRideHistory() {
                 snapshot.forEach(doc => {
                     const data = doc.data();
                     const date = data.timestamp ? new Date(data.timestamp.seconds * 1000).toLocaleString() : 'N/A';
-                    const status = data.status || 'quoted';
-                    const statusClass = status === 'completed' ? 'status-completed' : 'status-quoted';
-                    html += `
-                        <tr>
-                            <td>${date}</td>
-                            <td class="truncate" title="${data.origin || 'N/A'}">${data.origin || 'N/A'}</td>
-                            <td class="truncate" title="${data.destination || 'N/A'}">${data.destination || 'N/A'}</td>
-                            <td>${data.distance || 'N/A'}</td>
-                            <td class="fare-amount">
-                                ${data.fareXCD ? Math.round(Number(data.fareXCD)) + ' XCD' : ''}
-                                ${data.fareUSD ? '/ $' + Math.round(Number(data.fareUSD)) + ' USD' : ''}
-                            </td>
-                            <td><span class="status-badge ${statusClass}">${status}</span></td>
-                        </tr>
-                    `;
+                    const status = data.status || 'unknown';
+                    let statusClass = '';
+                        switch (status) {
+                            case 'pending':
+                                statusClass = 'status-pending'; // Ride requested, waiting for a driver
+                                break;
+                            case 'accepted':
+                                statusClass = 'status-accepted'; // Driver has accepted the ride
+                                break;
+                            case 'completed':
+                                statusClass = 'status-completed'; // Ride has been successfully finished
+                                break;
+                            case 'cancelled':
+                                statusClass = 'status-cancelled'; // Ride was cancelled by either party or admin
+                                break;
+                            case 'rejected': // Add 'rejected' status handling
+                                statusClass = 'status-rejected'; // Driver declined the ride
+                                break;
+                            default:
+                                statusClass = 'status-unknown'; // For any new or undefined statuses
+                        }
+                   html += `
+                            <tr>
+                                <td>${date}</td>
+                                <td class="truncate" title="${data.origin || 'N/A'}">${data.origin || 'N/A'}</td>
+                                <td class="truncate" title="${data.destination || 'N/A'}">${data.destination || 'N/A'}</td>
+                                <td>${data.distance || 'N/A'}</td>
+                                <td class="fare-amount">
+                                    ${data.fareXCD ? Math.round(Number(data.fareXCD)) + ' XCD' : ''}
+                                    ${data.fareUSD ? '/ $' + Math.round(Number(data.fareUSD)) + ' USD' : ''}
+                                </td>
+                                <td><span class="status-badge ${statusClass}">${status}</span></td>
+                            </tr>
+                        `;
                 });
                 html += '</tbody></table></div>';
                 historyBody.innerHTML = html;
