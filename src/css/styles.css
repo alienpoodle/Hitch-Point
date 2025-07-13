@@ -305,3 +305,38 @@ body {
         margin-right: 0;
     }
 }
+
+/* General badge style (adjust as needed) */
+.status-badge {
+    padding: 0.3em 0.6em;
+    border-radius: 0.25rem;
+    font-size: 0.75em;
+    font-weight: bold;
+    color: #fff; /* White text for contrast */
+}
+
+/* Specific status colors */
+.status-pending {
+    background-color: #0d6efd; /* Bootstrap Blue / Info */
+}
+
+.status-accepted {
+    background-color: #6f42c1; /* Bootstrap Purple / Primary-ish */
+}
+
+.status-completed {
+    background-color: #198754; /* Bootstrap Green / Success */
+}
+
+.status-cancelled {
+    background-color: #dc3545; /* Bootstrap Red / Danger */
+}
+
+.status-unknown {
+    background-color: #6c757d; /* Bootstrap Gray / Secondary */
+}
+
+.status-rejected {
+    background-color: #ffc107; /* Bootstrap Yellow / Warning */
+    color: #212529; /* Dark text for contrast on yellow */
+}
